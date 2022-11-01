@@ -46,6 +46,7 @@ module.exports = {
           };
           pinata.pinJSONToIPFS(data, options).then(_result => {
             data.metaData = "https://gateway.pinata.cloud/ipfs/" + _result.IpfsHash;
+            data.user = req.payload?.id;
             Nft.create(data).fetch().then(result => {
               console.log(data);
               return res.ok(result)

@@ -38,6 +38,9 @@ module.exports = {
     attributes: {
       type: 'json',
       columnType: 'array'
+    },
+    user :{
+      model: 'User'
     }
   },
 
