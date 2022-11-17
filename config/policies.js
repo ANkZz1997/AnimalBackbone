@@ -11,21 +11,22 @@
 module.exports.policies = {
 
   /***************************************************************************
-  *                                                                          *
-  * Default policy for all controllers and actions, unless overridden.       *
-  * (`true` allows public access)                                            *
-  *                                                                          *
-  ***************************************************************************/
+   *                                                                          *
+   * Default policy for all controllers and actions, unless overridden.       *
+   * (`true` allows public access)                                            *
+   *                                                                          *
+   ***************************************************************************/
 
   // '*': true,
-  MediaController:{
+  MediaController: {
+    '*': 'isAuthenticated',
+    download: true
+  },
+  UserController: {
     '*': 'isAuthenticated',
   },
-  UserController:{
-    '*': 'isAuthenticated',
-  },
-  NftController:{
-    '*': 'isAuthenticated',
+  PublicController: true,
+  NftController: {
+    '*': 'isAuthenticated'
   }
-
 };
