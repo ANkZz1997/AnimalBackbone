@@ -28,7 +28,7 @@ module.exports = {
     },
     extra: {
       type: 'string'
-    }
+    },
   },
 
 };

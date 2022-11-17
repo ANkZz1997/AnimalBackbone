@@ -18,5 +18,14 @@ module.exports.policies = {
   ***************************************************************************/
 
   // '*': true,
+  MediaController:{
+    '*': 'isAuthenticated',
+  },
+  UserController:{
+    '*': 'isAuthenticated',
+  },
+  NftController:{
+    '*': 'isAuthenticated',
+  }
 
 };
