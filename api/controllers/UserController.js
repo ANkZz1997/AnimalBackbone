@@ -17,7 +17,6 @@ module.exports = {
   profile: async (req, res) => {
     await User.findOne({ id: req.payload.id })
       .then((result) => {
-        result.avatar = (result.avatar) ? require('util').format('%s/images/%s', sails.config.custom.baseUrl, result.avatar): '';
         res.status(200).json(result);
       });
   },
@@ -31,19 +30,29 @@ module.exports = {
         return res.badRequest(error);
       }
       let filename = '';
+      let media = {};
       if(uploadedFile.length > 0){
+        media = await Media.create({
+          fd: uploadedFile[0].fd,
+          size: uploadedFile[0].size,
+          type: uploadedFile[0].type,
+          filename: uploadedFile[0].filename,
+          status: uploadedFile[0].status,
+          field: uploadedFile[0].field,
+          extra: uploadedFile[0].extra,
+        }).fetch();
         const file = uploadedFile[0].fd;
         filename = file.replace(/^.*[\\\/]/, '');
       }
       const user = await User.findOne({id:req.payload.id});
       const userDetails = {
-        avatar: filename || user.avatar,
+        avatar: media.id || user.avatar,
         firstName: firstName || user.firstName,
         lastName: lastName || user.lastName,
         contact: contact || user.contact
       };
       const updatedUser = await User.update({id:req.payload.id},userDetails).fetch();
-      updatedUser[0].avatar = (updatedUser[0].avatar) ? require('util').format('%s/images/%s', sails.config.custom.baseUrl, updatedUser[0].avatar): '';
+      updatedUser[0].avatar = updatedUser[0].avatar;
       res.status(200).json(updatedUser);
     });
   },

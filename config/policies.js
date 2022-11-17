@@ -20,9 +20,11 @@ module.exports.policies = {
   // '*': true,
   MediaController:{
     '*': 'isAuthenticated',
+    download: true
   },
   UserController:{
     '*': 'isAuthenticated',
-  }
+  },
+  PublicController: true
 
 };

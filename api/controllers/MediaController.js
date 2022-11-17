@@ -11,6 +11,21 @@ const pinata = pinataSDK('3b96933e4292f6aedad8',
   'a8f68ea2894fd5046c4d3bcba027d1050faa1dea9edeaf23c197584823ec70b0');
 
 module.exports = {
+  download: (req, res) => {
+    const {mediaId} = req.params;
+    if(!mediaId) return res.badRequest();
+    Media.findOne({id: mediaId}).then(result => {
+      if(result) {
+        const imagePartials = result.fd.split('/uploads/');
+        fs.open(`./uploads/${imagePartials[1]}`,'r',(err,fd)=>{
+          if(err) return res.badRequest(err)
+          return fs.createReadStream(`./uploads/${imagePartials[1]}`).pipe(res);
+        });
+      } else {
+        return res.badRequest('File not found')
+      }
+    })
+  },
   upload: (req, res) => {
     req.file('nft').upload({
       dirname: require('path').resolve(sails.config.appPath, 'uploads')
