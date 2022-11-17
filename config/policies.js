@@ -23,6 +23,9 @@ module.exports.policies = {
   },
   UserController:{
     '*': 'isAuthenticated',
+  },
+  NftController:{
+    '*': 'isAuthenticated',
   }
 
 };
