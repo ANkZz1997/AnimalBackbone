@@ -8,13 +8,19 @@
 module.exports = {
 
   attributes: {
+    user: {
+      model: 'User',
+    },
     address: {
       type: 'string',
       required: true
     },
     privateKey: {
       type: 'string',
-      required: true
+    },
+    nonce: {
+      type: 'number',
+      defaultsTo: Math.floor(Math.random() * 1000000)
     }
   },
 
