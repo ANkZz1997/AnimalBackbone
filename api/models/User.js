@@ -10,7 +10,6 @@ module.exports = {
   attributes: {
     username: {
       type: 'string',
-      required: true,
       unique: true
     },
     avatar:{
@@ -24,20 +23,23 @@ module.exports = {
     },
     password: {
       type: 'string',
-      required: true
     },
     email: {
       type: 'string',
-      required: true,
       unique: true
     },
     contact: {
       type: 'string',
-      required: true
     },
     wallet: {
       model: 'Wallet'
+    },
+    type: {
+      type: 'string',
+      isIn: ['CENTRALISED', 'DECENTRALISED'],
+      defaultsTo: 'CENTRALISED'
     }
+
   },
 
 };
