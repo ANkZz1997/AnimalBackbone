@@ -19,4 +19,6 @@ module.exports.custom = {
   // stripeSecret: 'sk_test_Zzd814nldl91104qor5911gjald',
   // …
   baseUrl: 'http://localhost:1337',
+  pinataApiKey: '1fd2fb27d82447885af3',
+  pinataSecret: '09bda6c71d70d72934c1895ff7b5df28f8c2cb7b8981b4242bd4937215122474'
 };

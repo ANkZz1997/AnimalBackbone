@@ -1331,48 +1331,99 @@ const nftMarketAbi = [
     }
 ];
 
-var Web3 = require('web3');
-var web3 = new Web3('http://localhost:7545');
-var contract = new web3.eth.Contract(nftMarketAbi, nftMarketAddress);
-var nftContract = new web3.eth.Contract(nftABI, nftContractAddress);
+const Web3 = require('web3');
+const web3 = new Web3('http://localhost:7545');
+const contract = new web3.eth.Contract(nftMarketAbi, nftMarketAddress);
+const nftContract = new web3.eth.Contract(nftABI, nftContractAddress);
+
+const fs = require('fs');
+const pinataSDK = require('@pinata/sdk');
+const pinata = pinataSDK(sails.config.custom.pinataApiKey, sails.config.custom.pinataSecret);
+
+const saveImageInDB = (uploadedFile, cb) => {
+  Media.create({
+    fd: uploadedFile[0].fd,
+    size: uploadedFile[0].size,
+    type: uploadedFile[0].type,
+    filename: uploadedFile[0].filename,
+    status: uploadedFile[0].status,
+    field: uploadedFile[0].field,
+    extra: uploadedFile[0].extra,
+  }).fetch().then(result => {
+    cb(null, result)
+  }).catch(e => {
+    cb(e);
+  })
+}
+const pinFileToIpfs = (fileStream, name) => {
+  let options = {
+    pinataMetadata: { name },
+    pinataOptions: { cidVersion: 0 }
+  };
+  return pinata.pinFileToIPFS(fileStream, options);
+}
+const pinJsonToIpfs = (name, data) => {
+  let options = {
+    pinataMetadata: { name: `${name}.json` },
+    pinataOptions: { cidVersion: 0 }
+  };
+  return pinata.pinJSONToIPFS(data, options);
+}
 
 module.exports = {
-    all: async (req, res) => {
-        await Nft.find().populateAll().then(result => {
-            res.status(200).json(result);
-        });
-    },
-    createSale: async (req, res) => {
-        const userData = await User.findOne({ id: req.payload?.id });
+  create: async (req, res) => {
+    const user = await User.findOne({ id: req.payload.id });
+    const data = req.body;
+    data.attributes = JSON.parse(data.attributes);
+    req.file('nft').upload({
+      dirname: require('path').resolve(sails.config.appPath, 'uploads')
+    }, (error, uploadedFile) => {
+      saveImageInDB(uploadedFile, (error, result) => {
+        if (error) return res.badRequest(error);
+        const readableStreamForFile = fs.createReadStream(uploadedFile[0].fd);
+        pinFileToIpfs(readableStreamForFile, uploadedFile[0].filename).then(response => {
+          data.image = "https://gateway.pinata.cloud/ipfs/" + response.IpfsHash;
+          pinJsonToIpfs(data.name, data).then(_response => {
+            data.ipfsHash = _response.IpfsHash
+            data.metaData = "https://gateway.pinata.cloud/ipfs/" + _response.IpfsHash;
+            data.minter = user.id;
+            data.user = user.id;
+            Nft.create(data).fetch().then(result => {
+              res.ok(result);
+            }).catch(e => res.badRequest(e));
+          }).catch(e => res.badRequest(e));
+        }).catch(e => res.badRequest(e));
+      });
+    });
+  },
+  all: async (req, res) => {
+    await Nft.find().populateAll().then(result => {
+      res.status(200).json(result);
+    });
+  },
+  createSale: async (req, res) => {
+    const userData = await User.findOne({ id: req.payload.id });
     const userWallet = await Wallet.findOne({ id: userData.wallet });
     await web3.eth.accounts.wallet.add(userWallet.privateKey);
-
-        const { tokenId, price } = req.body;
-        nftContract.methods.approve(nftMarketAddress, tokenId).send({ from: userWallet.address, gas: 4712388, gasPrice: 100000000000 })
-            .then(function (receipt) {
-                contract.methods.createSale(nftContractAddress, tokenId, price).send({ from: userWallet.address, gas: 4712388, gasPrice: 100000000000 })
-                    .then(function (receipt) {
-                        console.log("********************************");
-                        console.log("this is the receipt ======>", receipt)
-                        console.log("********************************");
-                        // receipt can also be a new contract instance, when coming from a "contract.deploy({...}).send()"
-                        res.status(200).json(receipt);
-                    }).catch(err => {
-                        console.log("this is the err ======>", err)
-                        res.status(500).json(err);
-
-
-                    });
-                // receipt can also be a new contract instance, when coming from a "contract.deploy({...}).send()"
-
-            }).catch(err => {
-                console.log("this is the err ======>", err)
-                res.status(500).json(err);
-
-
-            });
-
-
-    }
+    const { tokenId, price } = req.body;
+    nftContract.methods.approve(nftMarketAddress, tokenId).send({ from: userWallet.address, gas: 4712388, gasPrice: 100000000000 })
+      .then(function (receipt) {
+        contract.methods.createSale(nftContractAddress, tokenId, price).send({ from: userWallet.address, gas: 4712388, gasPrice: 100000000000 })
+          .then(function (receipt) {
+            console.log("********************************");
+            console.log("this is the receipt ======>", receipt)
+            console.log("********************************");
+            // receipt can also be a new contract instance, when coming from a "contract.deploy({...}).send()"
+            res.status(200).json(receipt);
+          }).catch(err => {
+            console.log("this is the err ======>", err)
+          res.status(500).json(err);
+          });
+        // receipt can also be a new contract instance, when coming from a "contract.deploy({...}).send()"
+      }).catch(err => {
+        console.log("this is the err ======>", err);
+        res.status(500).json(err);
+      });
+  },
 };
 

@@ -35,15 +35,21 @@ module.exports = {
       return res.badRequest('Something went wrong');
     })
   },
-  loginNonce: (req, res) => {
+  loginNonce: async (req, res) => {
     const {address} = req.body;
-    Wallet.create({address}).fetch().then(result => {
-      res.ok(result);
-    });
+    const wallet = await Wallet.findOne({address});
+    if(wallet) {
+      res.ok(wallet);
+    } else {
+      Wallet.create({address: address.toLowerCase()}).fetch().then(result => {
+        res.ok(result);
+      });
+    }
+
   },
   verifySignature: async (req, res) => {
-    const {address, signature} = req.body;
-    const wallet = await Wallet.findOne({address: address});
+    let {address, signature} = req.body;
+    const wallet = await Wallet.findOne({address: address.toLowerCase()});
     const msg = `Welcome to SDNA Crypt
       Click to sign in and accept the SDNA Crypt Terms of Service: https://sdnatech.com
 
@@ -56,14 +62,17 @@ module.exports = {
 
       Nonce:
       ${wallet.nonce}`;
-    const msgHash = ethUtil.hashPersonalMessage(ethUtil.toBuffer(msg));
-    const signatureParams = ethUtil.fromRpcSig(ethUtil.toBuffer(signature));
+    const msgBuffer = Buffer.from(msg, 'utf8');
+    const msgHash = ethUtil.hashPersonalMessage(msgBuffer);
+    const signatureBuffer = ethUtil.toBuffer(signature);
+    const signatureParams = ethUtil.fromRpcSig(signatureBuffer);
     const publicKey = ethUtil.ecrecover(msgHash,signatureParams.v, signatureParams.r, signatureParams.s);
     const generatedPublicKey = ethUtil.bufferToHex(ethUtil.publicToAddress(publicKey));
     if(address.toLowerCase() === generatedPublicKey.toLowerCase()){
       if(wallet.user) {
         User.findOne({id: wallet.user}).populateAll().then(async result => {
           result.token = await sails.helpers.signToken({id:result.id});
+          Wallet.update({address: address.toLowerCase()}).set({user: result.id, nonce: Math.floor(Math.random()*1000000)}).fetch().then(result => {})
           res.ok(result);
         })
       } else {
@@ -74,7 +83,9 @@ module.exports = {
         }).fetch().then(async result => {
           result.wallet = wallet;
           result.token = await sails.helpers.signToken({id:result.id});
-          Wallet.update({address: address}).set({user: result.id, nonce: Math.floor(Math.random()*1000000)}).then(result => {})
+          Wallet.update({address: address.toLowerCase()}).set({
+            user: result.id,
+            nonce: Math.floor(Math.random()*1000000)}).then(result => {})
           return res.ok(result);
         });
       }

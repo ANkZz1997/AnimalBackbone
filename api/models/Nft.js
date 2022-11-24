@@ -11,7 +11,7 @@ module.exports = {
     image: {
       type: 'string',
     },
-    IpfsHash: {
+    ipfsHash: {
       type: 'string',
     },
     metaData: {
@@ -40,8 +40,13 @@ module.exports = {
       columnType: 'array'
     },
     user :{
-      model: 'User'
-    }
+      model: 'User',
+      // required: true
+    },
+    minter: {
+      model: 'User',
+      // required: true
+    },
   },
 
 };
