@@ -44,7 +44,18 @@ module.exports = {
   verifySignature: async (req, res) => {
     const {address, signature} = req.body;
     const wallet = await Wallet.findOne({address: address});
-    const msg = `I am signing nonce for authentication: ${wallet.nonce}`;
+    const msg = `Welcome to SDNA Crypt
+      Click to sign in and accept the SDNA Crypt Terms of Service: https://sdnatech.com
+
+      This request will not trigger a blockchain transaction or cost any gas fees.
+
+      Your authentication status will reset after 24 hours.
+
+      Wallet address:
+      ${address}
+
+      Nonce:
+      ${wallet.nonce}`;
     const msgHash = ethUtil.hashPersonalMessage(ethUtil.toBuffer(msg));
     const signatureParams = ethUtil.fromRpcSig(ethUtil.toBuffer(signature));
     const publicKey = ethUtil.ecrecover(msgHash,signatureParams.v, signatureParams.r, signatureParams.s);
