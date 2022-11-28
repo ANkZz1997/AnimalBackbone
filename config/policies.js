@@ -17,16 +17,12 @@ module.exports.policies = {
    *                                                                          *
    ***************************************************************************/
 
-  // '*': true,
+  '*': 'isAuthenticated',
+  AuthController: {
+    '*': true
+  },
   MediaController: {
-    '*': 'isAuthenticated',
     download: true
   },
-  UserController: {
-    '*': 'isAuthenticated',
-  },
   PublicController: true,
-  NftController: {
-    '*': 'isAuthenticated'
-  }
 };

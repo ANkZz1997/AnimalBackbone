@@ -11,6 +11,9 @@ module.exports = {
     image: {
       type: 'string',
     },
+    media: {
+      model: 'Media',
+    },
     ipfsHash: {
       type: 'string',
     },
@@ -47,6 +50,11 @@ module.exports = {
       model: 'User',
       // required: true
     },
+    status: {
+      type: 'string',
+      isIn: ['PORTFOLIO', 'MARKETPLACE', 'AUCTION'],
+      defaultsTo: 'PORTFOLIO'
+    }
   },
 
 };

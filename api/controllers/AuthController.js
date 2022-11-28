@@ -50,18 +50,19 @@ module.exports = {
   verifySignature: async (req, res) => {
     let {address, signature} = req.body;
     const wallet = await Wallet.findOne({address: address.toLowerCase()});
-    const msg = `Welcome to SDNA Crypt
-      Click to sign in and accept the SDNA Crypt Terms of Service: https://sdnatech.com
+    const msg = `
+Welcome to SDNA Crypt
+Click to sign in and accept the SDNA Crypt Terms of Service: https://sdnatech.com
 
-      This request will not trigger a blockchain transaction or cost any gas fees.
+This request will not trigger a blockchain transaction or cost any gas fees.
 
-      Your authentication status will reset after 24 hours.
+Your authentication status will reset after 24 hours.
 
-      Wallet address:
-      ${address}
+Wallet address:
+${address}
 
-      Nonce:
-      ${wallet.nonce}`;
+Nonce:
+${wallet.nonce}`
     const msgBuffer = Buffer.from(msg, 'utf8');
     const msgHash = ethUtil.hashPersonalMessage(msgBuffer);
     const signatureBuffer = ethUtil.toBuffer(signature);

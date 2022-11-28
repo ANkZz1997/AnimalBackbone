@@ -1371,6 +1371,12 @@ const pinJsonToIpfs = (name, data) => {
 }
 
 module.exports = {
+  list: (req, res) => {
+    const {page, limit} = req.body;
+    Nft.find({user: req.payload.id}).limit(limit).skip(limit*(page - 1)).populateAll().then(result => {
+      res.ok(result);
+    })
+  },
   create: async (req, res) => {
     const user = await User.findOne({ id: req.payload.id });
     const data = req.body;
@@ -1388,6 +1394,7 @@ module.exports = {
             data.metaData = "https://gateway.pinata.cloud/ipfs/" + _response.IpfsHash;
             data.minter = user.id;
             data.user = user.id;
+            data.media = result.id;
             Nft.create(data).fetch().then(result => {
               res.ok(result);
             }).catch(e => res.badRequest(e));

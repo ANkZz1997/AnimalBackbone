@@ -1,5 +1,4 @@
 module.exports = async (req, res, next) => {
-  console.log("req.headers",req.headers);
   if(!req.headers.authorization) return res.badRequest('No Access Token');
   let partials = req.headers.authorization.split(' ');
   let scheme = partials[0];
