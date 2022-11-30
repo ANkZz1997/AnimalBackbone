@@ -15,7 +15,7 @@ module.exports = {
   addToMarketPlace: async (req, res) => {
     const {nftId, price} = req.body;
     const nft = await Nft.findOne({id: nftId, user: req.payload.id, status: 'PORTFOLIO'});
-    if(!nft) return res.badRequest();
+    if(!nft) return res.badRequest("nft does not exist");
     Marketplace.create({
       user: req.payload.id,
       nft: nft.id,

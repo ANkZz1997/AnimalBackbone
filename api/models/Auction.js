@@ -17,7 +17,7 @@ module.exports = {
       required: true
     },
     basePrice: {
-      type: 'string',
+      type: 'number',
       required: true
     },
     endTime: {
@@ -28,6 +28,10 @@ module.exports = {
       type: 'string',
       isIn: ['ACTIVE', 'ENDED', 'REMOVED'],
       defaultsTo: 'ACTIVE'
+    },
+    bid: {
+      collection: 'Bid',
+      via: 'auction'
     }
   },
 };

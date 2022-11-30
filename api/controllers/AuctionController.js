@@ -7,7 +7,7 @@
 
 module.exports = {
   list: (req, res) => {
-    Auction.find({status: 'ACTIVE'}).pupulateAll()
+    Auction.find({status: 'ACTIVE'}).populateAll()
       .then(result => {
         res.ok(result);
       })

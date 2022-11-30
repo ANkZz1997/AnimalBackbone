@@ -12,6 +12,13 @@ module.exports = {
       model: 'User',
       required: true
     },
+    auction: {
+      model: 'Auction',
+      required: true
+    },
+    price: {
+      type: 'number'
+    }
   },
 
 };
