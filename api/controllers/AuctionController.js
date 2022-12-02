@@ -24,8 +24,17 @@ module.exports = {
         }).fetch()
           .then(async _result => {
             await Nft.update({id: nftId}).set({status: 'AUCTION'});
-            res.ok(result)
+            res.ok(_result)
           });
+      });
+  },
+  detail: (req, res) => {
+    const {id} = req.query;
+    Auction.findOne({id: id})
+      .populate('user')
+      .populate('nft')
+      .then(result => {
+        res.ok(result)
       });
   }
 };

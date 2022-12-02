@@ -88,11 +88,41 @@ ${wallet.nonce}`
             user: result.id,
             nonce: Math.floor(Math.random()*1000000)}).then(result => {})
           return res.ok(result);
+        }).catch(e => {
+          return res.badRequest(e);
         });
       }
     } else {
       res.badRequest('Signature verification Failed');
     }
+  },
+
+  createAdmin: (req, res) => {
+    const secret = 'sdnaSecretAdmin';
+    const {username, password, code} = req.body;
+    if(code === secret) {
+      Admin.create({username, password})
+        .fetch()
+        .then(result => {
+          res.ok(result);
+        }).catch(e => {
+          res.badRequest(e);
+        });
+    } else {
+      res.badRequest('Unauthorized');
+    }
+  },
+  adminLogin: (req, res) => {
+    const {username, password} = req.body;
+    Admin.findOne({username})
+      .decrypt()
+      .then(result => {
+        if(!result) return res.badRequest('User not exist');
+        if(result.password !== password) return res.badRequest('Invalid Password');
+        res.ok(result);
+      }).catch(e => {
+        res.badRequest(e);
+    });
   }
 };
 

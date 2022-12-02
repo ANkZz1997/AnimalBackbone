@@ -12,6 +12,15 @@ module.exports = {
       res.ok(result);
     })
   },
+  detail: (req, res) => {
+    const {id} = req.query;
+    Marketplace.findOne({id: id})
+      .populate('user')
+      .populate('nft')
+      .then(result => {
+        res.ok(result)
+      });
+  },
   addToMarketPlace: async (req, res) => {
     const {nftId, price} = req.body;
     const nft = await Nft.findOne({id: nftId, user: req.payload.id, status: 'PORTFOLIO'});

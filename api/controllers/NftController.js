@@ -1408,6 +1408,16 @@ module.exports = {
       res.status(200).json(result);
     });
   },
+  detail: (req, res) => {
+    const {id} = req.query;
+    Nft.findOne({id})
+      .populate('minter')
+      .populate('user')
+      .then(result => {
+        res.ok(result);
+      });
+  },
+  // old
   createSale: async (req, res) => {
     const userData = await User.findOne({ id: req.payload.id });
     const userWallet = await Wallet.findOne({ id: userData.wallet });
@@ -1423,14 +1433,14 @@ module.exports = {
             // receipt can also be a new contract instance, when coming from a "contract.deploy({...}).send()"
             res.status(200).json(receipt);
           }).catch(err => {
-            console.log("this is the err ======>", err)
+          console.log("this is the err ======>", err)
           res.status(500).json(err);
-          });
+        });
         // receipt can also be a new contract instance, when coming from a "contract.deploy({...}).send()"
       }).catch(err => {
-        console.log("this is the err ======>", err);
-        res.status(500).json(err);
-      });
+      console.log("this is the err ======>", err);
+      res.status(500).json(err);
+    });
   },
 };
 
