@@ -97,6 +97,7 @@ ${wallet.nonce}`
     }
   },
 
+  //admin api's
   createAdmin: (req, res) => {
     const secret = 'sdnaSecretAdmin';
     const {username, password, code} = req.body;
@@ -116,9 +117,10 @@ ${wallet.nonce}`
     const {username, password} = req.body;
     Admin.findOne({username})
       .decrypt()
-      .then(result => {
+      .then(async result => {
         if(!result) return res.badRequest('User not exist');
         if(result.password !== password) return res.badRequest('Invalid Password');
+        result.token = await sails.helpers.signToken({id:result.id, isAdmin: true});
         res.ok(result);
       }).catch(e => {
         res.badRequest(e);

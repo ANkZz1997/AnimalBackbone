@@ -25,4 +25,7 @@ module.exports.policies = {
     download: true
   },
   PublicController: true,
+  AdminController: {
+    '*': ['isAuthenticated', 'isAdmin']
+  }
 };

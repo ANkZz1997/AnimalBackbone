@@ -15,8 +15,24 @@ module.exports = {
     },
     type: {
       type: 'string',
-      isIn: ['ADD', 'REMOVE', 'LOGIN'],
+      isIn: ['LOGIN', 'CREATE', 'BUY', 'ADD', 'REMOVE'],
       required: true
+    },
+    user: {
+      model: 'User',
+      required: true
+    },
+    nft: {
+      model: 'Nft'
+    },
+    marketplace: {
+      model: 'Marketplace'
+    },
+    auction: {
+      model: 'Auction'
+    },
+    bid: {
+      model: 'Bid'
     }
   }
 };

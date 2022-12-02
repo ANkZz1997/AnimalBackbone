@@ -10,7 +10,7 @@ module.exports = {
     }
   },
   fn: async (inputs,exits)=>{
-    let token = jwt.sign(inputs.payload,'secret',{ expiresIn: 60 * 60 });
+    let token = jwt.sign(inputs.payload,'secret',{ expiresIn: 60 * 60 * 24 });
     return exits.success(token);
   }
 };

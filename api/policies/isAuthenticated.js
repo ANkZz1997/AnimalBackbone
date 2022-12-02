@@ -7,8 +7,7 @@ module.exports = async (req, res, next) => {
   let payload = await sails.helpers.verifyToken(token);
   req.payload = payload;
   req.body={
-    ...req.body,
-    payload:payload
+    ...req.body
   };
   next();
 }
