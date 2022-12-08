@@ -24,7 +24,9 @@ module.exports.policies = {
   MediaController: {
     download: true
   },
-  PublicController: true,
+  PublicController: {
+    '*': true
+  },
   AdminController: {
     '*': ['isAuthenticated', 'isAdmin']
   }

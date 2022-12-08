@@ -701,37 +701,34 @@ module.exports = {
     const userData = await User.findOne({ id: req.payload?.id });
     const userWallet = await Wallet.findOne({ id: userData.wallet });
     let result=[];
-
-      const keysNFT = await contract.methods.getNFTMintedByUser(userWallet.address).call();
+    const keysNFT = await contract.methods.getNFTMintedByUser(userWallet.address).call();
      await keysNFT.forEach(async(item) => {
-      
+
         await contract.methods.tokenURI(item).call().then(key => {
           if (keysNFT.length >=result.length) {
             console.log(key);
             result.push({uri:key,tokenId:item});
-        
-          } 
+
+          }
           if(keysNFT.length ==result.length) {
             res.status(200).json(result);
             console.log("result =====> ",result);
           }
         });
       });
-      
-      
+
+
 
     // await Nft.find({ user: req.payload.id }).populateAll().then(result => {
     //   res.status(200).json(result);
     // });
   },
-
   profile: async (req, res) => {
     await User.findOne({ id: req.payload.id })
       .then((result) => {
         res.status(200).json(result);
       });
   },
-
   updateProfile: async (req, res) => {
     const { firstName, lastName, contact } = req.body;
     req.file('avatar').upload({

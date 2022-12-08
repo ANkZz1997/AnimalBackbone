@@ -38,6 +38,11 @@ module.exports = {
       type: 'string',
       isIn: ['CENTRALISED', 'DECENTRALISED'],
       defaultsTo: 'CENTRALISED'
+    },
+    status: {
+      type: 'string',
+      isIn: ['NEW', 'ACTIVE', 'BLOCKED', 'INACTIVE', 'DELETED'],
+      defaultsTo: 'NEW'
     }
   },
   customToJSON: function() {

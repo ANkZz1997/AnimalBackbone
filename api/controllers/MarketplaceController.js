@@ -10,7 +10,7 @@ module.exports = {
     const {page, limit} = req.body;
     Marketplace.find().limit(limit).skip(limit*(page - 1)).populateAll().then(result => {
       res.ok(result);
-    })
+    });
   },
   detail: (req, res) => {
     const {id} = req.query;
@@ -46,6 +46,7 @@ module.exports = {
       });
   },
   removeFromMarketplace: (req, res) => {
+    const {id} = req.body;
     Marketplace.update({id: id, user: req.payload.id})
       .set({isDeleted: true, status: 'DELETED'})
       .fetch()

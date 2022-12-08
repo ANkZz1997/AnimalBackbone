@@ -13,6 +13,7 @@
     "grunt": "1.0.4",
     "ipfs-http-client": "^56.0.2",
     "jsonwebtoken": "^8.5.1",
+    "moment": "^2.29.4",
     "random-words": "^1.2.0",
     "sails": "^1.5.3",
     "sails-hook-grunt": "^5.0.0",

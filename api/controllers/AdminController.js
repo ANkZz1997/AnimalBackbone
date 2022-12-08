@@ -4,7 +4,7 @@
  * @description :: Server-side actions for handling incoming requests.
  * @help        :: See https://sailsjs.com/docs/concepts/actions
  */
-
+const moment = require('moment');
 module.exports = {
   users: async (req, res) => {
     const {page = 1, limit = 20, sort = 'createdAt', order = 'DESC'} = req.query;
@@ -91,5 +91,17 @@ module.exports = {
         res.badRequest(e);
       });
   },
+  dashboard: async (req, res) => {
+    const startOfDay = moment().startOf('day').valueOf();
+    const totalUsers = await User.count();
+    const activeUserCount = await User.count({status: 'ACTIVE'});
+    const blockedUserCount = await User.count({status: 'BLOCKED'});
+    const newUserCount = await User.count({status: 'NEW'});
+    const todayUser = await User.count({createdAt: {'>=': startOfDay}});
+    const inactiveUser = await User.count({status: 'INACTIVE'});
+    res.ok({
+      totalUsers, activeUserCount, newUserCount, todayUser, inactiveUser
+    });
+  }
 };
 
