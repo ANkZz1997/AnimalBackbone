@@ -54,6 +54,10 @@ module.exports = {
       type: 'string',
       isIn: ['PORTFOLIO', 'MARKETPLACE', 'AUCTION'],
       defaultsTo: 'PORTFOLIO'
+    },
+    transferCount: {
+      type: 'number',
+      defaultsTo: 0,
     }
   },
 

@@ -102,6 +102,16 @@ module.exports = {
     res.ok({
       totalUsers, activeUserCount, newUserCount, todayUser, inactiveUser
     });
+  },
+  blockUser: (req, res) => {
+    const { id } = req.query;
+    User.update({id}).set({status: 'BLOCKED'})
+      .fetch()
+      .then(result => {
+        res.ok(result);
+      }).catch(e => {
+        res.badRequest(e);
+      });
   }
 };
 

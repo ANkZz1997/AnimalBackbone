@@ -37,7 +37,7 @@ module.exports = {
   },
   loginNonce: async (req, res) => {
     const {address} = req.body;
-    const wallet = await Wallet.findOne({address});
+    const wallet = await Wallet.findOne({address: address.toLowerCase()});
     if(wallet) {
       res.ok(wallet);
     } else {
@@ -80,7 +80,9 @@ ${wallet.nonce}`
         User.create({
           type: 'DECENTRALISED',
           firstName: 'Unnamed',
-          wallet: wallet.id
+          wallet: wallet.id,
+          user: address.toLowerCase(),
+          email: `${address.toLowerCase()}.sdnatech.com`
         }).fetch().then(async result => {
           result.wallet = wallet;
           result.token = await sails.helpers.signToken({id:result.id});
