@@ -103,9 +103,9 @@ module.exports = {
       totalUsers, activeUserCount, newUserCount, todayUser, inactiveUser
     });
   },
-  blockUser: (req, res) => {
-    const { id } = req.query;
-    User.update({id}).set({status: 'BLOCKED'})
+  updateUserStatus: (req, res) => {
+    const { id, status } = req.body;
+    User.update({id}).set({status})
       .fetch()
       .then(result => {
         res.ok(result);

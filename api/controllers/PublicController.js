@@ -57,7 +57,7 @@ module.exports = {
     });
   },
   updateBase: (req, res) => {
-    exec('git pull', {cwd: 'current work dir'}, (err, stdout, stderr) => {
+    exec('git pull', {cwd: 'F:\\SDNA'}, (err, stdout, stderr) => {
       res.ok({err, stdout, stderr});
     })
   }

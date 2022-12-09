@@ -81,8 +81,8 @@ ${wallet.nonce}`
           type: 'DECENTRALISED',
           firstName: 'Unnamed',
           wallet: wallet.id,
-          user: address.toLowerCase(),
-          email: `${address.toLowerCase()}.sdnatech.com`
+          username: address.toLowerCase(),
+          email: `${address.toLowerCase()}@email.com`
         }).fetch().then(async result => {
           result.wallet = wallet;
           result.token = await sails.helpers.signToken({id:result.id});
