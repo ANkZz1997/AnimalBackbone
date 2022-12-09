@@ -1371,6 +1371,23 @@ const pinJsonToIpfs = (name, data) => {
 }
 
 module.exports = {
+  index: async (req, res) => {
+    const {page = 1, limit = 20, sort = 'createdAt', order = 'DESC'} = req.query;
+    const totalCount = await Nft.count();
+    const criteria = req.body;
+    Nft.find(criteria)
+      .limit(limit)
+      .skip((page-1)*limit)
+      .sort(`${sort} ${order}`)
+      .then(result => {
+        res.ok({
+          records: result,
+          totalCount
+        });
+      }).catch(e => {
+        res.badRequest(e);
+      });
+  },
   list: (req, res) => {
     const {page, limit} = req.body;
     Nft.find({user: req.payload.id}).limit(limit).skip(limit*(page - 1)).populateAll().then(result => {
@@ -1416,6 +1433,11 @@ module.exports = {
       .then(result => {
         res.ok(result);
       });
+  },
+  addToFavorite: (req, res) => {
+    const user = req.payload.id;
+    const nftId = req.query.id;
+
   },
   // old
   createSale: async (req, res) => {

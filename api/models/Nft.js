@@ -50,6 +50,9 @@ module.exports = {
       model: 'User',
       // required: true
     },
+    marketPlaceId: {
+      type: 'string',
+    },
     status: {
       type: 'string',
       isIn: ['PORTFOLIO', 'MARKETPLACE', 'AUCTION'],

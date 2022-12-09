@@ -8,7 +8,9 @@
 module.exports = {
   list: (req, res) => {
     const {page, limit} = req.body;
-    Marketplace.find().limit(limit).skip(limit*(page - 1)).populateAll().then(result => {
+    Marketplace.find(
+      {isDeleted: {'!=': true}}
+    ).limit(limit).skip(limit*(page - 1)).populateAll().then(result => {
       res.ok(result);
     });
   },
@@ -30,7 +32,7 @@ module.exports = {
       nft: nft.id,
       price
     }).fetch().then(result => {
-      Nft.update({id: nft.id}).set({status: 'MARKETPLACE'}).then(_result => {
+      Nft.update({id: nft.id}).set({status: 'MARKETPLACE', marketPlaceId: result.id}).then(_result => {
         res.ok(result)
       });
     });
@@ -52,7 +54,7 @@ module.exports = {
       .fetch()
       .then(result => {
         res.ok(result)
-      })
+      });
   },
   buy: (req, res) => {
     const {id} = req.body;

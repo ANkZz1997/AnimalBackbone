@@ -43,6 +43,10 @@ module.exports = {
       type: 'string',
       isIn: ['NEW', 'ACTIVE', 'BLOCKED', 'INACTIVE', 'DELETED'],
       defaultsTo: 'NEW'
+    },
+    favNft: {
+      collection: 'Nft',
+      via: 'id'
     }
   },
   customToJSON: function() {

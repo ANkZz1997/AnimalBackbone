@@ -24,7 +24,7 @@ module.exports = {
         }).fetch()
           .then(async _result => {
             await Nft.update({id: nftId}).set({status: 'AUCTION'});
-            res.ok(_result)
+            res.ok(_result);
           });
       });
   },
@@ -34,7 +34,7 @@ module.exports = {
       .populate('user')
       .populate('nft')
       .then(result => {
-        res.ok(result)
+        res.ok(result);
       });
   }
 };
