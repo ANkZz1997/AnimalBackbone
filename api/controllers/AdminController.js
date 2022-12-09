@@ -100,7 +100,7 @@ module.exports = {
     const todayUser = await User.count({createdAt: {'>=': startOfDay}});
     const inactiveUser = await User.count({status: 'INACTIVE'});
     res.ok({
-      totalUsers, activeUserCount, newUserCount, todayUser, inactiveUser
+      totalUsers, activeUserCount, newUserCount, todayUser, inactiveUser, blockedUserCount
     });
   },
   updateUserStatus: (req, res) => {
@@ -112,6 +112,46 @@ module.exports = {
       }).catch(e => {
         res.badRequest(e);
       });
-  }
+  },
+  getUserDetail: (req, res) => {
+    const {id} = req.query;
+    User.findOne({id})
+      .populateAll()
+      .then(result => {
+        res.ok(result);
+      }).catch(e => {
+        res.badRequest(e);
+      });
+  },
+  getMarketplaceDetail: (req, res) => {
+    const {id} = req.query;
+    Marketplace.findOne({id})
+      .populateAll()
+      .then(result => {
+        res.ok(result);
+      }).catch(e => {
+        res.badRequest(e);
+      });
+  },
+  getAuctionDetail: (req, res) => {
+    const {id} = req.query;
+    Auction.findOne({id})
+      .populateAll()
+      .then(result => {
+        res.ok(result);
+      }).catch(e => {
+        res.badRequest(e);
+      });
+  },
+  getBidDetail: (req, res) => {
+    const {id} = req.query;
+    Bid.findOne({id})
+      .populateAll()
+      .then(result => {
+        res.ok(result);
+      }).catch(e => {
+        res.badRequest(e);
+      })
+  },
 };
 
