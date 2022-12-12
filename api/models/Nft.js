@@ -61,6 +61,10 @@ module.exports = {
     transferCount: {
       type: 'number',
       defaultsTo: 0,
+    },
+    wishlistedBy: {
+      collection: 'User',
+      via: 'wishlist'
     }
   },
 

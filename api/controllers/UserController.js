@@ -725,6 +725,7 @@ module.exports = {
   },
   profile: async (req, res) => {
     await User.findOne({ id: req.payload.id })
+      .populateAll()
       .then((result) => {
         res.status(200).json(result);
       });

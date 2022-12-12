@@ -44,9 +44,9 @@ module.exports = {
       isIn: ['NEW', 'ACTIVE', 'BLOCKED', 'INACTIVE', 'DELETED'],
       defaultsTo: 'NEW'
     },
-    favNft: {
+    wishlist: {
       collection: 'Nft',
-      via: 'id'
+      via: 'wishlistedBy'
     }
   },
   customToJSON: function() {
