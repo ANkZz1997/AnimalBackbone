@@ -153,5 +153,15 @@ module.exports = {
         res.badRequest(e);
       })
   },
+  getNftDetail: (req, res) => {
+    const {id} = req.query
+    Nft.findOne({id})
+      .populateAll()
+      .then(result => {
+        res.ok(result)
+      }).catch(e => {
+        res.badRequest(e)
+    })
+  }
 };
 
