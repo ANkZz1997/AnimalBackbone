@@ -14,6 +14,8 @@ module.exports = {
       .limit(limit)
       .skip((page-1)*limit)
       .sort(`${sort} ${order}`)
+      .populate('nft')
+      .populate('user')
       .then(result => {
         res.ok({
           records: result,

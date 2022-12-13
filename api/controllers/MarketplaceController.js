@@ -9,11 +9,14 @@ module.exports = {
   index: async (req, res) => {
     const {page = 1, limit = 20, sort = 'createdAt', order = 'DESC'} = req.query;
     const criteria = req.body;
+    criteria.isDeleted = false;
     const totalCount = await Marketplace.count(criteria);
     Marketplace.find(criteria)
       .limit(limit)
       .skip((page-1)*limit)
       .sort(`${sort} ${order}`)
+      .populate('nft')
+      .populate('user')
       .then(result => {
         res.ok({
           records: result,
