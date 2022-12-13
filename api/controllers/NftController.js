@@ -1434,12 +1434,9 @@ module.exports = {
         res.ok(result);
       });
   },
-  addToFavorite: (req, res) => {
+  addToFavourite: (req, res) => {
     const userId = req.payload.id;
     const nftId = req.query.id;
-    console.log({
-      userId, nftId
-    })
     User.addToCollection(userId, 'wishlist', nftId)
       .then(result => {
         res.ok(result)
@@ -1472,5 +1469,13 @@ module.exports = {
       res.status(500).json(err);
     });
   },
+  getWishlist: (req, res) => {
+    User.findOne({id: req.payload.id}).populate('wishlist')
+      .then(result => {
+        res.ok(result.wishlist)
+      }).catch(e => {
+        res.badRequest(e);
+    })
+  }
 };
 
