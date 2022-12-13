@@ -765,5 +765,17 @@ module.exports = {
       res.status(200).json(updatedUser);
     });
   },
+  getUserProfile: (req, res) => {
+    const {id} = req.query;
+    User.findOne({id})
+      .populate('wallet')
+      .then(result => {
+        result.address = result.wallet.address
+        delete result.wallet
+        res.ok(result)
+      }).catch(e => {
+        res.badRequest(e)
+      })
+  }
 };
 
