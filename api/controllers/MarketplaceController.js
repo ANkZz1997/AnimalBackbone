@@ -6,6 +6,23 @@
  */
 
 module.exports = {
+  index: async (req, res) => {
+    const {page = 1, limit = 20, sort = 'createdAt', order = 'DESC'} = req.query;
+    const criteria = req.body;
+    const totalCount = await Marketplace.count(criteria);
+    Marketplace.find(criteria)
+      .limit(limit)
+      .skip((page-1)*limit)
+      .sort(`${sort} ${order}`)
+      .then(result => {
+        res.ok({
+          records: result,
+          totalCount
+        });
+      }).catch(e => {
+      res.badRequest(e);
+    });
+  },
   list: (req, res) => {
     const {page, limit} = req.body;
     Marketplace.find(

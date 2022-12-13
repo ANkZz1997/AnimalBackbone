@@ -1444,6 +1444,20 @@ module.exports = {
         res.badRequest(e);
       });
   },
+  removeFromFavourite: async (req, res) => {
+    const userId = req.payload.id;
+    const nftId = req.query.id;
+    await User.User.removeFromCollection(userId, 'wishlist').members([nftId]);
+    res.ok()
+  },
+  getWishlist: (req, res) => {
+    User.findOne({id: req.payload.id}).populate('wishlist')
+      .then(result => {
+        res.ok(result.wishlist)
+      }).catch(e => {
+      res.badRequest(e);
+    })
+  },
   // old
   createSale: async (req, res) => {
     const userData = await User.findOne({ id: req.payload.id });
@@ -1469,13 +1483,5 @@ module.exports = {
       res.status(500).json(err);
     });
   },
-  getWishlist: (req, res) => {
-    User.findOne({id: req.payload.id}).populate('wishlist')
-      .then(result => {
-        res.ok(result.wishlist)
-      }).catch(e => {
-        res.badRequest(e);
-    })
-  }
 };
 
