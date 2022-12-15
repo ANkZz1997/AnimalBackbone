@@ -4,52 +4,65 @@
  * @description :: Server-side actions for handling incoming requests.
  * @help        :: See https://sailsjs.com/docs/concepts/actions
  */
-const ethUtil = require('ethereumjs-util')
+const ethUtil = require("ethereumjs-util");
 const Web3 = require("web3");
 const web3 = new Web3(Web3.givenProvider || "ws://localhost:7545");
+const passport = require("passport");
+const { OAuth2Client } = require("google-auth-library");
+const GOOGLE_CLIENT_ID =
+  "144163062893-c48rp2sgka2ms7bl9o1r3nsln6mnctvt.apps.googleusercontent.com";
+const client = new OAuth2Client(GOOGLE_CLIENT_ID);
+
 module.exports = {
   test: (req, res) => {
-    return res.ok('Success')
+    return res.ok("Success");
   },
   createUser: async (req, res) => {
     const account = web3.eth.accounts.create();
     const wallet = await Wallet.create(account).fetch();
     req.body.wallet = wallet.id;
-    User.create(req.body).fetch().then(async result => {
-      result.wallet = wallet;
-      result.token = await sails.helpers.signToken({id:result.id});
-      return res.ok(result);
-    }).catch(e => {
-      return res.badRequest(e);
-    });
+    User.create(req.body)
+      .fetch()
+      .then(async (result) => {
+        result.wallet = wallet;
+        result.token = await sails.helpers.signToken({ id: result.id });
+        return res.ok(result);
+      })
+      .catch((e) => {
+        return res.badRequest(e);
+      });
   },
   login: (req, res) => {
-    User.findOne({username: req.body.username, password: req.body.password}).populateAll().then( async result => {
-      if(result) {
-        result.token = await sails.helpers.signToken({id:result.id});
-        res.ok(result)
-      } else {
-        res.badRequest('User not found')
-      }
-    }).catch(e => {
-      return res.badRequest('Something went wrong');
-    })
+    User.findOne({ username: req.body.username, password: req.body.password })
+      .populateAll()
+      .then(async (result) => {
+        if (result) {
+          result.token = await sails.helpers.signToken({ id: result.id });
+          res.ok(result);
+        } else {
+          res.badRequest("User not found");
+        }
+      })
+      .catch((e) => {
+        return res.badRequest("Something went wrong");
+      });
   },
   loginNonce: async (req, res) => {
-    const {address} = req.body;
-    const wallet = await Wallet.findOne({address: address.toLowerCase()});
-    if(wallet) {
+    const { address } = req.body;
+    const wallet = await Wallet.findOne({ address: address.toLowerCase() });
+    if (wallet) {
       res.ok(wallet);
     } else {
-      Wallet.create({address: address.toLowerCase()}).fetch().then(result => {
-        res.ok(result);
-      });
+      Wallet.create({ address: address.toLowerCase() })
+        .fetch()
+        .then((result) => {
+          res.ok(result);
+        });
     }
-
   },
   verifySignature: async (req, res) => {
-    let {address, signature} = req.body;
-    const wallet = await Wallet.findOne({address: address.toLowerCase()});
+    let { address, signature } = req.body;
+    const wallet = await Wallet.findOne({ address: address.toLowerCase() });
     const msg = `
 Welcome to SDNA Crypt
 Click to sign in and accept the SDNA Crypt Terms of Service: https://sdnatech.com
@@ -62,71 +75,133 @@ Wallet address:
 ${address}
 
 Nonce:
-${wallet.nonce}`
-    const msgBuffer = Buffer.from(msg, 'utf8');
+${wallet.nonce}`;
+    const msgBuffer = Buffer.from(msg, "utf8");
     const msgHash = ethUtil.hashPersonalMessage(msgBuffer);
     const signatureBuffer = ethUtil.toBuffer(signature);
     const signatureParams = ethUtil.fromRpcSig(signatureBuffer);
-    const publicKey = ethUtil.ecrecover(msgHash,signatureParams.v, signatureParams.r, signatureParams.s);
-    const generatedPublicKey = ethUtil.bufferToHex(ethUtil.publicToAddress(publicKey));
-    if(address.toLowerCase() === generatedPublicKey.toLowerCase()){
-      if(wallet.user) {
-        User.findOne({id: wallet.user}).populateAll().then(async result => {
-          result.token = await sails.helpers.signToken({id:result.id});
-          Wallet.update({address: address.toLowerCase()}).set({user: result.id, nonce: Math.floor(Math.random()*1000000)}).fetch().then(result => {})
-          res.ok(result);
-        })
+    const publicKey = ethUtil.ecrecover(
+      msgHash,
+      signatureParams.v,
+      signatureParams.r,
+      signatureParams.s
+    );
+    const generatedPublicKey = ethUtil.bufferToHex(
+      ethUtil.publicToAddress(publicKey)
+    );
+    if (address.toLowerCase() === generatedPublicKey.toLowerCase()) {
+      if (wallet.user) {
+        User.findOne({ id: wallet.user })
+          .populateAll()
+          .then(async (result) => {
+            result.token = await sails.helpers.signToken({ id: result.id });
+            Wallet.update({ address: address.toLowerCase() })
+              .set({
+                user: result.id,
+                nonce: Math.floor(Math.random() * 1000000),
+              })
+              .fetch()
+              .then((result) => {});
+            res.ok(result);
+          });
       } else {
         User.create({
-          type: 'DECENTRALISED',
-          firstName: 'Unnamed',
+          type: "DECENTRALISED",
+          firstName: "Unnamed",
           wallet: wallet.id,
           username: address.toLowerCase(),
-          email: `${address.toLowerCase()}@email.com`
-        }).fetch().then(async result => {
-          result.wallet = wallet;
-          result.token = await sails.helpers.signToken({id:result.id});
-          Wallet.update({address: address.toLowerCase()}).set({
-            user: result.id,
-            nonce: Math.floor(Math.random()*1000000)}).then(result => {})
-          return res.ok(result);
-        }).catch(e => {
-          return res.badRequest(e);
-        });
+          email: `${address.toLowerCase()}@email.com`,
+        })
+          .fetch()
+          .then(async (result) => {
+            result.wallet = wallet;
+            result.token = await sails.helpers.signToken({ id: result.id });
+            Wallet.update({ address: address.toLowerCase() })
+              .set({
+                user: result.id,
+                nonce: Math.floor(Math.random() * 1000000),
+              })
+              .then((result) => {});
+            return res.ok(result);
+          })
+          .catch((e) => {
+            return res.badRequest(e);
+          });
       }
     } else {
-      res.badRequest('Signature verification Failed');
+      res.badRequest("Signature verification Failed");
     }
   },
 
   //admin api's
   createAdmin: (req, res) => {
-    const secret = 'sdnaSecretAdmin';
-    const {username, password, code} = req.body;
-    if(code === secret) {
-      Admin.create({username, password})
+    const secret = "sdnaSecretAdmin";
+    const { username, password, code } = req.body;
+    if (code === secret) {
+      Admin.create({ username, password })
         .fetch()
-        .then(result => {
+        .then((result) => {
           res.ok(result);
-        }).catch(e => {
+        })
+        .catch((e) => {
           res.badRequest(e);
         });
     } else {
-      res.badRequest('Unauthorized');
+      res.badRequest("Unauthorized");
     }
   },
   adminLogin: (req, res) => {
-    const {username, password} = req.body;
-    Admin.findOne({username})
+    const { username, password } = req.body;
+    Admin.findOne({ username })
       .decrypt()
-      .then(async result => {
-        if(!result) return res.badRequest('User not exist');
-        if(result.password !== password) return res.badRequest('Invalid Password');
-        result.token = await sails.helpers.signToken({id:result.id, isAdmin: true});
+      .then(async (result) => {
+        if (!result) return res.badRequest("User not exist");
+        if (result.password !== password)
+          return res.badRequest("Invalid Password");
+        result.token = await sails.helpers.signToken({
+          id: result.id,
+          isAdmin: true,
+        });
         res.ok(result);
-      }).catch(e => {
+      })
+      .catch((e) => {
         res.badRequest(e);
-    });
-  }
-};
+      });
+  },
+  socialLogin: async (req, res) => {
+    const { type } = req.body;
+    switch (type) {
+      case "GMAIL":
+        passport.authenticate("google-id-token", async (error, user, info) => {
+          if (user) {
+            res.ok(user);
+          } else {
+            res.badRequest("Something went wrong");
+          }
+        })(req, res);
+        break;
+      case "FACEBOOK":
+        passport.authenticate("facebook-token", (error, user, info) => {
+          if (user) {
+            res.ok(user);
+          } else {
+            res.badRequest("Something went wrong");
+          }
+        })(req, res);
+        break;
 
+      case "GITHUB":
+        passport.authenticate("github", (error, user, info) => {
+          if (user) {
+            res.ok(user);
+          } else {
+            res.badRequest("Something went wrong");
+          }
+        })(req, res);
+        break;
+
+      default:
+        res.badRequest(e);
+    }
+  },
+};

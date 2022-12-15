@@ -31,6 +31,14 @@ module.exports = {
     contact: {
       type: 'string',
     },
+    socialId:{
+      type: 'string'
+    },
+    socialAccountType:{
+      type: 'string',
+      isIn: ['FACEBOOK', 'GMAIL', 'INSTAGRAM', 'LINKEDIN', 'GITHUB', 'TWITTER'],
+      defaultsTo: ''
+    },
     wallet: {
       model: 'Wallet'
     },
