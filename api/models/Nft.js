@@ -53,6 +53,9 @@ module.exports = {
     marketPlaceId: {
       type: 'string',
     },
+    auctionId: {
+      type: 'string',
+    },
     status: {
       type: 'string',
       isIn: ['PORTFOLIO', 'MARKETPLACE', 'AUCTION'],

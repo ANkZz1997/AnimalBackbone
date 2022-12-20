@@ -42,7 +42,7 @@ module.exports = {
           endTime: endTime
         }).fetch()
           .then(async _result => {
-            await Nft.update({id: nftId}).set({status: 'AUCTION'});
+            await Nft.update({id: nftId}).set({status: 'AUCTION', auctionId: _result.id});
             res.ok(_result);
           });
       });
