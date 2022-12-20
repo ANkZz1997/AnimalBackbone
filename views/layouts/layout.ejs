@@ -1,112 +1,482 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>New Sails App</title>
+<head>
+    <title>Ethereum Contract Explorer</title>
+    <style>
 
-    <!-- Viewport mobile tag for sensible mobile support -->
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+      body {
+        margin: 0;
+        padding: 0;
+        color: #3b3c3d;
+        background-color: white;
+        font-family: BlinkMacSystemFont, Segoe UI, Roboto, sans-serif, monospace;
+      }
 
-    <%/* If you want to discourage search engines from indexing this site, uncomment the following line: */%>
-    <%/* <meta name="robots" content="noindex"> */%>
+      .row {
+        display: table;
+        width: 100%;
+      }
+
+      .row > div {
+        display: inline-block;
+      }
+
+      #main-page.fade-out {
+        opacity: 0;
+      }
+
+      .card {
+        background-color: #f9f8f6;
+        border: 1px solid #ccc;
+        padding: 20px;
+        position: relative;
+        margin: 15px 0;
+        box-sizing: border-box;
+      }
+
+      .output.card {
+        margin-top: 60px;
+      }
+
+      .output.card:before {
+        content: "Output";
+        position: absolute;
+        top: -40px;
+        left: -1px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        background-color: #f9f8f6;
+        box-sizing: border-box;
+        border-top-left-radius: 5px;
+        border-top-right-radius: 5px;
+      }
+
+      #contract-selection {
+        background-color: #f9f8f6;
+        padding: 20px;
+      }
+
+      .font-large {
+        font-size: 26px;
+        line-height: 34px
+      }
+
+      .pad-top20 {
+        padding-top: 20px;
+      }
+
+      .github-logo {
+        vertical-align: text-bottom;
+        display: inline-block;
+      }
+
+      .header {
+        font-size: 1em;
+        padding: 0 20px;
+      }
+
+      .header > div {
+        display: inline-block;
+        padding: 15px 0;
+        box-sizing: border-box;
+      }
+
+      .network-container {
+        float: right;
+      }
+
+      .input-wrapper input {
+        width: 100%;
+        outline: none;
+        box-sizing: border-box;
+        font-size: 14px;
+        position: relative;
+      }
+
+      .button {
+        color: #19B5FE;
+        margin: 0 5px;
+      }
+
+      .button:hover {
+        cursor: pointer;
+        color: #2574A9;
+      }
+
+      .button.btn-std:hover {
+        background-color: #2574A9;
+      }
+
+      .button.btn-std {
+        background-color: #19B5FE;
+        width: 100px;
+        color: white;
+        border-radius: 5px;
+        text-align: center;
+        padding: 10px;
+      }
+
+      #metamask {
+        background-color: orangered;
+      }
+
+      #contract {
+        font-size: 18px;
+        padding: 10px;
+        border-radius: 3px;
+        font-weight: 300;
+        margin: 0;
+        box-sizing: border-box;
+        transition: all 0.2s;
+        word-wrap: break-word;
+      }
+
+      .dropdown  {
+        position: relative;
+        margin: 10px 0;
+      }
+
+      .dropdown-btn {
+        padding: 10px;
+        box-sizing: border-box;
+        font-size: 18px;
+        float: right;
+        border-left: 1px solid #ccc;
+      }
+
+      .white-box {
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        background-color: white;
+        border-sizing: border-box;
+      }
+
+      .hide {
+        display:none;
+      }
+
+      .dropdown-content {
+        position: absolute;
+        background-color: #f1f1f1;
+        overflow: auto;
+        z-index: 1;
+        width: 100%;
+        box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+        overflow-wrap: break-word;
+      }
+
+      .dropdown-content div {
+        padding: 10px;
+      }
+
+      .dropdown-content .active {
+        background-color: #ddd;
+      }
+
+      .dropdown-content div:hover {
+        background-color: #ddd;
+      }
+
+      #contract-details > div {
+        float: left;
+        padding: 20px 0;
+      }
+
+      #menu {
+        width: 25%;
+        box-sizing: border-box;
+        background: #fff;
+        min-height: 90vh;
+      }
+
+      #menu .caption {
+        font-weight: bold;
+      }
+
+      #menu > div {
+        margin-right: 15px;
+      }
+
+      #filterer {
+        width: 100%;
+        font-size: 1em;
+        border-radius: 50px;
+        padding: 6px 12px;
+        border: solid 1px #ccc;
+        margin-bottom: 10px;
+        box-sizing: border-box;
+      }
+
+      #function-content {
+        width: 75%;
+        box-sizing: border-box;
+        background: #fff;
+        min-height: 90vh;
+        margin: auto;
+      }
+
+      #function-content > div {
+        margin-left: 15px;
+      }
+
+      #function-list {
+        margin-top: 5px;
+        height: 90vh;
+        overflow-y: auto;
+      }
+
+      #function-list > div {
+        padding: 0 5px;
+        margin: 5px 0;
+        overflow-wrap: break-word;
+        line-height: 21px;
+        font-size: 14px;
+      }
+
+      #function-list > div:hover {
+        color: #19B5FE;
+        cursor: pointer;
+      }
+
+      #function-list > .selected {
+        border-left: solid #19B5FE 3px;
+        font-weight: bold;
+      }
+
+      #function-name {
+        font-size: 23px;
+        word-wrap: break-word;
+      }
+
+      #function-name.setter:after {
+        content: '\21AA setter - requires gas to run';
+        display: block;
+        font-size: 12px;
+        color: #888;
+      }
+
+      .input-row {
+        padding: 0 0 10px;
+        box-sizing: border-box;
+      }
+
+      .input-row input {
+        padding: 10px 5px;
+        font-size: 0.8em;
+        width: 100%;
+        box-sizing: border-box;
+      }
+
+      .wallet-modal {
+        display: none;
+        position: fixed; /* Stay in place */
+        z-index: 1; /* Sit on top */
+        left: 0;
+        top: 0;
+        width: 100%; /* Full width */
+        height: 100%; /* Full height */
+        overflow: auto; /* Enable scroll if needed */
+        background-color: rgb(0,0,0); /* Fallback color */
+        background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+      }
+
+      /* Modal Content/Box */
+      .wallet-modal-content {
+        background-color: #fefefe;
+        margin: 15% auto; /* 15% from the top and centered */
+        padding: 20px;
+        border: 1px solid #888;
+        width: 70%; /* Could be more or less, depending on screen size */
+      }
+
+      .wallet-modal-content div {
+        margin-bottom: 10px;
+      }
+
+      /* The Close Button */
+      .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+      }
+
+      .close:hover,
+      .close:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+      }
 
 
-    <!--
-        Stylesheets and Preprocessors
-        ==============================
+      #modal {
+        position: absolute;
+        top: 0;
+        right: 0;
+        left: 0;
+        z-index: 10;
+        background: #000;
+        transform: scale(0);
+        transition: all 0.6s;
+      }
 
-        You can always bring in CSS files manually with `<link>` tags, or asynchronously
-        using a solution like AMD (RequireJS).  Or, if you like, you can take advantage
-        of Sails' conventional asset pipeline (boilerplate Gruntfile).
+      #modal.fade-in {
+        transform: scale(1);
+      }
 
-        By default, stylesheets from your `assets/styles` folder are included
-        here automatically (between STYLES and STYLES END). Both CSS (.css) and LESS (.less)
-        are supported. In production, your styles will be minified and concatenated into
-        a single file.
+      .modal-content {
+        width: 100%;
+        height: 100%;
+        padding: 0 20px;
+        box-sizing: border-box;
+        background: #fff;
+      }
 
-        To customize any part of the built-in behavior, just edit `tasks/pipeline.js`.
-        For example, here are a few things you could do:
+      #modal .caption {
+        padding: 5px 0;
+        font-size: 1.2em;
+        opacity: 0;
+      }
 
-            + Change the order of your CSS files
-            + Import stylesheets from other directories
-            + Use a different or additional preprocessor, like SASS, SCSS or Stylus
-    -->
+      #modal.del .caption {
+        padding: 20px 0;
+        opacity: 1;
+      }
+
+      textarea {
+        width: 100%;
+        height: 142px;
+        margin-bottom: 8px;
+        box-sizing: border-box;
+      }
+
+      .spinner.show {
+        border: 10px solid #f3f3f3;
+        border-top: 10px solid #3498db;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        margin: 50px;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0%   { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      .error {
+        opacity: 0;
+        color: red;
+        font-size: 13px;
+      }
+
+      .container {
+        padding: 0 20px;
+      }
+
+      @media only screen and (max-width: 600px) {
+        #contract {
+          font-size: 14px;
+          overflow-wrap: break-word;
+        }
+
+        .dropdown-btn {
+          font-size: 14px;
+        }
+      }
+
+      #no-contract {
+        color: orange;
+        text-align: center;
+      }
+
+      .network-container button {
+        width: 200px;
+      }
+
+      .network-container > div {
+        margin-bottom: 5px;
+      }
+
+    </style>
 
     <!--STYLES-->
     <link rel="stylesheet" href="/styles/importer.css">
     <!--STYLES END-->
-  </head>
+</head>
 
-  <body>
-    <%- body %>
-
-
-
-    <!--
-        Client-side Templates
-        ========================
-
-        HTML templates are important prerequisites of modern, rich client applications.
-        To work their magic, frameworks like React, Vue.js, Angular, Ember, and Backbone
-        require that you load these templates client-side.
-
-        By default, your Gruntfile is configured to automatically load and precompile
-        client-side JST templates in your `assets/templates` folder, then
-        include them here automatically (between TEMPLATES and TEMPLATES END).
-
-        To customize this behavior to fit your needs, just edit `tasks/pipeline.js`.
-        For example, here are a few things you could do:
-
-            + Import templates from other directories
-            + Use a different view engine (handlebars, dust, pug/jade, etc.)
-            + Internationalize your client-side templates using a server-side
-              stringfile before they're served.
-    -->
-
-    <!--TEMPLATES-->
-    <!--TEMPLATES END-->
+<body>
+<%- body %>
 
 
-    <!--
-        Server-side View Locals
-        ========================
 
-        Sometimes, it's convenient to get access to your server-side view locals from
-        client-side JavaScript.  This can improve page load times, remove the need for
-        extra AJAX requests, and make your client-side code easier to understand and
-        to maintain.  Sails provides a simple mechanism for accessing dynamic view
-        locals: the "exposeLocalsToBrowser()" view partial.
+<!--
+    Client-side Templates
+    ========================
 
-        For more information on using this built-in feature, see:
-        https://sailsjs.com/docs/concepts/views/locals#?escaping-untrusted-data-using-exposelocalstobrowser
+    HTML templates are important prerequisites of modern, rich client applications.
+    To work their magic, frameworks like React, Vue.js, Angular, Ember, and Backbone
+    require that you load these templates client-side.
 
-    -->
+    By default, your Gruntfile is configured to automatically load and precompile
+    client-side JST templates in your `assets/templates` folder, then
+    include them here automatically (between TEMPLATES and TEMPLATES END).
+
+    To customize this behavior to fit your needs, just edit `tasks/pipeline.js`.
+    For example, here are a few things you could do:
+
+        + Import templates from other directories
+        + Use a different view engine (handlebars, dust, pug/jade, etc.)
+        + Internationalize your client-side templates using a server-side
+          stringfile before they're served.
+-->
+
+<!--TEMPLATES-->
+<!--TEMPLATES END-->
 
 
-    <!--
+<!--
+    Server-side View Locals
+    ========================
 
-      Client-side Javascript
-      ========================
+    Sometimes, it's convenient to get access to your server-side view locals from
+    client-side JavaScript.  This can improve page load times, remove the need for
+    extra AJAX requests, and make your client-side code easier to understand and
+    to maintain.  Sails provides a simple mechanism for accessing dynamic view
+    locals: the "exposeLocalsToBrowser()" view partial.
 
-      You can always bring in JS files manually with `script` tags, or asynchronously
-      on the client using a solution like AMD (RequireJS).  Or, if you like, you can
-      take advantage of Sails' conventional asset pipeline (boilerplate Gruntfile).
+    For more information on using this built-in feature, see:
+    https://sailsjs.com/docs/concepts/views/locals#?escaping-untrusted-data-using-exposelocalstobrowser
 
-      By default, files in your `assets/js` folder are included here
-      automatically (between SCRIPTS and SCRIPTS END).  Both JavaScript (.js) and
-      CoffeeScript (.coffee) are supported. In production, your scripts will be minified
-      and concatenated into a single file.
+-->
 
-      To customize any part of the built-in behavior, just edit `tasks/pipeline.js`.
-      For example, here are a few things you could do:
 
-          + Change the order of your scripts
-          + Import scripts from other directories
-          + Use a different preprocessor, like TypeScript
+<!--
 
-    -->
+  Client-side Javascript
+  ========================
 
-    <!--SCRIPTS-->
-    <script src="/dependencies/sails.io.js"></script>
-    <!--SCRIPTS END-->
-  </body>
+  You can always bring in JS files manually with `script` tags, or asynchronously
+  on the client using a solution like AMD (RequireJS).  Or, if you like, you can
+  take advantage of Sails' conventional asset pipeline (boilerplate Gruntfile).
+
+  By default, files in your `assets/js` folder are included here
+  automatically (between SCRIPTS and SCRIPTS END).  Both JavaScript (.js) and
+  CoffeeScript (.coffee) are supported. In production, your scripts will be minified
+  and concatenated into a single file.
+
+  To customize any part of the built-in behavior, just edit `tasks/pipeline.js`.
+  For example, here are a few things you could do:
+
+      + Change the order of your scripts
+      + Import scripts from other directories
+      + Use a different preprocessor, like TypeScript
+
+-->
+
+<!--SCRIPTS-->
+<script src="/dependencies/sails.io.js"></script>
+<!--SCRIPTS END-->
+</body>
 </html>

@@ -28,21 +28,10 @@ module.exports.custom = {
       name: 'Goerli Testnet',
       contract: {
         main: {
-          address: '0x0477eb1Cd95A95e08B2dA55Fb0537f8e3A027c62',
+          address: '0x10CedcceAdd5183824e63E3A1e8858DD206709dB',
           abi: [
             {
-              "inputs": [
-                {
-                  "internalType": "string",
-                  "name": "NAME",
-                  "type": "string"
-                },
-                {
-                  "internalType": "string",
-                  "name": "SYMBOL",
-                  "type": "string"
-                }
-              ],
+              "inputs": [],
               "stateMutability": "nonpayable",
               "type": "constructor"
             },
@@ -102,33 +91,26 @@ module.exports.custom = {
                 {
                   "indexed": false,
                   "internalType": "uint256",
-                  "name": "_totalNft",
+                  "name": "nftId",
                   "type": "uint256"
                 },
                 {
                   "indexed": false,
-                  "internalType": "string",
-                  "name": "msg",
-                  "type": "string"
-                }
-              ],
-              "name": "BatchMint",
-              "type": "event"
-            },
-            {
-              "anonymous": false,
-              "inputs": [
+                  "internalType": "address",
+                  "name": "nftOwner",
+                  "type": "address"
+                },
+                {
+                  "indexed": false,
+                  "internalType": "address",
+                  "name": "nftCreator",
+                  "type": "address"
+                },
                 {
                   "indexed": false,
                   "internalType": "uint256",
-                  "name": "_NftId",
+                  "name": "time",
                   "type": "uint256"
-                },
-                {
-                  "indexed": false,
-                  "internalType": "string",
-                  "name": "msg",
-                  "type": "string"
                 }
               ],
               "name": "Minted",
@@ -138,19 +120,25 @@ module.exports.custom = {
               "anonymous": false,
               "inputs": [
                 {
-                  "indexed": true,
+                  "indexed": false,
+                  "internalType": "uint256",
+                  "name": "nftId",
+                  "type": "uint256"
+                },
+                {
+                  "indexed": false,
                   "internalType": "address",
-                  "name": "previousOwner",
+                  "name": "nftOwner",
                   "type": "address"
                 },
                 {
-                  "indexed": true,
-                  "internalType": "address",
-                  "name": "newOwner",
-                  "type": "address"
+                  "indexed": false,
+                  "internalType": "uint256",
+                  "name": "time",
+                  "type": "uint256"
                 }
               ],
-              "name": "OwnershipTransferred",
+              "name": "Minted",
               "type": "event"
             },
             {
@@ -181,22 +169,48 @@ module.exports.custom = {
             {
               "inputs": [
                 {
-                  "internalType": "uint256",
-                  "name": "",
-                  "type": "uint256"
+                  "components": [
+                    {
+                      "internalType": "uint256",
+                      "name": "tokenId",
+                      "type": "uint256"
+                    },
+                    {
+                      "internalType": "uint256",
+                      "name": "minPrice",
+                      "type": "uint256"
+                    },
+                    {
+                      "internalType": "string",
+                      "name": "uri",
+                      "type": "string"
+                    },
+                    {
+                      "internalType": "uint256",
+                      "name": "royaltyPercentage",
+                      "type": "uint256"
+                    },
+                    {
+                      "internalType": "bytes",
+                      "name": "signature",
+                      "type": "bytes"
+                    }
+                  ],
+                  "internalType": "struct Pangea.NFTVoucher",
+                  "name": "voucher",
+                  "type": "tuple"
                 }
               ],
-              "name": "_tokenURIs",
+              "name": "_verify",
               "outputs": [
                 {
-                  "internalType": "string",
+                  "internalType": "address",
                   "name": "",
-                  "type": "string"
+                  "type": "address"
                 }
               ],
               "stateMutability": "view",
-              "type": "function",
-              "constant": true
+              "type": "function"
             },
             {
               "inputs": [
@@ -217,6 +231,19 @@ module.exports.custom = {
               "type": "function"
             },
             {
+              "inputs": [],
+              "name": "availableToWithdraw",
+              "outputs": [
+                {
+                  "internalType": "uint256",
+                  "name": "",
+                  "type": "uint256"
+                }
+              ],
+              "stateMutability": "view",
+              "type": "function"
+            },
+            {
               "inputs": [
                 {
                   "internalType": "address",
@@ -233,8 +260,7 @@ module.exports.custom = {
                 }
               ],
               "stateMutability": "view",
-              "type": "function",
-              "constant": true
+              "type": "function"
             },
             {
               "inputs": [
@@ -253,8 +279,20 @@ module.exports.custom = {
                 }
               ],
               "stateMutability": "view",
-              "type": "function",
-              "constant": true
+              "type": "function"
+            },
+            {
+              "inputs": [],
+              "name": "getChainID",
+              "outputs": [
+                {
+                  "internalType": "uint256",
+                  "name": "",
+                  "type": "uint256"
+                }
+              ],
+              "stateMutability": "view",
+              "type": "function"
             },
             {
               "inputs": [
@@ -278,67 +316,7 @@ module.exports.custom = {
                 }
               ],
               "stateMutability": "view",
-              "type": "function",
-              "constant": true
-            },
-            {
-              "inputs": [],
-              "name": "maximumRoyalty",
-              "outputs": [
-                {
-                  "internalType": "uint256",
-                  "name": "",
-                  "type": "uint256"
-                }
-              ],
-              "stateMutability": "view",
-              "type": "function",
-              "constant": true
-            },
-            {
-              "inputs": [
-                {
-                  "internalType": "address",
-                  "name": "",
-                  "type": "address"
-                },
-                {
-                  "internalType": "uint256",
-                  "name": "",
-                  "type": "uint256"
-                }
-              ],
-              "name": "mintedByUser",
-              "outputs": [
-                {
-                  "internalType": "uint256",
-                  "name": "",
-                  "type": "uint256"
-                }
-              ],
-              "stateMutability": "view",
-              "type": "function",
-              "constant": true
-            },
-            {
-              "inputs": [
-                {
-                  "internalType": "uint256",
-                  "name": "",
-                  "type": "uint256"
-                }
-              ],
-              "name": "minter",
-              "outputs": [
-                {
-                  "internalType": "address",
-                  "name": "",
-                  "type": "address"
-                }
-              ],
-              "stateMutability": "view",
-              "type": "function",
-              "constant": true
+              "type": "function"
             },
             {
               "inputs": [],
@@ -351,22 +329,7 @@ module.exports.custom = {
                 }
               ],
               "stateMutability": "view",
-              "type": "function",
-              "constant": true
-            },
-            {
-              "inputs": [],
-              "name": "owner",
-              "outputs": [
-                {
-                  "internalType": "address",
-                  "name": "",
-                  "type": "address"
-                }
-              ],
-              "stateMutability": "view",
-              "type": "function",
-              "constant": true
+              "type": "function"
             },
             {
               "inputs": [
@@ -385,25 +348,54 @@ module.exports.custom = {
                 }
               ],
               "stateMutability": "view",
-              "type": "function",
-              "constant": true
-            },
-            {
-              "inputs": [],
-              "name": "renounceOwnership",
-              "outputs": [],
-              "stateMutability": "nonpayable",
               "type": "function"
             },
             {
               "inputs": [
                 {
-                  "internalType": "uint256",
-                  "name": "",
-                  "type": "uint256"
+                  "internalType": "address",
+                  "name": "_minter",
+                  "type": "address"
+                },
+                {
+                  "internalType": "address",
+                  "name": "redeemer",
+                  "type": "address"
+                },
+                {
+                  "components": [
+                    {
+                      "internalType": "uint256",
+                      "name": "tokenId",
+                      "type": "uint256"
+                    },
+                    {
+                      "internalType": "uint256",
+                      "name": "minPrice",
+                      "type": "uint256"
+                    },
+                    {
+                      "internalType": "string",
+                      "name": "uri",
+                      "type": "string"
+                    },
+                    {
+                      "internalType": "uint256",
+                      "name": "royaltyPercentage",
+                      "type": "uint256"
+                    },
+                    {
+                      "internalType": "bytes",
+                      "name": "signature",
+                      "type": "bytes"
+                    }
+                  ],
+                  "internalType": "struct Pangea.NFTVoucher",
+                  "name": "voucher",
+                  "type": "tuple"
                 }
               ],
-              "name": "royalty",
+              "name": "redeem",
               "outputs": [
                 {
                   "internalType": "uint256",
@@ -411,9 +403,8 @@ module.exports.custom = {
                   "type": "uint256"
                 }
               ],
-              "stateMutability": "view",
-              "type": "function",
-              "constant": true
+              "stateMutability": "payable",
+              "type": "function"
             },
             {
               "inputs": [
@@ -501,8 +492,7 @@ module.exports.custom = {
                 }
               ],
               "stateMutability": "view",
-              "type": "function",
-              "constant": true
+              "type": "function"
             },
             {
               "inputs": [],
@@ -515,8 +505,26 @@ module.exports.custom = {
                 }
               ],
               "stateMutability": "view",
-              "type": "function",
-              "constant": true
+              "type": "function"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "uint256",
+                  "name": "tokenId",
+                  "type": "uint256"
+                }
+              ],
+              "name": "tokenURI",
+              "outputs": [
+                {
+                  "internalType": "string",
+                  "name": "",
+                  "type": "string"
+                }
+              ],
+              "stateMutability": "view",
+              "type": "function"
             },
             {
               "inputs": [
@@ -542,37 +550,227 @@ module.exports.custom = {
               "type": "function"
             },
             {
+              "inputs": [],
+              "name": "withdraw",
+              "outputs": [],
+              "stateMutability": "nonpayable",
+              "type": "function"
+            }
+          ]
+        }
+      }
+
+    },
+    bsc: {
+      node: '',
+      name: 'Binance Smart Chain',
+      contract: {
+        main: {
+          address: '0x2d94da33998B3C7795C4Bc7e24852B16E5A5ff5F',
+          abi: [
+            {
+              "inputs": [],
+              "stateMutability": "nonpayable",
+              "type": "constructor"
+            },
+            {
+              "anonymous": false,
               "inputs": [
                 {
+                  "indexed": true,
                   "internalType": "address",
-                  "name": "newOwner",
+                  "name": "owner",
+                  "type": "address"
+                },
+                {
+                  "indexed": true,
+                  "internalType": "address",
+                  "name": "approved",
+                  "type": "address"
+                },
+                {
+                  "indexed": true,
+                  "internalType": "uint256",
+                  "name": "tokenId",
+                  "type": "uint256"
+                }
+              ],
+              "name": "Approval",
+              "type": "event"
+            },
+            {
+              "anonymous": false,
+              "inputs": [
+                {
+                  "indexed": true,
+                  "internalType": "address",
+                  "name": "owner",
+                  "type": "address"
+                },
+                {
+                  "indexed": true,
+                  "internalType": "address",
+                  "name": "operator",
+                  "type": "address"
+                },
+                {
+                  "indexed": false,
+                  "internalType": "bool",
+                  "name": "approved",
+                  "type": "bool"
+                }
+              ],
+              "name": "ApprovalForAll",
+              "type": "event"
+            },
+            {
+              "anonymous": false,
+              "inputs": [
+                {
+                  "indexed": false,
+                  "internalType": "uint256",
+                  "name": "nftId",
+                  "type": "uint256"
+                },
+                {
+                  "indexed": false,
+                  "internalType": "address",
+                  "name": "nftOwner",
+                  "type": "address"
+                },
+                {
+                  "indexed": false,
+                  "internalType": "address",
+                  "name": "nftCreator",
+                  "type": "address"
+                },
+                {
+                  "indexed": false,
+                  "internalType": "uint256",
+                  "name": "time",
+                  "type": "uint256"
+                }
+              ],
+              "name": "Minted",
+              "type": "event"
+            },
+            {
+              "anonymous": false,
+              "inputs": [
+                {
+                  "indexed": false,
+                  "internalType": "uint256",
+                  "name": "nftId",
+                  "type": "uint256"
+                },
+                {
+                  "indexed": false,
+                  "internalType": "address",
+                  "name": "nftOwner",
+                  "type": "address"
+                },
+                {
+                  "indexed": false,
+                  "internalType": "uint256",
+                  "name": "time",
+                  "type": "uint256"
+                }
+              ],
+              "name": "Minted",
+              "type": "event"
+            },
+            {
+              "anonymous": false,
+              "inputs": [
+                {
+                  "indexed": true,
+                  "internalType": "address",
+                  "name": "from",
+                  "type": "address"
+                },
+                {
+                  "indexed": true,
+                  "internalType": "address",
+                  "name": "to",
+                  "type": "address"
+                },
+                {
+                  "indexed": true,
+                  "internalType": "uint256",
+                  "name": "tokenId",
+                  "type": "uint256"
+                }
+              ],
+              "name": "Transfer",
+              "type": "event"
+            },
+            {
+              "inputs": [
+                {
+                  "components": [
+                    {
+                      "internalType": "uint256",
+                      "name": "tokenId",
+                      "type": "uint256"
+                    },
+                    {
+                      "internalType": "uint256",
+                      "name": "minPrice",
+                      "type": "uint256"
+                    },
+                    {
+                      "internalType": "string",
+                      "name": "uri",
+                      "type": "string"
+                    },
+                    {
+                      "internalType": "uint256",
+                      "name": "royaltyPercentage",
+                      "type": "uint256"
+                    },
+                    {
+                      "internalType": "bytes",
+                      "name": "signature",
+                      "type": "bytes"
+                    }
+                  ],
+                  "internalType": "struct Pangea.NFTVoucher",
+                  "name": "voucher",
+                  "type": "tuple"
+                }
+              ],
+              "name": "_verify",
+              "outputs": [
+                {
+                  "internalType": "address",
+                  "name": "",
                   "type": "address"
                 }
               ],
-              "name": "transferOwnership",
-              "outputs": [],
-              "stateMutability": "nonpayable",
+              "stateMutability": "view",
               "type": "function"
             },
             {
               "inputs": [
                 {
                   "internalType": "address",
-                  "name": "creator",
+                  "name": "to",
                   "type": "address"
                 },
                 {
-                  "internalType": "string",
-                  "name": "_TokenURI",
-                  "type": "string"
-                },
-                {
                   "internalType": "uint256",
-                  "name": "_royaltyPercentage",
+                  "name": "tokenId",
                   "type": "uint256"
                 }
               ],
-              "name": "_mintNft",
+              "name": "approve",
+              "outputs": [],
+              "stateMutability": "nonpayable",
+              "type": "function"
+            },
+            {
+              "inputs": [],
+              "name": "availableToWithdraw",
               "outputs": [
                 {
                   "internalType": "uint256",
@@ -580,23 +778,74 @@ module.exports.custom = {
                   "type": "uint256"
                 }
               ],
-              "stateMutability": "nonpayable",
+              "stateMutability": "view",
               "type": "function"
             },
             {
               "inputs": [
                 {
-                  "internalType": "string[]",
-                  "name": "_uri",
-                  "type": "string[]"
-                },
-                {
-                  "internalType": "uint256[]",
-                  "name": "_royalty",
-                  "type": "uint256[]"
+                  "internalType": "address",
+                  "name": "owner",
+                  "type": "address"
                 }
               ],
-              "name": "batchMint",
+              "name": "balanceOf",
+              "outputs": [
+                {
+                  "internalType": "uint256",
+                  "name": "",
+                  "type": "uint256"
+                }
+              ],
+              "stateMutability": "view",
+              "type": "function"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "uint256",
+                  "name": "tokenId",
+                  "type": "uint256"
+                }
+              ],
+              "name": "getApproved",
+              "outputs": [
+                {
+                  "internalType": "address",
+                  "name": "",
+                  "type": "address"
+                }
+              ],
+              "stateMutability": "view",
+              "type": "function"
+            },
+            {
+              "inputs": [],
+              "name": "getChainID",
+              "outputs": [
+                {
+                  "internalType": "uint256",
+                  "name": "",
+                  "type": "uint256"
+                }
+              ],
+              "stateMutability": "view",
+              "type": "function"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "address",
+                  "name": "owner",
+                  "type": "address"
+                },
+                {
+                  "internalType": "address",
+                  "name": "operator",
+                  "type": "address"
+                }
+              ],
+              "name": "isApprovedForAll",
               "outputs": [
                 {
                   "internalType": "bool",
@@ -604,7 +853,20 @@ module.exports.custom = {
                   "type": "bool"
                 }
               ],
-              "stateMutability": "nonpayable",
+              "stateMutability": "view",
+              "type": "function"
+            },
+            {
+              "inputs": [],
+              "name": "name",
+              "outputs": [
+                {
+                  "internalType": "string",
+                  "name": "",
+                  "type": "string"
+                }
+              ],
+              "stateMutability": "view",
               "type": "function"
             },
             {
@@ -615,61 +877,92 @@ module.exports.custom = {
                   "type": "uint256"
                 }
               ],
-              "name": "royaltyForToken",
+              "name": "ownerOf",
               "outputs": [
                 {
-                  "internalType": "uint256",
-                  "name": "percentage",
-                  "type": "uint256"
+                  "internalType": "address",
+                  "name": "",
+                  "type": "address"
                 }
               ],
               "stateMutability": "view",
-              "type": "function",
-              "constant": true
+              "type": "function"
             },
             {
               "inputs": [
+                {
+                  "internalType": "address",
+                  "name": "_minter",
+                  "type": "address"
+                },
+                {
+                  "internalType": "address",
+                  "name": "redeemer",
+                  "type": "address"
+                },
+                {
+                  "components": [
+                    {
+                      "internalType": "uint256",
+                      "name": "tokenId",
+                      "type": "uint256"
+                    },
+                    {
+                      "internalType": "uint256",
+                      "name": "minPrice",
+                      "type": "uint256"
+                    },
+                    {
+                      "internalType": "string",
+                      "name": "uri",
+                      "type": "string"
+                    },
+                    {
+                      "internalType": "uint256",
+                      "name": "royaltyPercentage",
+                      "type": "uint256"
+                    },
+                    {
+                      "internalType": "bytes",
+                      "name": "signature",
+                      "type": "bytes"
+                    }
+                  ],
+                  "internalType": "struct Pangea.NFTVoucher",
+                  "name": "voucher",
+                  "type": "tuple"
+                }
+              ],
+              "name": "redeem",
+              "outputs": [
+                {
+                  "internalType": "uint256",
+                  "name": "",
+                  "type": "uint256"
+                }
+              ],
+              "stateMutability": "payable",
+              "type": "function"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "address",
+                  "name": "from",
+                  "type": "address"
+                },
+                {
+                  "internalType": "address",
+                  "name": "to",
+                  "type": "address"
+                },
                 {
                   "internalType": "uint256",
                   "name": "tokenId",
                   "type": "uint256"
                 }
               ],
-              "name": "minterOfToken",
-              "outputs": [
-                {
-                  "internalType": "address",
-                  "name": "_minter",
-                  "type": "address"
-                }
-              ],
-              "stateMutability": "view",
-              "type": "function",
-              "constant": true
-            },
-            {
-              "inputs": [],
-              "name": "getTokenCounter",
-              "outputs": [
-                {
-                  "internalType": "uint256",
-                  "name": "tracker",
-                  "type": "uint256"
-                }
-              ],
-              "stateMutability": "view",
-              "type": "function",
-              "constant": true
-            },
-            {
-              "inputs": [
-                {
-                  "internalType": "uint256",
-                  "name": "_royalty",
-                  "type": "uint256"
-                }
-              ],
-              "name": "setMaxRoyalty",
+              "name": "safeTransferFrom",
               "outputs": [],
               "stateMutability": "nonpayable",
               "type": "function"
@@ -678,21 +971,79 @@ module.exports.custom = {
               "inputs": [
                 {
                   "internalType": "address",
-                  "name": "user",
+                  "name": "from",
                   "type": "address"
+                },
+                {
+                  "internalType": "address",
+                  "name": "to",
+                  "type": "address"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "tokenId",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "bytes",
+                  "name": "data",
+                  "type": "bytes"
                 }
               ],
-              "name": "getNFTMintedByUser",
+              "name": "safeTransferFrom",
+              "outputs": [],
+              "stateMutability": "nonpayable",
+              "type": "function"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "address",
+                  "name": "operator",
+                  "type": "address"
+                },
+                {
+                  "internalType": "bool",
+                  "name": "approved",
+                  "type": "bool"
+                }
+              ],
+              "name": "setApprovalForAll",
+              "outputs": [],
+              "stateMutability": "nonpayable",
+              "type": "function"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "bytes4",
+                  "name": "interfaceId",
+                  "type": "bytes4"
+                }
+              ],
+              "name": "supportsInterface",
               "outputs": [
                 {
-                  "internalType": "uint256[]",
-                  "name": "ids",
-                  "type": "uint256[]"
+                  "internalType": "bool",
+                  "name": "",
+                  "type": "bool"
                 }
               ],
               "stateMutability": "view",
-              "type": "function",
-              "constant": true
+              "type": "function"
+            },
+            {
+              "inputs": [],
+              "name": "symbol",
+              "outputs": [
+                {
+                  "internalType": "string",
+                  "name": "",
+                  "type": "string"
+                }
+              ],
+              "stateMutability": "view",
+              "type": "function"
             },
             {
               "inputs": [
@@ -711,13 +1062,580 @@ module.exports.custom = {
                 }
               ],
               "stateMutability": "view",
-              "type": "function",
-              "constant": true
+              "type": "function"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "address",
+                  "name": "from",
+                  "type": "address"
+                },
+                {
+                  "internalType": "address",
+                  "name": "to",
+                  "type": "address"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "tokenId",
+                  "type": "uint256"
+                }
+              ],
+              "name": "transferFrom",
+              "outputs": [],
+              "stateMutability": "nonpayable",
+              "type": "function"
+            },
+            {
+              "inputs": [],
+              "name": "withdraw",
+              "outputs": [],
+              "stateMutability": "nonpayable",
+              "type": "function"
             }
           ]
         }
       }
 
-    }
+    },
+    polygon: {
+      node: '',
+      name: 'Mumbai Polygon Scan',
+      contract: {
+        main: {
+          address: '0x2d94da33998B3C7795C4Bc7e24852B16E5A5ff5F',
+          abi: [
+            {
+              "inputs": [],
+              "stateMutability": "nonpayable",
+              "type": "constructor"
+            },
+            {
+              "anonymous": false,
+              "inputs": [
+                {
+                  "indexed": true,
+                  "internalType": "address",
+                  "name": "owner",
+                  "type": "address"
+                },
+                {
+                  "indexed": true,
+                  "internalType": "address",
+                  "name": "approved",
+                  "type": "address"
+                },
+                {
+                  "indexed": true,
+                  "internalType": "uint256",
+                  "name": "tokenId",
+                  "type": "uint256"
+                }
+              ],
+              "name": "Approval",
+              "type": "event"
+            },
+            {
+              "anonymous": false,
+              "inputs": [
+                {
+                  "indexed": true,
+                  "internalType": "address",
+                  "name": "owner",
+                  "type": "address"
+                },
+                {
+                  "indexed": true,
+                  "internalType": "address",
+                  "name": "operator",
+                  "type": "address"
+                },
+                {
+                  "indexed": false,
+                  "internalType": "bool",
+                  "name": "approved",
+                  "type": "bool"
+                }
+              ],
+              "name": "ApprovalForAll",
+              "type": "event"
+            },
+            {
+              "anonymous": false,
+              "inputs": [
+                {
+                  "indexed": false,
+                  "internalType": "uint256",
+                  "name": "nftId",
+                  "type": "uint256"
+                },
+                {
+                  "indexed": false,
+                  "internalType": "address",
+                  "name": "nftOwner",
+                  "type": "address"
+                },
+                {
+                  "indexed": false,
+                  "internalType": "address",
+                  "name": "nftCreator",
+                  "type": "address"
+                },
+                {
+                  "indexed": false,
+                  "internalType": "uint256",
+                  "name": "time",
+                  "type": "uint256"
+                }
+              ],
+              "name": "Minted",
+              "type": "event"
+            },
+            {
+              "anonymous": false,
+              "inputs": [
+                {
+                  "indexed": false,
+                  "internalType": "uint256",
+                  "name": "nftId",
+                  "type": "uint256"
+                },
+                {
+                  "indexed": false,
+                  "internalType": "address",
+                  "name": "nftOwner",
+                  "type": "address"
+                },
+                {
+                  "indexed": false,
+                  "internalType": "uint256",
+                  "name": "time",
+                  "type": "uint256"
+                }
+              ],
+              "name": "Minted",
+              "type": "event"
+            },
+            {
+              "anonymous": false,
+              "inputs": [
+                {
+                  "indexed": true,
+                  "internalType": "address",
+                  "name": "from",
+                  "type": "address"
+                },
+                {
+                  "indexed": true,
+                  "internalType": "address",
+                  "name": "to",
+                  "type": "address"
+                },
+                {
+                  "indexed": true,
+                  "internalType": "uint256",
+                  "name": "tokenId",
+                  "type": "uint256"
+                }
+              ],
+              "name": "Transfer",
+              "type": "event"
+            },
+            {
+              "inputs": [
+                {
+                  "components": [
+                    {
+                      "internalType": "uint256",
+                      "name": "tokenId",
+                      "type": "uint256"
+                    },
+                    {
+                      "internalType": "uint256",
+                      "name": "minPrice",
+                      "type": "uint256"
+                    },
+                    {
+                      "internalType": "string",
+                      "name": "uri",
+                      "type": "string"
+                    },
+                    {
+                      "internalType": "uint256",
+                      "name": "royaltyPercentage",
+                      "type": "uint256"
+                    },
+                    {
+                      "internalType": "bytes",
+                      "name": "signature",
+                      "type": "bytes"
+                    }
+                  ],
+                  "internalType": "struct Pangea.NFTVoucher",
+                  "name": "voucher",
+                  "type": "tuple"
+                }
+              ],
+              "name": "_verify",
+              "outputs": [
+                {
+                  "internalType": "address",
+                  "name": "",
+                  "type": "address"
+                }
+              ],
+              "stateMutability": "view",
+              "type": "function"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "address",
+                  "name": "to",
+                  "type": "address"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "tokenId",
+                  "type": "uint256"
+                }
+              ],
+              "name": "approve",
+              "outputs": [],
+              "stateMutability": "nonpayable",
+              "type": "function"
+            },
+            {
+              "inputs": [],
+              "name": "availableToWithdraw",
+              "outputs": [
+                {
+                  "internalType": "uint256",
+                  "name": "",
+                  "type": "uint256"
+                }
+              ],
+              "stateMutability": "view",
+              "type": "function"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "address",
+                  "name": "owner",
+                  "type": "address"
+                }
+              ],
+              "name": "balanceOf",
+              "outputs": [
+                {
+                  "internalType": "uint256",
+                  "name": "",
+                  "type": "uint256"
+                }
+              ],
+              "stateMutability": "view",
+              "type": "function"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "uint256",
+                  "name": "tokenId",
+                  "type": "uint256"
+                }
+              ],
+              "name": "getApproved",
+              "outputs": [
+                {
+                  "internalType": "address",
+                  "name": "",
+                  "type": "address"
+                }
+              ],
+              "stateMutability": "view",
+              "type": "function"
+            },
+            {
+              "inputs": [],
+              "name": "getChainID",
+              "outputs": [
+                {
+                  "internalType": "uint256",
+                  "name": "",
+                  "type": "uint256"
+                }
+              ],
+              "stateMutability": "view",
+              "type": "function"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "address",
+                  "name": "owner",
+                  "type": "address"
+                },
+                {
+                  "internalType": "address",
+                  "name": "operator",
+                  "type": "address"
+                }
+              ],
+              "name": "isApprovedForAll",
+              "outputs": [
+                {
+                  "internalType": "bool",
+                  "name": "",
+                  "type": "bool"
+                }
+              ],
+              "stateMutability": "view",
+              "type": "function"
+            },
+            {
+              "inputs": [],
+              "name": "name",
+              "outputs": [
+                {
+                  "internalType": "string",
+                  "name": "",
+                  "type": "string"
+                }
+              ],
+              "stateMutability": "view",
+              "type": "function"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "uint256",
+                  "name": "tokenId",
+                  "type": "uint256"
+                }
+              ],
+              "name": "ownerOf",
+              "outputs": [
+                {
+                  "internalType": "address",
+                  "name": "",
+                  "type": "address"
+                }
+              ],
+              "stateMutability": "view",
+              "type": "function"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "address",
+                  "name": "_minter",
+                  "type": "address"
+                },
+                {
+                  "internalType": "address",
+                  "name": "redeemer",
+                  "type": "address"
+                },
+                {
+                  "components": [
+                    {
+                      "internalType": "uint256",
+                      "name": "tokenId",
+                      "type": "uint256"
+                    },
+                    {
+                      "internalType": "uint256",
+                      "name": "minPrice",
+                      "type": "uint256"
+                    },
+                    {
+                      "internalType": "string",
+                      "name": "uri",
+                      "type": "string"
+                    },
+                    {
+                      "internalType": "uint256",
+                      "name": "royaltyPercentage",
+                      "type": "uint256"
+                    },
+                    {
+                      "internalType": "bytes",
+                      "name": "signature",
+                      "type": "bytes"
+                    }
+                  ],
+                  "internalType": "struct Pangea.NFTVoucher",
+                  "name": "voucher",
+                  "type": "tuple"
+                }
+              ],
+              "name": "redeem",
+              "outputs": [
+                {
+                  "internalType": "uint256",
+                  "name": "",
+                  "type": "uint256"
+                }
+              ],
+              "stateMutability": "payable",
+              "type": "function"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "address",
+                  "name": "from",
+                  "type": "address"
+                },
+                {
+                  "internalType": "address",
+                  "name": "to",
+                  "type": "address"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "tokenId",
+                  "type": "uint256"
+                }
+              ],
+              "name": "safeTransferFrom",
+              "outputs": [],
+              "stateMutability": "nonpayable",
+              "type": "function"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "address",
+                  "name": "from",
+                  "type": "address"
+                },
+                {
+                  "internalType": "address",
+                  "name": "to",
+                  "type": "address"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "tokenId",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "bytes",
+                  "name": "data",
+                  "type": "bytes"
+                }
+              ],
+              "name": "safeTransferFrom",
+              "outputs": [],
+              "stateMutability": "nonpayable",
+              "type": "function"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "address",
+                  "name": "operator",
+                  "type": "address"
+                },
+                {
+                  "internalType": "bool",
+                  "name": "approved",
+                  "type": "bool"
+                }
+              ],
+              "name": "setApprovalForAll",
+              "outputs": [],
+              "stateMutability": "nonpayable",
+              "type": "function"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "bytes4",
+                  "name": "interfaceId",
+                  "type": "bytes4"
+                }
+              ],
+              "name": "supportsInterface",
+              "outputs": [
+                {
+                  "internalType": "bool",
+                  "name": "",
+                  "type": "bool"
+                }
+              ],
+              "stateMutability": "view",
+              "type": "function"
+            },
+            {
+              "inputs": [],
+              "name": "symbol",
+              "outputs": [
+                {
+                  "internalType": "string",
+                  "name": "",
+                  "type": "string"
+                }
+              ],
+              "stateMutability": "view",
+              "type": "function"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "uint256",
+                  "name": "tokenId",
+                  "type": "uint256"
+                }
+              ],
+              "name": "tokenURI",
+              "outputs": [
+                {
+                  "internalType": "string",
+                  "name": "",
+                  "type": "string"
+                }
+              ],
+              "stateMutability": "view",
+              "type": "function"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "address",
+                  "name": "from",
+                  "type": "address"
+                },
+                {
+                  "internalType": "address",
+                  "name": "to",
+                  "type": "address"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "tokenId",
+                  "type": "uint256"
+                }
+              ],
+              "name": "transferFrom",
+              "outputs": [],
+              "stateMutability": "nonpayable",
+              "type": "function"
+            },
+            {
+              "inputs": [],
+              "name": "withdraw",
+              "outputs": [],
+              "stateMutability": "nonpayable",
+              "type": "function"
+            }
+          ]
+        }
+      }
+
+    },
   }
 };
