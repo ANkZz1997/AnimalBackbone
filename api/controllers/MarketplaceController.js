@@ -73,7 +73,7 @@ module.exports = {
       .set({isDeleted: true, status: 'DELETED'})
       .fetch()
       .then(async result => {
-        await Nft.update({status: 'PORTFOLIO', marketplaceId: ''})
+        await Nft.update({id: result[0].nft}).set({status: 'PORTFOLIO', marketplaceId: ''})
         res.ok(result)
       });
   },
