@@ -1379,7 +1379,15 @@ module.exports = {
       .limit(limit)
       .skip((page-1)*limit)
       .sort(`${sort} ${order}`)
+      .populate('wishlistedBy', {where: {id: req.payload.id}})
       .then(result => {
+        result.forEach(e => {
+          e.isWishlisted = true
+          if(e.wishlistedBy.length) {
+            e.isWishlisted = true
+          }
+          delete e.wishlistedBy;
+        })
         res.ok({
           records: result,
           totalCount

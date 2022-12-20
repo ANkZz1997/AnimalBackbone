@@ -82,8 +82,9 @@ module.exports = {
       .then(result => {
         if(!result) return res.badRequest();
         Nft.update({id: result.nft})
-          .set({user: req.payload.id, status: 'PORTFOLIO'})
-          .then(_result => {
+          .set({user: req.payload.id, status: 'PORTFOLIO', marketplaceId: ''})
+          .then(async _result => {
+            await Marketplace.update({id: result.id}).set({status: 'COMPLETED'})
             res.ok(_result);
           });
       });
