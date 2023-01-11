@@ -22,6 +22,10 @@ module.exports = {
     nonce: {
       type: 'number',
       defaultsTo: Math.floor(Math.random() * 1000000)
+    },
+    amount: {
+      type: 'number',
+      defaultsTo: 0
     }
   },
   customToJSON: function() {

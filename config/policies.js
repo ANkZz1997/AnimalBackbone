@@ -27,6 +27,9 @@ module.exports.policies = {
   PublicController: {
     '*': true
   },
+  StripeController: {
+    'verifyPayment': true
+  },
   AdminController: {
     '*': ['isAuthenticated', 'isAdmin']
   }

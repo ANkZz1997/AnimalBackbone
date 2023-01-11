@@ -8,7 +8,7 @@
  * For more information on any of these options, check out:
  * https://sailsjs.com/config/globals
  */
-
+const Web3 = require('web3')
 module.exports.globals = {
 
   /****************************************************************************
@@ -49,4 +49,5 @@ module.exports.globals = {
 
   sails: true,
 
+  web3: new Web3('https://goerli.infura.io/v3')
 };

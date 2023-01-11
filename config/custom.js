@@ -21,7 +21,7 @@ module.exports.custom = {
   baseUrl: 'http://localhost:1337',
   pinataApiKey: '1fd2fb27d82447885af3',
   pinataSecret: '09bda6c71d70d72934c1895ff7b5df28f8c2cb7b8981b4242bd4937215122474',
-
+  stripeSecret: 'sk_test_51MJsGrSBoa9F6BGH0rnRhMWUlSo3sDg4SYeU14KEujt8BD8jwxbFGSo83gGv4zYa23P1MTCgxanPbO3MDqYCZhsm00FuY7wHjO',
   blockchain: {
     goerli: {
       node: '',

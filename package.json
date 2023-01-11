@@ -26,6 +26,7 @@
     "sails-hook-orm": "^4.0.0",
     "sails-hook-sockets": "^2.0.0",
     "sails-mongo": "^2.0.0",
+    "stripe": "^11.5.0",
     "web3": "^1.8.0"
   },
   "devDependencies": {
