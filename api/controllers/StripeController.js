@@ -36,8 +36,12 @@ module.exports = {
           Wallet.findOne({user: record.user}).then(wallet => {
             Wallet.update({user: record.user}).set({amount: wallet.amount + paymentIntent.amount_received})
               .then(async () => {
-                await Stripe.update({piId: payment_intent}).set(paymentIntent)
-                res.redirect(`https://nft.sdnatech.com/paymentStatus?id=${record.id}`)
+                delete paymentIntent.id;
+                Stripe.update({piId: payment_intent}).set({...paymentIntent, processed: true}).fetch().then(_record => {
+                  res.redirect(`https://nft.sdnatech.com/paymentStatus?id=${record.id}`)
+                }).catch(e => {
+                  res.redirect(`https://nft.sdnatech.com/paymentStatus?id=${record.id}`)
+                })
               })
           });
         } else {
