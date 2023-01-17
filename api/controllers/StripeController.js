@@ -32,7 +32,7 @@ module.exports = {
       if (!record) return res.redirect('https://nft.sdnatech.com/paymentStatus?id=null');
       if (record.processed) return res.redirect(`https://nft.sdnatech.com/paymentStatus?id=${record.id}`);
       if (paymentIntent.status !== record.status) {
-        if (payment_intent.status === 'succeeded') {
+        if (paymentIntent.status === 'succeeded') {
           Wallet.findOne({user: record.user}).then(wallet => {
             Wallet.update({user: record.user}).set({amount: wallet.amount + paymentIntent.amount_received})
               .then(async () => {

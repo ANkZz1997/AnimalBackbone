@@ -24,6 +24,7 @@ module.exports = {
     User.create(req.body)
       .fetch()
       .then(async (result) => {
+        await Wallet.update({id: wallet.id}).set({user: result.id});
         result.wallet = wallet;
         result.token = await sails.helpers.signToken({ id: result.id });
         return res.ok(result);
