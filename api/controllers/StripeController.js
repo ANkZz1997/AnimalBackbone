@@ -7,6 +7,12 @@
 
 const stripe = require("stripe")(sails.config.custom.stripeSecret);
 module.exports = {
+  list: (req, res) => {
+    Stripe.find({user: req.payload.id})
+      .then(records => {
+        res.ok(records);
+      })
+  },
   createPayment: async (req, res) => {
     const {amount} = req.body
     const paymentIntent = await stripe.paymentIntents.create({
