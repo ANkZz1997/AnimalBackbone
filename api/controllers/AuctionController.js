@@ -55,6 +55,19 @@ module.exports = {
       .then(result => {
         res.ok(result);
       });
+  },
+  bids: (req, res) => {
+  const { id } = req.query;
+  Auction.findOne({ id: id, user: req.payload.id })
+      .then((result) => {
+        console.log(result.id);
+        Bid.find({auction: result.id}).then((bids)=>{
+          res.ok(bids);
+        })
+      })
+      .catch((e) => {
+        res.badRequest(e);
+      });
   }
 };
 
