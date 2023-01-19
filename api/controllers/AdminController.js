@@ -77,11 +77,15 @@ module.exports = {
       });
   },
   bids: async (req, res) => {
-    const {page = 1, limit = 20, sort = 'createdAt', order = 'DESC'} = req.query;
-    const totalCount = await Bid.count();
+    const {page = 1, limit = 20, sort = 'createdAt', order = 'DESC', auction = null} = req.query;
     const criteria = req.body;
+    if(auction){
+      criteria['auction'] = auction;
+    }
+    const totalCount = await Bid.count(criteria);
     Bid.find(criteria)
       .limit(limit)
+      .populate("user")
       .skip((page-1)*limit)
       .sort(`${sort} ${order}`)
       .then(result => {
