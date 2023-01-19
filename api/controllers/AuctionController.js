@@ -55,6 +55,29 @@ module.exports = {
       .then(result => {
         res.ok(result);
       });
+  },
+  bids: async (req, res) => {
+    const {page = 1, limit = 20, sort = 'createdAt', order = 'DESC'} = req.query;
+    const { id } = req.query;
+    Auction.findOne({ id: id, user: req.payload.id })
+      .then( async (result) => {
+        const criteria = {auction: result.id};
+        const totalCount = await Bid.count(criteria);
+        Bid.find(criteria)
+        .limit(limit)
+        .populate("user")
+        .skip((page-1)*limit)
+        .sort(`${sort} ${order}`)
+        .then((bids)=>{
+          res.ok({
+            records: bids,
+            totalCount
+          });
+        });
+      })
+      .catch((e) => {
+        res.badRequest(e);
+      });
   }
 };
 
