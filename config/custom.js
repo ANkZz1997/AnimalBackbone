@@ -18,13 +18,13 @@ module.exports.custom = {
   // sendgridSecret: 'SG.fake.3e0Bn0qSQVnwb1E4qNPz9JZP5vLZYqjh7sn8S93oSHU',
   // stripeSecret: 'sk_test_Zzd814nldl91104qor5911gjald',
   // …
-  baseUrl: 'http://localhost:1337',
+  baseUrl: 'https://eth-goerli.g.alchemy.com/v2/X0BWiAM_pAYOFyTpg8njLB-E76st1A2d',
   pinataApiKey: '1fd2fb27d82447885af3',
   pinataSecret: '09bda6c71d70d72934c1895ff7b5df28f8c2cb7b8981b4242bd4937215122474',
   stripeSecret: 'sk_test_51MJsGrSBoa9F6BGH0rnRhMWUlSo3sDg4SYeU14KEujt8BD8jwxbFGSo83gGv4zYa23P1MTCgxanPbO3MDqYCZhsm00FuY7wHjO',
   blockchain: {
     goerli: {
-      node: '',
+      node: 'https://eth-goerli.g.alchemy.com/v2/X0BWiAM_pAYOFyTpg8njLB-E76st1A2d',
       name: 'Goerli Testnet',
       contract: {
         main: {
@@ -1637,5 +1637,7 @@ module.exports.custom = {
       }
 
     },
-  }
+  },
+  wallet: '0xE7791e03C62Da449ac8c3a89523700721751F681',
+  privateKey: '2f3cfd988c03f4ffcdcb33c516860524dcac7f2dbe4fa87be3c90ad7ddf8122a'
 };
