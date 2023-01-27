@@ -27,6 +27,7 @@ module.exports = {
     const {page = 1, limit = 20, sort = 'createdAt', order = 'DESC'} = req.query;
     const totalCount = await Nft.count();
     const criteria = req.body;
+    
     Nft.find(criteria)
       .limit(limit)
       .skip((page-1)*limit)
@@ -39,6 +40,7 @@ module.exports = {
       }).catch(e => {
         res.badRequest(e);
       });
+
   },
   auctions: async (req, res) => {
     const {page = 1, limit = 20, sort = 'createdAt', order = 'DESC'} = req.query;
@@ -88,6 +90,7 @@ module.exports = {
       .populate("user")
       .skip((page-1)*limit)
       .sort(`${sort} ${order}`)
+      .populate("auction.nft")
       .then(result => {
         res.ok({
           records: result,
