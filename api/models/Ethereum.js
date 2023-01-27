@@ -21,6 +21,9 @@ module.exports = {
     },
     rate: {
       type: 'json'
+    },
+    transactionHash: {
+      type: 'string'
     }
   },
 

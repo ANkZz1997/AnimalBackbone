@@ -34,7 +34,8 @@ module.exports = {
         user: req.payload.id,
         ether: amount,
         price: totalPrice,
-        rate: rate['INR']
+        rate: rate['INR'],
+        transactionHash: result.transactionHash
       }).then(createdRecord => {
         console.log(createdRecord);
       })
