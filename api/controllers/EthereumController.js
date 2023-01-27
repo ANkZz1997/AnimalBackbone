@@ -6,6 +6,14 @@
  */
 
 module.exports = {
+  getBalance: (req,res) => {
+    const {address} = req.query
+    sails.helpers.etherBalance(address).then(result => {
+      res.ok({
+        balance: result
+      })
+    })
+  },
   rate: async (req, res) => {
     const {from, to} = req.body;
     const rate = await sails.helpers.getEthPrice(from, to);
