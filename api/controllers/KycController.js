@@ -31,6 +31,7 @@ const fileUploadPromiseConverter = (file) => {
 };
 
 module.exports = {
+  //user api's
   updateKyc: (req, res) => {
     Promise.all([
       fileUploadPromiseConverter(req.file('addressProof')),
@@ -46,6 +47,21 @@ module.exports = {
         sails.log.error(e)
       });
     });
+  },
+
+
+  // admin api's
+  verifyKyc: (req, res) => {
+      const {id} = req.query;
+      Kyc.update({id}).set({status: 'APPROVED'}).fetch().then(result => {
+        res.ok(result);
+      })
+  },
+  rejectKyc: (req, res) => {
+      const {id} = req.query;
+      Kyc.update({id}).set({status: 'REJECT'}).fetch().then(result => {
+        res.ok(result);
+      })
   },
 };
 

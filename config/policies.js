@@ -32,6 +32,16 @@ module.exports.policies = {
   },
   AdminController: {
     '*': ['isAuthenticated', 'isAdmin']
+  },
+  DisputeController: {
+    '*': ['isAuthenticated'],
+    'markAsPending': ['isAuthenticated', 'isAdmin'],
+    'newResponse': ['isAuthenticated', 'isAdmin'],
+  },
+  KycController: {
+    '*': ['isAuthenticated'],
+    'verifyKyc': ['isAuthenticated', 'isAdmin'],
+    'rejectKyc': ['isAuthenticated', 'isAdmin'],
   }
 
 };

@@ -191,6 +191,25 @@ module.exports = {
     });
 
   },
+  kyc: async (req, res) => {
+    const {page = 1, limit = 20, sort = 'createdAt', order = 'DESC'} = req.query;
+    const totalCount = await Kyc.count();
+    const criteria = req.body;
+
+    Kyc.find(criteria)
+      .limit(limit)
+      .skip((page-1)*limit)
+      .sort(`${sort} ${order}`)
+      .then(result => {
+        res.ok({
+          records: result,
+          totalCount
+        });
+      }).catch(e => {
+      res.badRequest(e);
+    });
+
+  },
 
 };
 
