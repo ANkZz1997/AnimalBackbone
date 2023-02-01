@@ -27,7 +27,7 @@ module.exports = {
     const {page = 1, limit = 20, sort = 'createdAt', order = 'DESC'} = req.query;
     const totalCount = await Nft.count();
     const criteria = req.body;
-    
+
     Nft.find(criteria)
       .limit(limit)
       .skip((page-1)*limit)
@@ -171,6 +171,26 @@ module.exports = {
       }).catch(e => {
         res.badRequest(e)
     })
-  }
+  },
+  dispute: async (req, res) => {
+    const {page = 1, limit = 20, sort = 'createdAt', order = 'DESC'} = req.query;
+    const totalCount = await Dispute.count();
+    const criteria = req.body;
+
+    Dispute.find(criteria)
+      .limit(limit)
+      .skip((page-1)*limit)
+      .sort(`${sort} ${order}`)
+      .then(result => {
+        res.ok({
+          records: result,
+          totalCount
+        });
+      }).catch(e => {
+      res.badRequest(e);
+    });
+
+  },
+
 };
 

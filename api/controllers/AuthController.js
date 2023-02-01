@@ -13,6 +13,7 @@ const GOOGLE_CLIENT_ID =
   "144163062893-c48rp2sgka2ms7bl9o1r3nsln6mnctvt.apps.googleusercontent.com";
 const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 
+
 module.exports = {
   test: (req, res) => {
     return res.ok("Success");
@@ -24,7 +25,9 @@ module.exports = {
     User.create(req.body)
       .fetch()
       .then(async (result) => {
-        await Wallet.update({id: wallet.id}).set({user: result.id});
+        sails.log.info(`User created with the id ${result.id}`)
+        Wallet.update({id: wallet.id}).set({user: result.id}).then(_result => {sails.log.info('User wallet is updated with the user address')});
+        Kyc.create({user: result.id}).then(_result => {sails.log.info(`User's Kyc record created`)});
         result.wallet = wallet;
         result.token = await sails.helpers.signToken({ id: result.id });
         return res.ok(result);
@@ -115,6 +118,7 @@ ${wallet.nonce}`;
         })
           .fetch()
           .then(async (result) => {
+            Kyc.create({user: result.id}).fetch().then(_result => {sails.log.info(`User's KYC record is created with id - ${_result.id}`)})
             result.wallet = wallet;
             result.token = await sails.helpers.signToken({ id: result.id });
             Wallet.update({ address: address.toLowerCase() })
@@ -122,7 +126,7 @@ ${wallet.nonce}`;
                 user: result.id,
                 nonce: Math.floor(Math.random() * 1000000),
               })
-              .then((result) => {});
+              .then((result) => {sails.log.info(`User wallet nonce is updated`)});
             return res.ok(result);
           })
           .catch((e) => {

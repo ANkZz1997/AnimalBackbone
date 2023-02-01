@@ -4,9 +4,48 @@
  * @description :: Server-side actions for handling incoming requests.
  * @help        :: See https://sailsjs.com/docs/concepts/actions
  */
+const fs = require('fs')
+const path = require('path');
+
+const fileUploadPromiseConverter = (file) => {
+  return new Promise((resolve, reject) => {
+    file.upload({
+      dirname: require('path').resolve(sails.config.appPath, 'uploads')
+    }, async (err, uploadedFile) => {
+      if(err) {
+        sails.log.info('Error when uploading file')
+        return reject('err');
+      }
+      const media = await Media.create({
+        fd: uploadedFile[0].fd,
+        size: uploadedFile[0].size,
+        type: uploadedFile[0].type,
+        filename: uploadedFile[0].filename,
+        status: uploadedFile[0].status,
+        field: uploadedFile[0].field,
+        extra: uploadedFile[0].extra,
+      }).fetch();
+      return resolve(media);
+    });
+  });
+};
 
 module.exports = {
-  
-
+  updateKyc: (req, res) => {
+    Promise.all([
+      fileUploadPromiseConverter(req.file('addressProof')),
+      fileUploadPromiseConverter(req.file('identityProof')),
+    ]).then(r => {
+      Kyc.update({user: req.payload.id}).set({
+        status: 'PENDING',
+        addressProof: r[0].id,
+        identityProof: r[1].id,
+      }).fetch().then(result => {
+        res.ok(result);
+      }).catch(e => {
+        sails.log.error(e)
+      });
+    });
+  },
 };
 

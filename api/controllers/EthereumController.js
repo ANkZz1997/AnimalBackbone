@@ -24,8 +24,8 @@ module.exports = {
     const user = await User.findOne({id: req.payload.id}).populate('wallet');
     const rate = await sails.helpers.getEthPrice('ETH', 'INR');
     const totalPrice = amount * rate['INR'];
-    if(user.wallet.amount < totalPrice){
-      return res.badRequest(`Insufficient fund - required amount ${totalPrice}, available amount ${user.wallet.amount}`)
+    if(user.wallet.amount/100 < totalPrice){
+      return res.badRequest(`Insufficient fund - required amount ${totalPrice.toFixed(2)}, available amount ${(user.wallet.amount/100).toFixed(2)}`)
     }
     sails.helpers.transferEther(user.wallet.address, amount).then(result => {
       console.log(result)
