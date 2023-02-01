@@ -21,8 +21,28 @@ module.exports = {
   createUser: async (req, res) => {
     const account = web3.eth.accounts.create();
     const wallet = await Wallet.create(account).fetch();
+    let userDetails = req.body;
     req.body.wallet = wallet.id;
-    User.create(req.body)
+    req.file('avatar').upload({
+      dirname: require('path').resolve(sails.config.appPath, 'uploads')
+    },async (error, uploadedFile) => {
+      if(error) {
+        return res.badRequest(error);
+      }
+      let media = {};
+      if(uploadedFile.length > 0){
+        media = await Media.create({
+          fd: uploadedFile[0].fd,
+          size: uploadedFile[0].size,
+          type: uploadedFile[0].type,
+          filename: uploadedFile[0].filename,
+          status: uploadedFile[0].status,
+          field: uploadedFile[0].field,
+          extra: uploadedFile[0].extra,
+        }).fetch();
+      }
+      userDetails['avatar']  = media.id;
+      User.create(userDetails)
       .fetch()
       .then(async (result) => {
         sails.log.info(`User created with the id ${result.id}`)
@@ -35,6 +55,7 @@ module.exports = {
       .catch((e) => {
         return res.badRequest(e);
       });
+    });
   },
   login: (req, res) => {
     User.findOne({ username: req.body.username, password: req.body.password })
