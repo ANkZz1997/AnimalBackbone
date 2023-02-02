@@ -726,7 +726,9 @@ module.exports = {
   profile: async (req, res) => {
     await User.findOne({ id: req.payload.id })
       .populateAll()
-      .then((result) => {
+      .then(async (result) => {
+        const kyc = await Kyc.findOne({user: req.payload.id})
+        result.kyc = kyc;
         res.status(200).json(result);
       });
   },
