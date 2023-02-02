@@ -21,8 +21,8 @@ module.exports = {
     },
     status: {
       type: 'string',
-      isIn: ['PENDING', 'REJECTED', 'APPROVED'],
-      defaultsTo: 'PENDING'
+      isIn: ['', 'PENDING', 'REJECTED', 'APPROVED'],
+      defaultsTo: 'NEW'
     },
     identityProof: {
       model: 'Media'
