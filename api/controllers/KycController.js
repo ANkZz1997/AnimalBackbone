@@ -59,7 +59,7 @@ module.exports = {
   },
   rejectKyc: (req, res) => {
       const {id} = req.query;
-      Kyc.update({id}).set({status: 'REJECT'}).fetch().then(result => {
+      Kyc.update({id}).set({status: 'REJECTED'}).fetch().then(result => {
         res.ok(result);
       })
   },

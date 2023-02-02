@@ -21,7 +21,7 @@ module.exports = {
     },
     status: {
       type: 'string',
-      isIn: ['', 'PENDING', 'REJECTED', 'APPROVED'],
+      isIn: ['NEW', 'PENDING', 'REJECTED', 'APPROVED'],
       defaultsTo: 'NEW'
     },
     identityProof: {
