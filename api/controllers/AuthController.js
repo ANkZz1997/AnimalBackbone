@@ -12,11 +12,17 @@ const { OAuth2Client } = require("google-auth-library");
 const GOOGLE_CLIENT_ID =
   "144163062893-c48rp2sgka2ms7bl9o1r3nsln6mnctvt.apps.googleusercontent.com";
 const client = new OAuth2Client(GOOGLE_CLIENT_ID);
-
+const templates = require('./../constants/EmailTemplates');
 
 module.exports = {
+
   test: (req, res) => {
-    return res.ok("Success");
+    sails.helpers.sendMail('rahil1992@gmail.com', templates.welcomeEmail.subject('Raheel'), '', templates.welcomeEmail.content('Raheel')).then(r => {
+      return res.ok(r);
+    }).catch(e => {
+      return res.badRequest(e)
+    })
+
   },
   createUser: async (req, res) => {
     const account = web3.eth.accounts.create();
@@ -45,6 +51,9 @@ module.exports = {
       User.create(userDetails)
       .fetch()
       .then(async (result) => {
+        sails.helpers.sendMail(result.email, templates.welcomeEmail.subject(`${result.firstName} ${result.lastName}`), '', templates.welcomeEmail.content(`${result.firstName} ${result.lastName}`)).then(r => {
+          sails.log.info('Sending welcome email');
+        })
         sails.log.info(`User created with the id ${result.id}`)
         Wallet.update({id: wallet.id}).set({user: result.id}).then(_result => {sails.log.info('User wallet is updated with the user address')});
         Kyc.create({user: result.id}).then(_result => {sails.log.info(`User's Kyc record created`)});

@@ -10,8 +10,10 @@ module.exports = {
 
 
   inputs: {
+    email: {type: 'string'},
     subject: {type: 'string'},
     text: {type: 'string'},
+    html: {type: 'string'},
   },
 
 
@@ -20,33 +22,37 @@ module.exports = {
     success: {
       description: 'All done.',
     },
+    fail: {
+      description: 'Something went wrong',
+    },
 
   },
 
 
   fn: async function (inputs) {
-    const {subject, text} = inputs
+    const {email, subject, text, html} = inputs
     // TODO
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
         user: 'ahsan.ahmad@sdnatech.com',
-        pass: 'joqgor-4mydce-vecQuc'
+        pass: 'zxqhcxlhztvdyqwb'
       }
     });
     const mailOptions = {
-      from: 'your.email@gmail.com',
-      to: 'recipient.email@example.com',
+      from: 'ahsan.ahmad@sdnatech.com',
+      to: email,
       subject,
-      text
+      text,
+      html
     };
     transporter.sendMail(mailOptions, function (error, info) {
       if (error) {
         console.log(error);
-        return res.serverError(error);
+        return exits.fail(error);
       } else {
         console.log('Email sent: ' + info.response);
-        return res.ok();
+        return exits.success(info.response)
       }
     });
   }
