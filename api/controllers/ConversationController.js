@@ -23,4 +23,9 @@ module.exports = {
       return res.badRequest(e);
     })
   },
+  subscribe: (req, res) => {
+    console.log('subscribing');
+    sails.sockets.join(req, 'conversation');
+    res.ok()
+  }
 }
