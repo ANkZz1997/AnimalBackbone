@@ -46,6 +46,7 @@ module.exports = {
       user: req.payload.id,
       message,
     }).fetch().then(record => {
+      sails.sockets.broadcast(req.payload.id, record)
       res.ok(record)
     });
   },
@@ -63,14 +64,18 @@ module.exports = {
       res.ok()
     });
   },
-  newResponse: (req, res) => {
+  newResponse: async (req, res) => {
     const {dispute, message} = req.body;
+    const d = await Dispute.findOne({id: dispute});
+    console.log(d)
     Conversation.create({
       dispute,
       user: req.payload.id,
       message,
       response: true
     }).fetch().then(record => {
+      sails.log.info(`broadcasting to ${d.user}`)
+      sails.sockets.broadcast('63a1f680dfefab37d855e1f8', record)
       res.ok(record)
     });
   }

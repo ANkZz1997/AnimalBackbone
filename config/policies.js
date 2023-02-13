@@ -42,6 +42,9 @@ module.exports.policies = {
     '*': ['isAuthenticated'],
     'verifyKyc': ['isAuthenticated', 'isAdmin'],
     'rejectKyc': ['isAuthenticated', 'isAdmin'],
+  },
+  SocketController: {
+    '*': ['isAuthenticated'],
+    'joinUserRoom': ['isAuthenticated', 'isAdmin'],
   }
-
 };

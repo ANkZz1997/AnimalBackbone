@@ -251,7 +251,11 @@ module.exports = {
      *                                                                          *
      ***************************************************************************/
     onlyAllowOrigins: [
-      'http://localhost:63342',
+      'http://localhost',
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'http://nft.sdnatech.com',
+      'https://nft.sdnatech.com',
     ],
 
 

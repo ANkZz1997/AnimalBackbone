@@ -61,6 +61,11 @@ module.exports = {
       res.ok({err, stdout, stderr});
     })
   },
+  s: (req, res) => {
+    console.log('subscribing');
+    sails.sockets.join(req, 'conversation')
+    res.ok()
+  },
   t: (req, res) => {
     console.log('testing socket');
     sails.sockets.broadcast('conversation', 'msg', {h: 123456789})
