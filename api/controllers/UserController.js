@@ -763,7 +763,6 @@ module.exports = {
         contact: contact || user.contact
       };
       const updatedUser = await User.update({id:req.payload.id},userDetails).fetch();
-      updatedUser[0].avatar = updatedUser[0].avatar;
       res.status(200).json(updatedUser);
     });
   },

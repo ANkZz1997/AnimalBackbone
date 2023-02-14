@@ -250,10 +250,13 @@ module.exports = {
      * > Be sure to use the right protocol!  ("http://" vs. "https://")         *
      *                                                                          *
      ***************************************************************************/
-    // onlyAllowOrigins: [
-    //   'https://example.com',
-    //   'https://staging.example.com',
-    // ],
+    onlyAllowOrigins: [
+      'http://localhost',
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'http://nft.sdnatech.com',
+      'https://nft.sdnatech.com',
+    ],
 
 
     /***************************************************************************

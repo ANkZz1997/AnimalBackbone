@@ -28,6 +28,10 @@ module.exports = {
       type: 'string',
       unique: true
     },
+    verified: {
+      type: 'boolean',
+      defaultsTo: false
+    },
     contact: {
       type: 'string',
     },
