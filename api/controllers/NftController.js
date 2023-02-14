@@ -1420,7 +1420,15 @@ module.exports = {
             data.minter = user.id;
             data.user = user.id;
             data.media = result.id;
-            Nft.create(data).fetch().then(result => {
+            Nft.create(data).fetch().then(async result => {
+                await sails.helpers.captureActivities({
+                    action:"NFT",
+                    type:"CREATE",
+                    user:user.id,
+                    payload:{
+                    },
+                    nft:result.id
+                });
               res.ok(result);
             }).catch(e => res.badRequest(e));
           }).catch(e => res.badRequest(e));
@@ -1446,7 +1454,15 @@ module.exports = {
     const userId = req.payload.id;
     const nftId = req.query.id;
     User.addToCollection(userId, 'wishlist', nftId)
-      .then(result => {
+      .then(async result => {
+        await sails.helpers.captureActivities({
+            action:"NFT",
+            type:"MARKFAV",
+            user:userId,
+            payload:{
+            },
+            nft:nftId
+        });
         res.ok(result)
       }).catch(e => {
         res.badRequest(e);
@@ -1456,6 +1472,14 @@ module.exports = {
     const userId = req.payload.id;
     const nftId = req.query.id;
     await User.User.removeFromCollection(userId, 'wishlist').members([nftId]);
+    await sails.helpers.captureActivities({
+        action:"NFT",
+        type:"UNMARKFAV",
+        user:userId,
+        payload:{
+        },
+        nft:nftId
+    });
     res.ok()
   },
   getWishlist: (req, res) => {

@@ -51,7 +51,16 @@ module.exports = {
       user: req.payload.id,
       nft: nft.id,
       price
-    }).fetch().then(result => {
+    }).fetch().then(async result => {
+      await sails.helpers.captureActivities({
+        action:"NFT",
+        type:"ADDTOMARKET",
+        user:req.payload.id,
+        payload:{
+        },
+        nft:nft.id,
+        marketplace: result.id
+    });
       Nft.update({id: nft.id}).set({status: 'MARKETPLACE', marketPlaceId: result.id}).then(_result => {
         res.ok(result)
       });
@@ -59,9 +68,21 @@ module.exports = {
   },
   updatePrice: async (req, res) => {
     const {id, price} = req.body;
+    const marketplace = await Marketplace.findOne({id: id, user: req.payload.id});
     Marketplace.update({id: id, user: req.payload.id}).set({price: price})
       .fetch()
-      .then(result => {
+      .then(async result => {
+        await sails.helpers.captureActivities({
+          action:"NFT",
+          type:"UPDATEPRICE",
+          user:req.payload.id,
+          payload:{
+            updatedprice:price,
+            oldprice: marketplace.price
+          },
+          nft:marketplace.nft,
+          marketplace: id
+      });
         res.ok(result);
       }).catch(e => {
         res.badRequest(e);
@@ -73,6 +94,13 @@ module.exports = {
       .set({isDeleted: true, status: 'DELETED'})
       .fetch()
       .then(async result => {
+        await sails.helpers.captureActivities({
+          action:"NFT",
+          type:"REMOVEFROMMARKET",
+          user:req.payload.id,
+          nft:result.nft,
+          marketplace: id
+      });
         await Nft.update({id: result[0].nft}).set({status: 'PORTFOLIO', marketplaceId: ''})
         res.ok(result)
       });
@@ -85,6 +113,13 @@ module.exports = {
         Nft.update({id: result.nft})
           .set({user: req.payload.id, status: 'PORTFOLIO', marketplaceId: ''})
           .then(async _result => {
+            await sails.helpers.captureActivities({
+              action:"NFT",
+              type:"BUY",
+              user:req.payload.id,
+              nft:result.nft,
+              marketplace: id
+          });
             await Marketplace.update({id: result.id}).set({status: 'COMPLETED'})
             res.ok(_result);
           });

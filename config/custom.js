@@ -1639,5 +1639,23 @@ module.exports.custom = {
     },
   },
   wallet: '0xE7791e03C62Da449ac8c3a89523700721751F681',
-  privateKey: '2f3cfd988c03f4ffcdcb33c516860524dcac7f2dbe4fa87be3c90ad7ddf8122a'
+  privateKey: '2f3cfd988c03f4ffcdcb33c516860524dcac7f2dbe4fa87be3c90ad7ddf8122a',
+  activitiesMessages: {
+    NFT: {
+      BUY: "NFT Bought by <%= user.firstName %> <%= user.lastName %>",
+      MARKFAV: "<%= user.firstName %> <%= user.lastName %> has marked this NFT as Favorite",
+      UNMARKFAV: "<%= user.firstName %> <%= user.lastName %> has unmakred this NFT from Favorite",
+      ADDTOMARKET: "<%= user.firstName %> <%= user.lastName %> added NFT to the Market Place",
+      REMOVEFROMMARKET: "NFT removed from Market Place",
+      CREATE:"<%= user.firstName %> <%= user.lastName %> added a new NFT",
+      UPDATEPRICE:
+        "NFT price has been updated from <%= payload.oldprice %> ETH to <%= payload.updatedprice %> ETH by <%= user.firstName %> <%= user.lastName %>",
+      BID:"<%= user.firstName %> <%= user.lastName %> has bid on this NFT for <%= bid.price %> ETH",
+      ADDTOAUCTION:"<%= user.firstName %> <%= user.lastName %> added NFT to Auction",
+    },
+    AUTH: {
+      LOGIN: "<%= user.firstName %> <%= user.lastName %> logged in at <%= new Date(payload.loginAt) %>",
+      CHANGEPASSWORD: "<%= user.firstName %> <%= user.lastName %> has updated his password",
+    },
+  }
 };

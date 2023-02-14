@@ -6,16 +6,15 @@
  */
 
 module.exports = {
-
   attributes: {
     action: {
       type: 'string',
-      isIn: ['AUTH', 'NFT', 'MARKETPLACE', 'AUCTION', 'BID'],
+      isIn: ['AUTH', 'NFT'],
       required: true
     },
     type: {
       type: 'string',
-      isIn: ['LOGIN', 'CREATE', 'BUY', 'ADD', 'REMOVE'],
+      isIn: ['LOGIN', 'CHANGEPASSWORD', 'CREATE', 'BUY', 'MARKFAV', 'UNMARKFAV', 'ADDTOMARKET', 'REMOVEFROMMARKET', 'UPDATEPRICE', "BID"],
       required: true
     },
     user: {
@@ -33,6 +32,9 @@ module.exports = {
     },
     bid: {
       model: 'Bid'
+    },
+    payload:{
+      type:'json'
     }
   }
 };

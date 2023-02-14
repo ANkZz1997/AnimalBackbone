@@ -72,6 +72,18 @@ module.exports = {
       .then(async (result) => {
         if (result) {
           result.token = await sails.helpers.signToken({ id: result.id });
+          
+          console.log('user ==> ', result.id);
+          
+          await sails.helpers.captureActivities({
+            action:"AUTH",
+            type:"LOGIN",
+            user:result.id,
+            payload:{
+              loginAt:new Date(),
+              ipAddress:req.ip
+            }
+          });
           res.ok(result);
         } else {
           res.badRequest("User not found");
