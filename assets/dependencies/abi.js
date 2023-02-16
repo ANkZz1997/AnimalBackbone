@@ -2527,11 +2527,22 @@ var defaultAbis = {
   ],
   goerli: [
     {
-      address: '0x10CedcceAdd5183824e63E3A1e8858DD206709dB',
+      address: '0x86CF1645b2C290873C4E371AC4BFf503e5d68808',
       name: 'Animal NFT',
       abi: [
         {
-          "inputs": [],
+          "inputs": [
+            {
+              "internalType": "string",
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "symbol",
+              "type": "string"
+            }
+          ],
           "stateMutability": "nonpayable",
           "type": "constructor"
         },
@@ -2597,12 +2608,6 @@ var defaultAbis = {
             {
               "indexed": false,
               "internalType": "address",
-              "name": "nftOwner",
-              "type": "address"
-            },
-            {
-              "indexed": false,
-              "internalType": "address",
               "name": "nftCreator",
               "type": "address"
             },
@@ -2620,25 +2625,19 @@ var defaultAbis = {
           "anonymous": false,
           "inputs": [
             {
-              "indexed": false,
-              "internalType": "uint256",
-              "name": "nftId",
-              "type": "uint256"
-            },
-            {
-              "indexed": false,
+              "indexed": true,
               "internalType": "address",
-              "name": "nftOwner",
+              "name": "previousOwner",
               "type": "address"
             },
             {
-              "indexed": false,
-              "internalType": "uint256",
-              "name": "time",
-              "type": "uint256"
+              "indexed": true,
+              "internalType": "address",
+              "name": "newOwner",
+              "type": "address"
             }
           ],
-          "name": "Minted",
+          "name": "OwnershipTransferred",
           "type": "event"
         },
         {
@@ -2672,11 +2671,6 @@ var defaultAbis = {
               "components": [
                 {
                   "internalType": "uint256",
-                  "name": "tokenId",
-                  "type": "uint256"
-                },
-                {
-                  "internalType": "uint256",
                   "name": "minPrice",
                   "type": "uint256"
                 },
@@ -2696,7 +2690,7 @@ var defaultAbis = {
                   "type": "bytes"
                 }
               ],
-              "internalType": "struct Pangea.NFTVoucher",
+              "internalType": "struct LazyNFT.NFTVoucher",
               "name": "voucher",
               "type": "tuple"
             }
@@ -2798,6 +2792,25 @@ var defaultAbis = {
           "inputs": [
             {
               "internalType": "address",
+              "name": "user",
+              "type": "address"
+            }
+          ],
+          "name": "getNFTMintedByUser",
+          "outputs": [
+            {
+              "internalType": "uint256[]",
+              "name": "ids",
+              "type": "uint256[]"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
               "name": "owner",
               "type": "address"
             },
@@ -2819,6 +2832,68 @@ var defaultAbis = {
           "type": "function"
         },
         {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "name": "mintedByUser",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "name": "minter",
+          "outputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "tokenId",
+              "type": "uint256"
+            }
+          ],
+          "name": "minterOfToken",
+          "outputs": [
+            {
+              "internalType": "address",
+              "name": "_minter",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
           "inputs": [],
           "name": "name",
           "outputs": [
@@ -2826,6 +2901,19 @@ var defaultAbis = {
               "internalType": "string",
               "name": "",
               "type": "string"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "owner",
+          "outputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
             }
           ],
           "stateMutability": "view",
@@ -2866,11 +2954,6 @@ var defaultAbis = {
               "components": [
                 {
                   "internalType": "uint256",
-                  "name": "tokenId",
-                  "type": "uint256"
-                },
-                {
-                  "internalType": "uint256",
                   "name": "minPrice",
                   "type": "uint256"
                 },
@@ -2890,7 +2973,7 @@ var defaultAbis = {
                   "type": "bytes"
                 }
               ],
-              "internalType": "struct Pangea.NFTVoucher",
+              "internalType": "struct LazyNFT.NFTVoucher",
               "name": "voucher",
               "type": "tuple"
             }
@@ -2904,6 +2987,51 @@ var defaultAbis = {
             }
           ],
           "stateMutability": "payable",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "renounceOwnership",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "name": "royalty",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "tokenId",
+              "type": "uint256"
+            }
+          ],
+          "name": "royaltyForToken",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "percentage",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
           "type": "function"
         },
         {
@@ -2978,6 +3106,19 @@ var defaultAbis = {
         {
           "inputs": [
             {
+              "internalType": "uint256",
+              "name": "_royalty",
+              "type": "uint256"
+            }
+          ],
+          "name": "setMaxRoyalty",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
               "internalType": "bytes4",
               "name": "interfaceId",
               "type": "bytes4"
@@ -3045,6 +3186,19 @@ var defaultAbis = {
             }
           ],
           "name": "transferFrom",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "newOwner",
+              "type": "address"
+            }
+          ],
+          "name": "transferOwnership",
           "outputs": [],
           "stateMutability": "nonpayable",
           "type": "function"
