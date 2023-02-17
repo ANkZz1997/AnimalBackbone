@@ -75,7 +75,7 @@ module.exports = {
       response: true
     }).fetch().then(record => {
       sails.log.info(`broadcasting to ${d.user}`)
-      sails.sockets.broadcast('63a1f680dfefab37d855e1f8', record)
+      sails.sockets.broadcast(d.user, record)
       res.ok(record)
     });
   }

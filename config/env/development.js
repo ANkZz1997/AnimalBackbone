@@ -250,13 +250,7 @@ module.exports = {
      * > Be sure to use the right protocol!  ("http://" vs. "https://")         *
      *                                                                          *
      ***************************************************************************/
-    onlyAllowOrigins: [
-      'http://localhost',
-      'http://localhost:3000',
-      'http://localhost:3001',
-      'http://nft.sdnatech.com',
-      'https://nft.sdnatech.com',
-    ],
+    // onlyAllowOrigins: [],
 
 
     /***************************************************************************
@@ -343,7 +337,7 @@ module.exports = {
    * this, just try deploying without setting it and see if it works.)       *
    *                                                                         *
    ***************************************************************************/
-  port: 1339,
+  port: 81,
 
 
 
