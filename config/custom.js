@@ -1643,6 +1643,7 @@ module.exports.custom = {
   activitiesMessages: {
     NFT: {
       BUY: "NFT Bought by <%= user.firstName %> <%= user.lastName %>",
+      SOLD:"NFT Sold by <%= user.firstName %> <%= user.lastName %>",
       MARKFAV: "<%= user.firstName %> <%= user.lastName %> has marked this NFT as Favorite",
       UNMARKFAV: "<%= user.firstName %> <%= user.lastName %> has unmakred this NFT from Favorite",
       ADDTOMARKET: "<%= user.firstName %> <%= user.lastName %> added NFT to the Market Place",
@@ -1658,8 +1659,8 @@ module.exports.custom = {
       CHANGEPASSWORD: "<%= user.firstName %> <%= user.lastName %> has updated his password",
     },
     PAYMENT:{
-      INTENT: '<%= user.firstName %> <%= user.lastName %> has created an payment intent for Rs. <%= payload.amount %> on stripe',
-      VERIFIED: '<%= user.firstName %> <%= user.lastName %> has paid Rs. <%= payload.amount %> on stripe'
+      INTENT: '<%= user.firstName %> <%= user.lastName %> has created an payment intent for Rs. <%= payload.amount/100 %> on stripe',
+      VERIFIED: '<%= user.firstName %> <%= user.lastName %> has paid Rs. <%= payload.amount/100 %> on stripe'
     }
   }
 };

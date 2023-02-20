@@ -26,12 +26,13 @@ module.exports = {
     paymentIntent.user = req.payload.id;
     paymentIntent.processed = false;
     delete paymentIntent.id;
-    Stripe.create(paymentIntent).fetch().then(record => {
+    Stripe.create(paymentIntent).fetch().then(async record => {
       await sails.helpers.captureActivities({
         action:"PAYMENT",
         type:"INTENT",
         user:req.payload.id,
         payload:{
+          amount:amount,
           paymentIntentId:record.id,
           ipAddress:req.ip
         }
@@ -52,7 +53,7 @@ module.exports = {
             Wallet.update({user: record.user}).set({amount: wallet.amount + paymentIntent.amount_received})
               .then(async () => {
                 delete paymentIntent.id;
-                Stripe.update({piId: payment_intent}).set({...paymentIntent, processed: true}).fetch().then(_record => {
+                Stripe.update({piId: payment_intent}).set({...paymentIntent, processed: true}).fetch().then(async _record => {
                   await sails.helpers.captureActivities({
                     action:"PAYMENT",
                     type:"VERIFIED",
