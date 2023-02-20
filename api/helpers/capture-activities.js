@@ -20,10 +20,8 @@ module.exports = {
     await Activity.create(
       inputs.payload
      );  
-     console.log("*** success *****");
     return exits.success(inputs.payload);
     }catch(err){
-      console.log(err);
       return exits.success();
     }
   },
