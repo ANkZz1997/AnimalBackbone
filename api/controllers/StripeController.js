@@ -27,8 +27,17 @@ module.exports = {
     paymentIntent.processed = false;
     delete paymentIntent.id;
     Stripe.create(paymentIntent).fetch().then(record => {
+      await sails.helpers.captureActivities({
+        action:"PAYMENT",
+        type:"INTENT",
+        user:req.payload.id,
+        payload:{
+          paymentIntentId:record.id,
+          ipAddress:req.ip
+        }
+      });
       res.ok(record)
-    })
+    });
   },
   verifyPayment: async (req, res) => {
     const {payment_intent, payment_intent_client_secret} = req.query;
@@ -44,6 +53,16 @@ module.exports = {
               .then(async () => {
                 delete paymentIntent.id;
                 Stripe.update({piId: payment_intent}).set({...paymentIntent, processed: true}).fetch().then(_record => {
+                  await sails.helpers.captureActivities({
+                    action:"PAYMENT",
+                    type:"VERIFIED",
+                    user:record.user,
+                    payload:{
+                      amount:paymentIntent.amount_received,
+                      paymentIntentId:record.id,
+                      ipAddress:req.ip
+                    }
+                  });
                   res.redirect(`https://nft.sdnatech.com/paymentStatus?id=${record.id}`)
                 }).catch(e => {
                   res.redirect(`https://nft.sdnatech.com/paymentStatus?id=${record.id}`)

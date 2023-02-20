@@ -9,12 +9,12 @@ module.exports = {
   attributes: {
     action: {
       type: 'string',
-      isIn: ['AUTH', 'NFT'],
+      isIn: ['AUTH', 'NFT', 'PAYMENT'],
       required: true
     },
     type: {
       type: 'string',
-      isIn: ['LOGIN', 'CHANGEPASSWORD', 'CREATE', 'BUY', 'MARKFAV', 'UNMARKFAV', 'ADDTOMARKET', 'REMOVEFROMMARKET', 'UPDATEPRICE', "BID"],
+      isIn: ['LOGIN', 'CHANGEPASSWORD', 'CREATE', 'BUY', 'MARKFAV', 'UNMARKFAV', 'ADDTOMARKET', 'REMOVEFROMMARKET', 'UPDATEPRICE', 'BID', 'INTENT', 'VERIFIED'],
       required: true
     },
     user: {

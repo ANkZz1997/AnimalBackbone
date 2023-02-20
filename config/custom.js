@@ -1657,5 +1657,9 @@ module.exports.custom = {
       LOGIN: "<%= user.firstName %> <%= user.lastName %> logged in at <%= new Date(payload.loginAt) %>",
       CHANGEPASSWORD: "<%= user.firstName %> <%= user.lastName %> has updated his password",
     },
+    PAYMENT:{
+      INTENT: '<%= user.firstName %> <%= user.lastName %> has created an payment intent for Rs. <%= payload.amount %> on stripe',
+      VERIFIED: '<%= user.firstName %> <%= user.lastName %> has paid Rs. <%= payload.amount %> on stripe'
+    }
   }
 };
