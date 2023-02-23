@@ -26,6 +26,9 @@ module.exports = {
     name: {
       type: 'string'
     },
+    minPrice: {
+      type: 'string'
+    },
     royalty: {
       type: 'number'
     },
@@ -68,6 +71,10 @@ module.exports = {
     wishlistedBy: {
       collection: 'User',
       via: 'wishlist'
+    },
+    minted: {
+      type: 'boolean',
+      defaultsTo: false
     }
   },
 

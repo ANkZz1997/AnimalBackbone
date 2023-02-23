@@ -130,10 +130,22 @@ module.exports = {
   },
   buy: (req, res) => {
     const { id } = req.body;
-    Marketplace.findOne({ id, status: "PENDING" }).then((result) => {
+    Marketplace.findOne({ id, status: "PENDING" }).then(async (result) => {
       if (!result) return res.badRequest();
-      Nft.update({ id: result.nft })
-        .set({ user: req.payload.id, status: "PORTFOLIO", marketplaceId: "" })
+      const nft = await Nft.findOne({id: result.nft});
+      const minter = await User.findOne({id: result.user}).populate('wallet');
+      const redeemer = await User.findOne({id: req.payload.id}).populate('wallet');
+      if(!nft.minted) {
+        sails.helpers.mintNft(minter, redeemer, nft, result).then(response => {
+          res.ok(response)
+        });
+      } else {
+        res.ok({nft,minter,redeemer})
+      }
+
+      return;
+      Nft.update({id: result.nft})
+        .set({user: req.payload.id, status: "PORTFOLIO", marketplaceId: ""})
         .then(async (_result) => {
           await sails.helpers.captureActivities({
             action: "NFT",
@@ -149,7 +161,7 @@ module.exports = {
             nft: result.nft,
             marketplace: id,
           });
-          await Marketplace.update({ id: result.id }).set({
+          await Marketplace.update({id: result.id}).set({
             status: "COMPLETED",
           });
           res.ok(_result);

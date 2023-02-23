@@ -703,16 +703,24 @@ const pinata = pinataSDK('3b96933e4292f6aedad8',
 module.exports = {
   download: (req, res) => {
     const {mediaId} = req.params;
-    if(!mediaId) return res.badRequest();
+    if(!mediaId ) {
+      sails.log.info('media id not found, returning default image')
+      return fs.createReadStream(`./assets/images/ph.png`).pipe(res);
+    }
     Media.findOne({id: mediaId}).then(result => {
       if(result) {
         const imagePartials = result.fd.split('/uploads/');
         fs.open(`./uploads/${imagePartials[1]}`,'r',(err,fd)=>{
-          if(err) return res.badRequest(err)
+          if(err) {
+            sails.log.error('There is an issue while reading the file');
+            sails.log.error(err);
+            return fs.createReadStream(`./assets/images/ph.png`).pipe(res);
+          }
           return fs.createReadStream(`./uploads/${imagePartials[1]}`).pipe(res);
         });
       } else {
-        return res.badRequest('File not found')
+        sails.log.info('media not found, returning default image')
+        return fs.createReadStream(`./assets/images/ph.png`).pipe(res);
       }
     })
   },
