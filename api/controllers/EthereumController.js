@@ -29,7 +29,7 @@ module.exports = {
     }
     sails.helpers.transferEther(user.wallet.address, amount).then(result => {
       console.log(result)
-      Wallet.update({id: user.wallet.id}).set({amount: user.wallet.amount-totalPrice}).then(result => {})
+      Wallet.update({id: user.wallet.id}).set({amount: user.wallet.amount-(totalPrice*100)}).then(result => {})
       Ethereum.create({
         user: req.payload.id,
         ether: amount,
