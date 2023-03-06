@@ -1,5 +1,5 @@
+const networks = require('./../constants/networks')
 const Web3 = require('web3');
-const web3 = new Web3(sails.config.custom.blockchain.goerli.node);
 module.exports = {
 
 
@@ -28,9 +28,8 @@ module.exports = {
 
   fn: async function (inputs, exits) {
     // TODO
-    console.log(inputs)
-    const {address} = inputs
-    console.log(address)
+    const {address, chainId} = inputs
+    const web3 = new Web3(networks[chainId].node);
     web3.eth.getBalance(address, (error, balance) => {
       if (error) {
         return exits.fail(error)

@@ -75,8 +75,13 @@ module.exports = {
     minted: {
       type: 'boolean',
       defaultsTo: false
+    },
+    chainId: {
+      type: 'number'
+    },
+    views: {
+      type: 'number'
     }
   },
-
 };
 

@@ -6,6 +6,7 @@ module.exports = async (req, res, next) => {
   let token = partials[1];
   let payload = await sails.helpers.verifyToken(token);
   req.payload = payload;
+  req.payload.chainId = req.headers.chainid;
   req.body={
     ...req.body
   };

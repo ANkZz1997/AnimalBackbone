@@ -1420,6 +1420,7 @@ module.exports = {
             data.minter = user.id;
             data.user = user.id;
             data.media = result.id;
+            data.chainId = req.payload.chainId
             Nft.create(data).fetch().then(async result => {
                 await sails.helpers.captureActivities({
                     action:"NFT",
@@ -1441,12 +1442,13 @@ module.exports = {
       res.status(200).json(result);
     });
   },
-  detail: (req, res) => {
+  detail: async (req, res) => {
     const {id} = req.query;
     Nft.findOne({id})
       .populate('minter')
       .populate('user')
       .then(result => {
+        Nft.updateOne({id}).set({views: result.views+1}).then();
         res.ok(result);
       });
   },

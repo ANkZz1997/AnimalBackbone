@@ -70,6 +70,12 @@ module.exports = {
     console.log('testing socket');
     sails.sockets.broadcast('conversation', 'msg', {h: 123456789})
     res.ok()
+  },
+  test: (req, res) => {
+    sails.helpers.mintNft('minter', 'redeemer').then(r => {
+      res.ok(r)
+    })
+
   }
 }
 

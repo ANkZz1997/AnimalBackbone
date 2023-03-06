@@ -46,5 +46,8 @@ module.exports.policies = {
   SocketController: {
     '*': ['isAuthenticated'],
     'joinUserRoom': ['isAuthenticated', 'isAdmin'],
+  },
+  MarketplaceController: {
+    'index': true
   }
 };

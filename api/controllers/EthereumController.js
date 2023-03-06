@@ -8,7 +8,8 @@
 module.exports = {
   getBalance: (req,res) => {
     const {address} = req.query
-    sails.helpers.etherBalance(address).then(result => {
+    sails.log.info(`fetching ether balance for address ${address}`)
+    sails.helpers.etherBalance(address, req.payload.chainId).then(result => {
       res.ok({
         balance: result
       })
@@ -27,9 +28,9 @@ module.exports = {
     if(user.wallet.amount/100 < totalPrice){
       return res.badRequest(`Insufficient fund - required amount ${totalPrice.toFixed(2)}, available amount ${(user.wallet.amount/100).toFixed(2)}`)
     }
-    sails.helpers.transferEther(user.wallet.address, amount).then(result => {
+    sails.helpers.transferEther(user.wallet.address, amount, req.payload.chainId).then(result => {
       console.log(result)
-      Wallet.update({id: user.wallet.id}).set({amount: user.wallet.amount-(totalPrice*100)}).then(result => {})
+      Wallet.update({id: user.wallet.id}).set({amount: user.wallet.amount-totalPrice}).then(result => {})
       Ethereum.create({
         user: req.payload.id,
         ether: amount,
