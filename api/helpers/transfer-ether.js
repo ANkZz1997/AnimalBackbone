@@ -21,6 +21,9 @@ module.exports = {
     amount: {
       type: 'string',
       required: true
+    },
+    chainId: {
+      type: 'number'
     }
   },
 

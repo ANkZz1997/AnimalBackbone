@@ -12,6 +12,9 @@ module.exports = {
   inputs: {
     address: {
       type: 'string'
+    },
+    chainId: {
+      type: 'number'
     }
   },
 
