@@ -42,13 +42,19 @@ module.exports = {
       order = "DESC",
     } = req.query;
     const totalCount = await Nft.count();
+    const populate = req.body.populate || [];
+    delete req.body.populate;
     const criteria = req.body;
-
-    Nft.find(criteria)
+    const query = Nft.find(criteria)
       .limit(limit)
       .skip((page - 1) * limit)
-      .sort(`${sort} ${order}`)
-      .then((result) => {
+      .sort(`${sort} ${order}`);
+
+    populate.forEach(e => {
+      query.populate(e)
+    })
+
+    query.then((result) => {
         res.ok({
           records: result,
           totalCount,
