@@ -39,7 +39,8 @@ module.exports = {
           user: req.payload.id,
           nft: nftId,
           basePrice: basePrice,
-          endTime: endTime
+          endTime: endTime,
+          chainId: req.payload.chainId
         }).fetch()
           .then(async _result => {
             await Nft.update({id: nftId}).set({status: 'AUCTION', auctionId: _result.id});
