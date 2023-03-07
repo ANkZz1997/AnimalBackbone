@@ -49,5 +49,8 @@ module.exports.policies = {
   },
   MarketplaceController: {
     'index': true
+  },
+  AuctionController: {
+    'index': true
   }
 };
