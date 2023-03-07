@@ -150,7 +150,6 @@ module.exports = {
           Nft.update({id: result.nft.id})
             .set({user: req.payload.id, status: "PORTFOLIO", marketplaceId: "", minted: true})
             .then(async (_result) => {
-              _result.transaction = transaction
               await sails.helpers.captureActivities({
                 action: "NFT",
                 type: "BUY",
@@ -168,7 +167,7 @@ module.exports = {
               await Marketplace.update({id: result.id}).set({
                 status: "COMPLETED",
               });
-              res.ok(_result);
+              res.ok(transaction);
             });
         });
       } else {
