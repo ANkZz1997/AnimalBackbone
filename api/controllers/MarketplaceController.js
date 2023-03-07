@@ -146,10 +146,11 @@ module.exports = {
       const redeemer = await Wallet.findOne({user: req.payload.id});
       if(!result.nft.minted) {
         sails.log.info('nft is not minted, minting now');
-        sails.helpers.mintLazyNft(redeemer.privateKey, minter.address, redeemer.address, result.voucher, req.payload.chainId).then(response => {
+        sails.helpers.mintLazyNft(redeemer.privateKey, minter.address, redeemer.address, result.voucher, req.payload.chainId).then(transaction => {
           Nft.update({id: result.nft.id})
             .set({user: req.payload.id, status: "PORTFOLIO", marketplaceId: "", minted: true})
             .then(async (_result) => {
+              _result.transaction = transaction
               await sails.helpers.captureActivities({
                 action: "NFT",
                 type: "BUY",

@@ -8,8 +8,8 @@
 module.exports = {
   index: async (req, res) => {
     const response = {
-      created: await Nft.count({minter: req.payload.id}),
-      collected: await Nft.count({user: req.payload.id, minter: {'!=': req.payload.id}}),
+      createdCount: await Nft.count({minter: req.payload.id}),
+      collectedCount: await Nft.count({user: req.payload.id, minter: {'!=': req.payload.id}}),
       auction: await Auction.find().limit(10),
       marketplace: await Marketplace.find().limit(10),
       nft: await Nft.find().limit(10),
