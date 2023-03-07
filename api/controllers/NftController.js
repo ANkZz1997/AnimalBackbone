@@ -1448,7 +1448,7 @@ module.exports = {
       .populate('minter')
       .populate('user')
       .then(result => {
-        Nft.updateOne({id}).set({views: result.views+1}).then();
+        Nft.updateOne({id}).set({views: (result.views||0)+1}).then();
         res.ok(result);
       });
   },

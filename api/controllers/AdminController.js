@@ -72,13 +72,17 @@ module.exports = {
       order = "DESC",
     } = req.query;
     const totalCount = await Auction.count();
+    const populate = req.body.populate || [];
+    delete req.body.populate;
     const criteria = req.body;
-    Auction.find(criteria)
+    const query = Auction.find(criteria)
       .limit(limit)
       .skip((page - 1) * limit)
-      .sort(`${sort} ${order}`)
-      .populate("nft")
-      .then((result) => {
+      .sort(`${sort} ${order}`);
+    populate.forEach(e => {
+      query.populate(e)
+    })
+    query.then((result) => {
         res.ok({
           records: result,
           totalCount,
@@ -96,13 +100,17 @@ module.exports = {
       order = "DESC",
     } = req.query;
     const totalCount = await Marketplace.count();
+    const populate = req.body.populate || [];
+    delete req.body.populate;
     const criteria = req.body;
-    Marketplace.find(criteria)
+    const query = Marketplace.find(criteria)
       .limit(limit)
       .skip((page - 1) * limit)
-      .sort(`${sort} ${order}`)
-      .populate("nft")
-      .then((result) => {
+      .sort(`${sort} ${order}`);
+    populate.forEach(e => {
+      query.populate(e)
+    })
+    query.then((result) => {
         res.ok({
           records: result,
           totalCount,
