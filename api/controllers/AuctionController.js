@@ -9,6 +9,7 @@ module.exports = {
   index: async (req, res) => {
     const {page = 1, limit = 20, sort = 'createdAt', order = 'DESC'} = req.query;
     const criteria = req.body;
+    criteria.chainId = req.payload.chainId;
     const totalCount = await Auction.count(criteria);
     Auction.find(criteria)
       .limit(limit)

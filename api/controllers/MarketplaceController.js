@@ -15,6 +15,7 @@ module.exports = {
     } = req.query;
     const criteria = req.body;
     criteria.isDeleted = false;
+    criteria.chainId = req.payload.chainId;
     const totalCount = await Marketplace.count(criteria);
     Marketplace.find(criteria)
       .limit(limit)
