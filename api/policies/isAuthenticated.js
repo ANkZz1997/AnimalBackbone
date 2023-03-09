@@ -5,8 +5,7 @@ module.exports = async (req, res, next) => {
   if(scheme !== 'Bearer') return res.badRequest('Invalid Token Scheme');
   let token = partials[1];
   let payload = await sails.helpers.verifyToken(token);
-  req.payload = payload;
-  req.payload.chainId = req.headers.chainid;
+  req.payload = {...req.payload, ...payload};
   req.body={
     ...req.body
   };

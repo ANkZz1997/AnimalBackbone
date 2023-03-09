@@ -17,7 +17,7 @@ module.exports.policies = {
    *                                                                          *
    ***************************************************************************/
 
-  '*': 'isAuthenticated',
+  '*': ['injectChainId', 'isAuthenticated'],
   AuthController: {
     '*': true
   },
@@ -48,9 +48,9 @@ module.exports.policies = {
     'joinUserRoom': ['isAuthenticated', 'isAdmin'],
   },
   MarketplaceController: {
-    'index': true
+    'index': ['injectChainId']
   },
   AuctionController: {
-    'index': true
+    'index': ['injectChainId']
   }
 };
