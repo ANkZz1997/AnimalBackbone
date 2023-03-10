@@ -10,9 +10,9 @@ module.exports = {
     const response = {
       createdCount: await Nft.count({minter: req.payload.id}),
       collectedCount: await Nft.count({user: req.payload.id, minter: {'!=': req.payload.id}}),
-      auction: await Auction.find().limit(10),
-      marketplace: await Marketplace.find().limit(10),
-      nft: await Nft.find().limit(10),
+      auction: await Auction.find().populate('nft').limit(10),
+      marketplace: await Marketplace.find().populate('nft').limit(10),
+      nft: await Nft.find().populate('nft').limit(10),
       wishlist: await User.findOne({id: req.payload.id}).populate('wishlist', {limit: 10})
     }
     res.ok(response)
