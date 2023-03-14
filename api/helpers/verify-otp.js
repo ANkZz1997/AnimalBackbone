@@ -17,7 +17,6 @@ module.exports = {
     },
   },
   fn: async function (inputs, exits) {
-    debugger;
     const decoded = await sails.helpers.decryptText({text:inputs.payload.token});
     console.log(decoded);
     const verificationDetails = JSON.parse(decoded);
@@ -27,7 +26,7 @@ module.exports = {
       .then(async (result) => {
         console.log(result);
         if (result) {
-          await Otp.({id:result.id});
+          await Otp.destroy({id:result.id});
           exits.success({varified:true, user:result.user});
         } else {
           exits.success({varified:false});

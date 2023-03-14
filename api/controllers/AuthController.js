@@ -286,7 +286,6 @@ ${wallet.nonce}`;
     console.log(otpDetails);
     if(otpDetails.varified === true){
       await User.update({id:otpDetails.user},{password:password}).fetch();
-      await Otp.remove({id:otpId});
       res.ok();
     }else{
       return res.badRequest("Something went wrong");
