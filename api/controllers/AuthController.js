@@ -13,6 +13,7 @@ const GOOGLE_CLIENT_ID =
   "144163062893-c48rp2sgka2ms7bl9o1r3nsln6mnctvt.apps.googleusercontent.com";
 const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 const templates = require('./../constants/EmailTemplates');
+const Otp = require("../models/Otp");
 
 module.exports = {
 
@@ -251,4 +252,44 @@ ${wallet.nonce}`;
         res.badRequest(e);
     }
   },
+  forgotPassword: async (req, res) => {
+    User.findOne({ email: req.body.email, type: "CENTRALISED" })
+      .then(async (result) => {
+        if (result) {
+          const otpDetails = await sails.helpers.createOtp({
+            user: result.id,
+            type: "EMAIL",
+            for: "FORGOTPASSWORD",
+          });
+          let name =  `${result.firstName} ${result.lastName}`;
+          (!name)? name = result.email : '';
+          sails.helpers.sendMail(result.email, templates.forgotPassword.subject(), '', templates.forgotPassword.content({name:name,OTP:otpDetails['otp'], token:otpDetails['token']})).then(r => {
+            sails.log.info('Sending forgot password email');
+          });
+          res.ok({token:otpDetails['token']});
+        } else{
+          res.badRequest("User not found");
+        }
+      })
+      .catch((e) => {
+        console.log(e);
+        return res.badRequest("Something went wrong");
+      });
+  },
+
+  resetPassword:async (req, res) => {
+    const { token, otp, password } = req.body;
+    const otpDetails =  await sails.helpers.verifyOtp({
+      token,
+      otp
+    });
+    console.log(otpDetails);
+    if(otpDetails.varified === true){
+      await User.update({id:otpDetails.user},{password:password}).fetch();
+      await Otp.remove({id:otpId});
+      res.ok();
+    }else{
+      return res.badRequest("Something went wrong");
+    }
+  }
 };

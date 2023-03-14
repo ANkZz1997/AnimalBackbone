@@ -748,6 +748,7 @@ module.exports.custom = {
   },
   wallet: '0xE7791e03C62Da449ac8c3a89523700721751F681',
   privateKey: '2f3cfd988c03f4ffcdcb33c516860524dcac7f2dbe4fa87be3c90ad7ddf8122a',
+  encryptionSecret: "33c516ff051b742698d47a06c9ab82522",
   activitiesMessages: {
     NFT: {
       BUY: "NFT Bought by <%= user.firstName %> <%= user.lastName %>",
@@ -770,5 +771,6 @@ module.exports.custom = {
       INTENT: '<%= user.firstName %> <%= user.lastName %> has created an payment intent for Rs. <%= payload.amount/100 %> on stripe',
       VERIFIED: '<%= user.firstName %> <%= user.lastName %> has paid Rs. <%= payload.amount/100 %> on stripe'
     }
-  }
+  },
+  domain:'http://nft.sdnatech.com:8080/'
 };

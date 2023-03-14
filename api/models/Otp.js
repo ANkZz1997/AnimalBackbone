@@ -16,7 +16,11 @@ module.exports = {
     },
     type: {
       type: 'string',
-      isIn: ['email', 'mobile']
+      isIn: ['EMAIL', 'MOBILE']
+    },
+    for:{
+      type:'string',
+      isIn:['FORGOTPASSWORD','EMAILCONFIRMATION']
     }
   },
 
