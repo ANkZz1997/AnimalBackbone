@@ -723,6 +723,7 @@ module.exports.custom = {
       "constant": true
     }
   ],
+  chainId: 5,
   blockchain: {
     goerli: {
       node: 'https://eth-goerli.g.alchemy.com/v2/X0BWiAM_pAYOFyTpg8njLB-E76st1A2d',

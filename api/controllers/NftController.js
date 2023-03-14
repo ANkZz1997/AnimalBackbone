@@ -1374,6 +1374,7 @@ module.exports = {
   index: async (req, res) => {
     const {page = 1, limit = 20, sort = 'createdAt', order = 'DESC'} = req.query;
     const criteria = req.body;
+    criteria.chainId = req.payload.chainId;
     const totalCount = await Nft.count(criteria);
     Nft.find(criteria)
       .limit(limit)
@@ -1420,6 +1421,7 @@ module.exports = {
             data.minter = user.id;
             data.user = user.id;
             data.media = result.id;
+            data.chainId = req.payload.chainId
             Nft.create(data).fetch().then(async result => {
                 await sails.helpers.captureActivities({
                     action:"NFT",
@@ -1441,12 +1443,13 @@ module.exports = {
       res.status(200).json(result);
     });
   },
-  detail: (req, res) => {
+  detail: async (req, res) => {
     const {id} = req.query;
     Nft.findOne({id})
       .populate('minter')
       .populate('user')
       .then(result => {
+        Nft.updateOne({id}).set({views: (result.views||0)+1}).then();
         res.ok(result);
       });
   },

@@ -15,6 +15,7 @@ module.exports = {
     } = req.query;
     const criteria = req.body;
     criteria.isDeleted = false;
+    criteria.chainId = req.payload.chainId;
     const totalCount = await Marketplace.count(criteria);
     Marketplace.find(criteria)
       .limit(limit)
@@ -53,16 +54,26 @@ module.exports = {
   },
   addToMarketPlace: async (req, res) => {
     const { nftId, price } = req.body;
+    const wallet = await Wallet.findOne({user: req.payload.id});
     const nft = await Nft.findOne({
       id: nftId,
       user: req.payload.id,
       status: "PORTFOLIO",
     });
     if (!nft) return res.badRequest("nft does not exist");
+    const voucher = await sails.helpers.generateMintingSignature(
+      wallet.privateKey,
+      price,
+      nft.metaData,
+      nft.royalty,
+      req.payload.chainId
+    )
     Marketplace.create({
       user: req.payload.id,
       nft: nft.id,
       price,
+      voucher,
+      chainId: req.payload.chainId
     })
       .fetch()
       .then(async (result) => {
@@ -130,30 +141,39 @@ module.exports = {
   },
   buy: (req, res) => {
     const { id } = req.body;
-    Marketplace.findOne({ id, status: "PENDING" }).then((result) => {
+    Marketplace.findOne({ id, status: "PENDING" }).populate('nft').then(async (result) => {
       if (!result) return res.badRequest();
-      Nft.update({ id: result.nft })
-        .set({ user: req.payload.id, status: "PORTFOLIO", marketplaceId: "" })
-        .then(async (_result) => {
-          await sails.helpers.captureActivities({
-            action: "NFT",
-            type: "BUY",
-            user: req.payload.id,
-            nft: result.nft,
-            marketplace: id,
-          });
-          await sails.helpers.captureActivities({
-            action: "NFT",
-            type: "SOLD",
-            user: result.user,
-            nft: result.nft,
-            marketplace: id,
-          });
-          await Marketplace.update({ id: result.id }).set({
-            status: "COMPLETED",
-          });
-          res.ok(_result);
+      const minter = await Wallet.findOne({user: result.user});
+      const redeemer = await Wallet.findOne({user: req.payload.id});
+      if(!result.nft.minted) {
+        sails.log.info('nft is not minted, minting now');
+        sails.helpers.mintLazyNft(redeemer.privateKey, minter.address, redeemer.address, result.voucher, req.payload.chainId).then(transaction => {
+          Nft.update({id: result.nft.id})
+            .set({user: req.payload.id, status: "PORTFOLIO", marketplaceId: "", minted: true})
+            .then(async (_result) => {
+              await sails.helpers.captureActivities({
+                action: "NFT",
+                type: "BUY",
+                user: req.payload.id,
+                nft: result.nft.id,
+                marketplace: id,
+              });
+              await sails.helpers.captureActivities({
+                action: "NFT",
+                type: "SOLD",
+                user: result.user,
+                nft: result.nft.id,
+                marketplace: id,
+              });
+              await Marketplace.update({id: result.id}).set({
+                status: "COMPLETED",
+              });
+              res.ok(transaction);
+            });
         });
+      } else {
+        res.ok()
+      }
     });
   },
 };

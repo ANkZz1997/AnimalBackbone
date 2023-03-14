@@ -27,6 +27,12 @@ module.exports = {
     isDeleted: {
       type: 'boolean',
       defaultsTo: false
+    },
+    voucher: {
+      type: 'json'
+    },
+    chainId: {
+      type: 'number'
     }
   },
 

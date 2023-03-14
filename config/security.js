@@ -33,7 +33,7 @@ module.exports.security = {
     allowOrigins: '*',
     allowAnyOriginWithCredentialsUnsafe: true,
     allowCredentials: true,
-    headers: 'Content-Type, authorization'
+    headers: 'Content-Type, authorization, chainId'
   },
 
 

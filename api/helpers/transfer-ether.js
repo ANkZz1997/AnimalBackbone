@@ -1,9 +1,8 @@
+const networks = require('./../constants/networks')
 const Web3 = require('web3');
-const web3 = new Web3(sails.config.custom.blockchain.goerli.node);
 
 const sender = sails.config.custom.wallet;
 const privateKey = sails.config.custom.privateKey;
-
 
 module.exports = {
 
@@ -22,6 +21,9 @@ module.exports = {
     amount: {
       type: 'string',
       required: true
+    },
+    chainId: {
+      type: 'number'
     }
   },
 
@@ -39,37 +41,32 @@ module.exports = {
 
 
   fn: async function (inputs, exits) {
-    const {receiver, amount} = inputs;
-    // Get the current nonce (number of transactions sent) for the sender
-    web3.eth.getTransactionCount(sender)
-      .then(nonce => {
-        // Build the transaction object
-        console.log(nonce)
-        const tx = {
-          nonce: nonce,
-          to: receiver,
-          value: web3.utils.toWei(amount, 'ether'),
-          gas: 21000,
-          gasPrice: web3.utils.toWei('20', 'gwei')
-        };
-        // Sign the transaction with the sender's private key
-        console.log(tx)
-        web3.eth.accounts.signTransaction(tx, privateKey)
-          .then(signed => {
-            console.log('transaction signed');
-            // Send the signed transaction to the network
-            web3.eth.sendSignedTransaction(signed.rawTransaction)
-              .then(receipt => {
-                console.log(`Transaction hash: ${receipt.transactionHash}`);
-                return exits.success(receipt);
-              })
-              .catch(err => {
-                return exits.fail(err)
-              });
-          });
-      }).catch(e => {
-        return exits.fail(e)
-    });
+    sails.log.info(`transfering ethers from ${sender} to ${inputs.receiver}`);
+    const {receiver, amount, chainId} = inputs;
+    const web3 = new Web3(networks[chainId].node);
+    try {
+      const gasPrice = await web3.eth.getGasPrice();
+      const nonce = await web3.eth.getTransactionCount(sender);
+      const tx = {
+        from: sender,
+        to: receiver,
+        value: web3.utils.toWei(amount.toString(), 'ether'),
+        gas: 21000,
+        gasPrice: gasPrice,
+        nonce: nonce
+      };
+      sails.log.info('created transaction object')
+      console.log(tx)
+      const signedTx = await web3.eth.accounts.signTransaction(tx, privateKey);
+      sails.log.info('transaction signed')
+      const result = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+      console.log('transaction sent to chain')
+      return exits.success(result);
+    } catch (e) {
+      sails.log.info('transfer failed');
+      sails.log.error(e)
+      return exits.fail(e)
+    }
   }
 
 

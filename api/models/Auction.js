@@ -32,6 +32,9 @@ module.exports = {
     bid: {
       collection: 'Bid',
       via: 'auction'
+    },
+    chainId: {
+      type: 'number'
     }
   },
 };
