@@ -18,13 +18,9 @@ module.exports = {
   },
   fn: async function (inputs, exits) {
     const decoded = await sails.helpers.decryptText({text:inputs.payload.token});
-    console.log(decoded);
     const verificationDetails = JSON.parse(decoded);
-    console.log(verificationDetails);
-    console.log(inputs.payload);
     Otp.findOne({ id: verificationDetails.otpId, otp: inputs.payload.otp })
       .then(async (result) => {
-        console.log(result);
         if (result) {
           await Otp.destroy({id:result.id});
           exits.success({varified:true, user:result.user});
@@ -33,7 +29,6 @@ module.exports = {
         }
       })
       .catch((e) => {
-        console.log(e);
         exits.success({varified:false});
       });
   },

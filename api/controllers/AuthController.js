@@ -283,7 +283,6 @@ ${wallet.nonce}`;
       token,
       otp
     });
-    console.log(otpDetails);
     if(otpDetails.varified === true){
       await User.update({id:otpDetails.user},{password:password}).fetch();
       res.ok();
