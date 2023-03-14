@@ -298,7 +298,6 @@ module.exports = {
       .sort(`${sort} ${order}`)
       .then(async (result) => {
         const data = await sails.helpers.displayActivities(result);
-        console.log(data);
         res.ok({
           records: data,
           totalCount,

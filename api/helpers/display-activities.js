@@ -20,8 +20,6 @@ module.exports = {
   fn: async function (inputs, exits) {
     const activities = [];
     const messages = sails.config.custom.activitiesMessages;
-    console.log(inputs.payload);
-
     if (inputs.payload) {
       for (let data of inputs.payload) {
         let msg = ejs.render(messages[data.action][data.type], data);
