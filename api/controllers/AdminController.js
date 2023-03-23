@@ -307,4 +307,93 @@ module.exports = {
         res.badRequest(e);
     });
   },
+  addBanner: async (req, res) => {
+    const { name, description, link,order,isActive } = req.body;
+    req.file("image").upload(
+      {
+        dirname: require("path").resolve(sails.config.appPath, "uploads"),
+      },
+      async (error, uploadedFile) => {
+        if (error) {
+          return res.badRequest(error);
+        }
+        let media = {};
+        if (uploadedFile.length > 0) {
+          media = await Media.create({
+            fd: uploadedFile[0].fd,
+            size: uploadedFile[0].size,
+            type: uploadedFile[0].type,
+            filename: uploadedFile[0].filename,
+            status: uploadedFile[0].status,
+            field: uploadedFile[0].field,
+            extra: uploadedFile[0].extra,
+          }).fetch();
+        }
+        const bannerDetails = {
+          image: media.id,
+          name: name,
+          description: description,
+          link: link,
+          order:order,
+          isActive: isActive,
+        };
+
+        Banner.create(bannerDetails)
+          .fetch()
+          .then(async (result) => {
+            res.status(200).json(result);
+          })
+          .catch((e) => {
+            return res.badRequest(e);
+          });
+      }
+    );
+  },
+  updateBannerStatus: (req, res) => {
+    const { id, isActive } = req.body;
+    Banner.update({ id })
+      .set({ isActive })
+      .fetch()
+      .then((result) => {
+        res.ok(result);
+      })
+      .catch((e) => {
+        res.badRequest(e);
+      });
+  },
+  deleteBanner: async (req, res) => {
+    const { id } = req.body;
+    Banner.update({ id: id})
+      .set({ isDeleted: true, isActive:false})
+      .fetch()
+      .then(async (result) => {
+        res.ok(result);
+      });
+  },
+  banners:async (req, res) => {
+    const {
+      page = 1,
+      limit = 20,
+      sort = "createdAt",
+      order = "DESC",
+    } = req.query;
+
+    const criteria = req.body;
+    criteria['isDeleted'] = false;
+    criteria['isActive'] = true;
+    const totalCount = await Banner.count(criteria);
+    Banner.find(criteria)
+      .limit(limit)
+      .skip((page - 1) * limit)
+      .sort(`${sort} ${order}`)
+      .then((result) => {
+        res.ok({
+          records: result,
+          totalCount,
+        });
+      })
+      .catch((e) => {
+        res.badRequest(e);
+      });
+  }
 };
