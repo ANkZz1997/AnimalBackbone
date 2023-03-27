@@ -380,7 +380,7 @@ module.exports = {
 
     const criteria = req.body;
     criteria['isDeleted'] = false;
-    criteria['isActive'] = true;
+    //criteria['isActive'] = true;
     const totalCount = await Banner.count(criteria);
     Banner.find(criteria)
       .limit(limit)
