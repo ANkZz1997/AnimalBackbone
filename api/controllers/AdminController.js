@@ -395,5 +395,46 @@ module.exports = {
       .catch((e) => {
         res.badRequest(e);
       });
-  }
+  },
+  // api only for super admin
+  getSettings: (req, res) => {
+    Settings.findOne({uid: 1}).then(setting => {
+      return res.ok(setting);
+    });
+  },
+  setCommission: (req, res) => {
+    const {value} = req.query;
+    Settings.update({uid: 1}).set({commission: value}).then(() => {
+      sails.log.info(`commission updated with value ${value}`)
+      res.ok();
+    })
+  },
+  setCommissionType: (req, res) => {
+    const {value} = req.query;
+    Settings.update({uid: 1}).set({commissionType: value}).then(() => {
+      sails.log.info(`commission type updated with value ${value}`)
+      res.ok();
+    })
+  },
+  setLazyMint: (req, res) => {
+    const {value} = req.query;
+    Settings.update({uid: 1}).set({lazymint: value}).then(() => {
+      sails.log.info(`enable lazy mint is set to ${value}`)
+      res.ok();
+    })
+  },
+  setPinataCreds: (req, res) => {
+    const {pinataApiKey, pinataSecret} = req.body;
+    Settings.update({uid: 1}).set({pinataApiKey, pinataSecret}).then(() => {
+      sails.log.info('Pinata Credentials Stored successfully')
+      res.ok();
+    })
+  },
+  setStripeSecret: (req, res) => {
+    const {value} = req.query;
+    Settings.update({uid: 1}).set({stripeSecret: value}).then(() => {
+      sails.log.info('Stripe secret is stored');
+      res.ok();
+    });
+  },
 };
