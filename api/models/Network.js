@@ -9,10 +9,11 @@ module.exports = {
 
   attributes: {
     host: {type: 'string'},
-    chainId: {type: 'string'},
+    chainId: {type: 'string', unique: true},
     address: {type: 'string'},
     logo: {model: 'Media'},
-    enabled: {type: 'boolean'}
+    enabled: {type: 'boolean', defaultsTo: false},
+    isDefault: {type: 'boolean', defaultsTo: false}
   },
 
 };

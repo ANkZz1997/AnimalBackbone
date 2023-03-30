@@ -396,6 +396,7 @@ module.exports = {
         res.badRequest(e);
       });
   },
+
   // api only for super admin
   getSettings: (req, res) => {
     Settings.findOne({uid: 1}).then(setting => {
@@ -437,4 +438,37 @@ module.exports = {
       res.ok();
     });
   },
+
+
+  // network api's
+  getNetworks: (req, res) => {
+    Network.find().then(networks => res.ok(networks));
+  },
+  addNetwork: (req, res) => {
+    const { host, chainId, address } = req.body;
+    req.file('logo').upload({
+      dirname: require('path').resolve(sails.config.appPath, 'uploads')
+    }, async (error, uploadedFile) => {
+      if(error) return res.badRequest(error);
+      let media = {};
+      if(uploadedFile.length > 0) {
+        media = await Media.create({
+          fd: uploadedFile[0].fd,
+          size: uploadedFile[0].size,
+          type: uploadedFile[0].type,
+          filename: uploadedFile[0].filename,
+          status: uploadedFile[0].status,
+          field: uploadedFile[0].field,
+          extra: uploadedFile[0].extra,
+        }).fetch();
+        Network.create({host, chainId, address, logo: media.id }).fetch().then( result => {
+          res.ok(result)
+        })
+      }
+    });
+  },
+  setNetworkAsDefault: (req, res) => {
+    const {id} = req.param;
+
+  }
 };
