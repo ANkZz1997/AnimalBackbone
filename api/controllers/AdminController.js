@@ -468,7 +468,18 @@ module.exports = {
     });
   },
   setNetworkAsDefault: (req, res) => {
-    const {id} = req.param;
-
+    const {id} = req.query;
+    Network.update({}).set({isDefault: false}).then(() => {
+      Network.update({id}).set({isDefault: true}).then(() => res.ok()).catch(e => res.badRequest(e))
+    }).catch(e => res.badRequest(e));
+  },
+  setNetworkEnableStatus: (req, res) => {
+    const {networkId, status} = req.body;
+    console.log(networkId)
+    Network.find({id: networkId}).then(r => {
+      console.log(r)
+    })
+    Network.update({id: networkId}).set({enabled: status}).fetch().then( r => res.ok(r))
+      .catch(e => res.badRequest(e))
   }
 };
