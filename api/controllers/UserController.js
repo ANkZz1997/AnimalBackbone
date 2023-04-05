@@ -727,8 +727,14 @@ module.exports = {
     await User.findOne({ id: req.payload.id })
       .populateAll()
       .then(async (result) => {
-        const kyc = await Kyc.findOne({user: req.payload.id})
+        const kyc = await Kyc.findOne({user: req.payload.id});
+        const createdCount = await Nft.count({minter: req.payload.id});
+        const collectedCount = await Nft.count({user: req.payload.id, minter: {'!=': req.payload.id}});
+        const ticketCount = await Dispute.count({user: req.payload.id});
         result.kyc = kyc;
+        result.createdCount = createdCount;
+        result.collectedCount = collectedCount;
+        result.ticketCount = ticketCount;
         res.status(200).json(result);
       });
   },
