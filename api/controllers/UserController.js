@@ -731,10 +731,12 @@ module.exports = {
         const createdCount = await Nft.count({minter: req.payload.id});
         const collectedCount = await Nft.count({user: req.payload.id, minter: {'!=': req.payload.id}});
         const ticketCount = await Dispute.count({user: req.payload.id});
+        const favCount = 0;
         result.kyc = kyc;
         result.createdCount = createdCount;
         result.collectedCount = collectedCount;
         result.ticketCount = ticketCount;
+        result.favCount = favCount;
         res.status(200).json(result);
       });
   },
