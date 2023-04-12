@@ -5,6 +5,38 @@
  * @help        :: See https://sailsjs.com/docs/concepts/actions
  */
 
+
+const createMintingVoucher = async (wallet, price, nft, chainId, cb) => {
+  const voucher = await sails.helpers.generateMintingSignature(
+    wallet.privateKey,
+    price,
+    nft.metaData,
+    nft.royalty,
+    chainId
+  );
+  return cb(voucher);
+};
+
+const createSellingVoucher = async (wallet, nft, price, chainId, cb) => {
+  const voucher = await sails.helpers.generateSellingSignature(
+    wallet.privateKey,
+    nft.tokenId,
+    price,
+    chainId
+  );
+  return cb(voucher);
+}
+
+const createMatketplaceItem = (userId, nftId, price, voucher, chainId, cb) => {
+  Marketplace.create({
+    user: userId,
+    nft: nftId,
+    price,
+    voucher,
+    chainId: chainId
+  }).fetch().then(item => cb(null, item)).catch(e => cb(e))
+}
+
 module.exports = {
   index: async (req, res) => {
     const {
@@ -61,36 +93,45 @@ module.exports = {
       status: "PORTFOLIO",
     });
     if (!nft) return res.badRequest("nft does not exist");
-    const voucher = await sails.helpers.generateMintingSignature(
-      wallet.privateKey,
-      price,
-      nft.metaData,
-      nft.royalty,
-      req.payload.chainId
-    )
-    Marketplace.create({
-      user: req.payload.id,
-      nft: nft.id,
-      price,
-      voucher,
-      chainId: req.payload.chainId
-    })
-      .fetch()
-      .then(async (result) => {
-        await sails.helpers.captureActivities({
-          action: "NFT",
-          type: "ADDTOMARKET",
-          user: req.payload.id,
-          payload: {},
-          nft: nft.id,
-          marketplace: result.id,
-        });
-        Nft.update({ id: nft.id })
-          .set({ status: "MARKETPLACE", marketPlaceId: result.id })
-          .then((_result) => {
-            res.ok(result);
+    if(!nft.minted) {
+      createMintingVoucher(wallet, price, nft, req.payload.chainId, voucher => {
+        createMatketplaceItem(req.payload.id, nft.id, price, voucher, req.payload.chainId, async (err, item) => {
+          if(err) return res.badRequest(err);
+          await sails.helpers.captureActivities({
+            action: "NFT",
+            type: "ADDTOMARKET",
+            user: req.payload.id,
+            payload: {},
+            nft: nft.id,
+            marketplace: item.id,
           });
+          Nft.update({ id: nft.id })
+            .set({ status: "MARKETPLACE", marketPlaceId: item.id })
+            .then((_result) => {
+              res.ok(item);
+            });
+        });
       });
+    } else {
+      createSellingVoucher(wallet, nft, price, req.payload.chainId,  voucher => {
+        createMatketplaceItem(req.payload.id, nft.id, price, voucher, req.payload.chainId, async (err, item) => {
+          if(err) return res.badRequest(err);
+          await sails.helpers.captureActivities({
+            action: "NFT",
+            type: "ADDTOMARKET",
+            user: req.payload.id,
+            payload: {},
+            nft: nft.id,
+            marketplace: item.id,
+          });
+          Nft.update({ id: nft.id })
+            .set({ status: "MARKETPLACE", marketPlaceId: item.id })
+            .then((_result) => {
+              res.ok(item);
+            });
+        })
+      })
+    }
   },
   updatePrice: async (req, res) => {
     const { id, price } = req.body;
@@ -139,17 +180,44 @@ module.exports = {
         res.ok(result);
       });
   },
-  buy: (req, res) => {
+  buy: async (req, res) => {
     const { id } = req.body;
+    const network = await Network.findOne({chainId: req.payload.chainId});
     Marketplace.findOne({ id, status: "PENDING" }).populate('nft').then(async (result) => {
       if (!result) return res.badRequest();
       const minter = await Wallet.findOne({user: result.user});
       const redeemer = await Wallet.findOne({user: req.payload.id});
       if(!result.nft.minted) {
         sails.log.info('nft is not minted, minting now');
-        sails.helpers.mintLazyNft(redeemer.privateKey, minter.address, redeemer.address, result.voucher, req.payload.chainId).then(transaction => {
+        sails.helpers.mintLazyNft(redeemer.privateKey, minter.address, redeemer.address, result.voucher, network).then(tokenId => {
           Nft.update({id: result.nft.id})
-            .set({user: req.payload.id, status: "PORTFOLIO", marketplaceId: "", minted: true})
+            .set({user: req.payload.id, status: "PORTFOLIO", marketplaceId: "", minted: true, tokenId})
+            .then(async (_result) => {
+              await sails.helpers.captureActivities({
+                action: "NFT",
+                type: "BUY",
+                user: req.payload.id,
+                nft: result.nft.id,
+                marketplace: id,
+              });
+              await sails.helpers.captureActivities({
+                action: "NFT",
+                type: "SOLD",
+                user: result.user,
+                nft: result.nft.id,
+                marketplace: id,
+              });
+              await Marketplace.update({id: result.id}).set({
+                status: "COMPLETED",
+              });
+              res.ok(tokenId);
+            });
+        }).catch(e => res.badRequest(e));
+      } else {
+        sails.log.info(`nft is minted, transferring now from ${minter.address} to ${redeemer.address}`);
+        sails.helpers.transferLazyNft(redeemer.privateKey, minter.address, redeemer.address, result.voucher, network).then(transaction => {
+          Nft.update({id: result.nft.id})
+            .set({user: req.payload.id, status: "PORTFOLIO", marketplaceId: ""})
             .then(async (_result) => {
               await sails.helpers.captureActivities({
                 action: "NFT",
@@ -170,9 +238,7 @@ module.exports = {
               });
               res.ok(transaction);
             });
-        });
-      } else {
-        res.ok()
+        }).catch(e => res.badRequest(e));
       }
     });
   },

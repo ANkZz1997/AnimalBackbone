@@ -11,9 +11,8 @@ module.exports = {
 
   inputs: {
     privateKey: {type: 'string'},
-    minPrice: {type: 'string'},
-    uri: {type: 'string'},
-    royaltyPercentage: {type: 'string'},
+    tokenId: {type: 'string'},
+    price: {type: 'string'},
     chainId: {type: 'number'},
   },
 
@@ -28,20 +27,18 @@ module.exports = {
   fn: async function (inputs, exits) {
     // TODO
     sails.log.info('generating voucher for nft: ' + inputs.uri)
-    const {privateKey, minPrice, uri, royaltyPercentage, chainId} = inputs;
+    const {privateKey, tokenId, price, chainId} = inputs;
     sails.log.info('initializing node with chainId: ' + chainId)
     const network = await Network.findOne({chainId: chainId});
     const web3 = new Web3(network.host);
     const voucher = {
-      minPrice: web3.utils.toWei(minPrice, 'ether'),
-      uri: uri,
-      royaltyPercentage: royaltyPercentage.toString()
+      tokenId,
+      price: web3.utils.toWei(price, 'ether')
     };
     const types = {
-      NFTVoucher: [
-        { name: "minPrice", type: "uint256" },
-        { name: "uri", type: "string" },
-        { name: "royaltyPercentage", type: "uint256" }
+      NFTTransferVoucher: [
+        { name: "tokenId", type: "uint256" },
+        { name: "price", type: "uint256" },
       ]
     };
     const domain = {

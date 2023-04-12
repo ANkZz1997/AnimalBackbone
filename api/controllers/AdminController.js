@@ -265,13 +265,18 @@ module.exports = {
       order = "DESC",
     } = req.query;
     const totalCount = await Kyc.count();
+    const populate = req.body.populate || [];
+    delete req.body.populate;
     const criteria = req.body;
-
-    Kyc.find(criteria)
+    const query = Kyc.find(criteria)
       .limit(limit)
       .skip((page - 1) * limit)
       .sort(`${sort} ${order}`)
-      .then((result) => {
+    populate.forEach(e => {
+      query.populate(e)
+    })
+
+    query.then((result) => {
         res.ok({
           records: result,
           totalCount,
