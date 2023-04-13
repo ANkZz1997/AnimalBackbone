@@ -21,7 +21,7 @@ module.exports = {
       required: true
     },
     endTime: {
-      type: 'string',
+      type: 'number',
       required: true
     },
     status: {

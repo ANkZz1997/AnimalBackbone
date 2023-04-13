@@ -139,9 +139,12 @@ module.exports = {
      *                                                                          *
      ***************************************************************************/
     cors: {
-      // allowOrigins: [
-      //   'https://example.com',
-      // ]
+      allowOrigins: [
+        'https://nft.sdnatech.com',
+        'https://artcod3.sdnatech.com',
+        'http://localhost:3000',
+        'http://localhost:3001',
+      ]
     },
 
   },
