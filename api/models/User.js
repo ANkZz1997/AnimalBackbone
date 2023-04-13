@@ -59,6 +59,9 @@ module.exports = {
     wishlist: {
       collection: 'Nft',
       via: 'wishlistedBy'
+    },
+    lastLoginIP:{
+      type: 'string'
     }
   },
   customToJSON: function() {

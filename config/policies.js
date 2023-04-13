@@ -17,7 +17,7 @@ module.exports.policies = {
    *                                                                          *
    ***************************************************************************/
 
-  '*': ['injectChainId', 'isAuthenticated'],
+  '*': ['injectChainId', 'isAuthenticated','setClientIp'],
   AuthController: {
     '*': true
   },

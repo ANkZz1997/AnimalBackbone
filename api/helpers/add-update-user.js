@@ -30,6 +30,18 @@ module.exports = {
         if(!kyc.length){
           Kyc.create({user: user.id}).then(_result => {sails.log.info(`User's Kyc record created`)});
         }
+        await User.update({ id: user.id }).set({
+          lastLoginIP:req.ip
+        });
+        await sails.helpers.captureActivities({
+          action:"AUTH",
+          type:"LOGIN",
+          user:user.id,
+          payload:{
+            loginAt:new Date(),
+            ipAddress:req.ip
+          }
+        });
         user.token = await sails.helpers.signToken({ id: user.id });
         return exits.success(user);
       } else {
@@ -45,6 +57,18 @@ module.exports = {
             result.wallet = updatedWallet;
             await Kyc.create({user: result.id}).then(_result => {sails.log.info(`User's Kyc record created`)});
             result.token = await sails.helpers.signToken({ id: result.id });
+            await User.update({ id: result.id }).set({
+              lastLoginIP:req.ip
+            });
+            await sails.helpers.captureActivities({
+              action:"AUTH",
+              type:"LOGIN",
+              user:result.id,
+              payload:{
+                loginAt:new Date(),
+                ipAddress:req.ip
+              }
+            });
             return exits.success(result);
           })
           .catch((e) => {

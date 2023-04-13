@@ -74,6 +74,10 @@ module.exports = {
         if (result) {
           result.token = await sails.helpers.signToken({ id: result.id });
           
+          await User.update({ id: result.id }).set({
+            lastLoginIP:req.ip
+          });
+
           console.log('user ==> ', result.id);
           
           await sails.helpers.captureActivities({
@@ -142,6 +146,18 @@ ${wallet.nonce}`;
         User.findOne({ id: wallet.user })
           .populateAll()
           .then(async (result) => {
+            await User.update({ id: result.id }).set({
+              lastLoginIP:req.ip
+            });
+            await sails.helpers.captureActivities({
+              action:"AUTH",
+              type:"LOGIN",
+              user:result.id,
+              payload:{
+                loginAt:new Date(),
+                ipAddress:req.ip
+              }
+            });
             result.token = await sails.helpers.signToken({ id: result.id });
             Wallet.update({ address: address.toLowerCase() })
               .set({
@@ -162,6 +178,9 @@ ${wallet.nonce}`;
         })
           .fetch()
           .then(async (result) => {
+            await User.update({ id: result.id }).set({
+              lastLoginIP:req.ip
+            });
             Kyc.create({user: result.id}).fetch().then(_result => {sails.log.info(`User's KYC record is created with id - ${_result.id}`)})
             result.wallet = wallet;
             result.token = await sails.helpers.signToken({ id: result.id });
@@ -171,6 +190,15 @@ ${wallet.nonce}`;
                 nonce: Math.floor(Math.random() * 1000000),
               })
               .then((result) => {sails.log.info(`User wallet nonce is updated`)});
+              await sails.helpers.captureActivities({
+                action:"AUTH",
+                type:"LOGIN",
+                user:result.id,
+                payload:{
+                  loginAt:new Date(),
+                  ipAddress:req.ip
+                }
+              });
             return res.ok(result);
           })
           .catch((e) => {
@@ -219,6 +247,7 @@ ${wallet.nonce}`;
   },
   socialLogin: async (req, res) => {
     const { type } = req.body;
+    console.log(req.ip);
     switch (type) {
       case "GMAIL":
         passport.authenticate("google-id-token", async (error, user, info) => {
