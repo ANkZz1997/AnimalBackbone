@@ -457,7 +457,7 @@ module.exports = {
     Network.find().then(networks => res.ok(networks));
   },
   addNetwork: (req, res) => {
-    const { host, chainId, address } = req.body;
+    const { host, chainId, address,name } = req.body;
     req.file('logo').upload({
       dirname: require('path').resolve(sails.config.appPath, 'uploads')
     }, async (error, uploadedFile) => {
@@ -473,7 +473,7 @@ module.exports = {
           field: uploadedFile[0].field,
           extra: uploadedFile[0].extra,
         }).fetch();
-        Network.create({host, chainId, address, logo: media.id }).fetch().then( result => {
+        Network.create({host, chainId, address, logo: media.id,name }).fetch().then( result => {
           res.ok(result)
         })
       }
