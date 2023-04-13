@@ -103,12 +103,13 @@ module.exports = {
       Wallet.create({ address: address.toLowerCase() })
         .fetch()
         .then((result) => {
+          result["newUser"] = true;
           res.ok(result);
         });
     }
   },
   verifySignature: async (req, res) => {
-    let { address, signature } = req.body;
+    let { address, signature, email } = req.body;
     const wallet = await Wallet.findOne({ address: address.toLowerCase() });
     const msg = `
 Welcome to SDNA Crypt
@@ -157,7 +158,7 @@ ${wallet.nonce}`;
           firstName: "Unnamed",
           wallet: wallet.id,
           username: address.toLowerCase(),
-          email: `${address.toLowerCase()}@email.com`,
+          email: email,
         })
           .fetch()
           .then(async (result) => {
@@ -221,9 +222,13 @@ ${wallet.nonce}`;
     switch (type) {
       case "GMAIL":
         passport.authenticate("google-id-token", async (error, user, info) => {
+          if(error){
+            console.log(error);
+          }
           if (user) {
             res.ok(user);
           } else {
+            console.log(info);
             res.badRequest("Something went wrong");
           }
         })(req, res);
