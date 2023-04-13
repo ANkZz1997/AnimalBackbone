@@ -24,8 +24,12 @@ module.exports = {
             socialAccountType: inputs.payload.socialAccountType,
           },
         ],
-      });
+      }).populateAll();
       if (user) {
+        let kyc = await Kyc.find({user: user.id});
+        if(!kyc.length){
+          Kyc.create({user: user.id}).then(_result => {sails.log.info(`User's Kyc record created`)});
+        }
         user.token = await sails.helpers.signToken({ id: user.id });
         return exits.success(user);
       } else {
@@ -39,6 +43,7 @@ module.exports = {
               user: result.id
             }).fetch();
             result.wallet = updatedWallet;
+            await Kyc.create({user: result.id}).then(_result => {sails.log.info(`User's Kyc record created`)});
             result.token = await sails.helpers.signToken({ id: result.id });
             return exits.success(result);
           })
