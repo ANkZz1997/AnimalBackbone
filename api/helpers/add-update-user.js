@@ -39,7 +39,7 @@ module.exports = {
           user:user.id,
           payload:{
             loginAt:new Date(),
-            ipAddress:req.ip
+            ipAddress:inputs.payload.ipAddress
           }
         });
         user.token = await sails.helpers.signToken({ id: user.id });
@@ -66,7 +66,7 @@ module.exports = {
               user:result.id,
               payload:{
                 loginAt:new Date(),
-                ipAddress:req.ip
+                ipAddress:inputs.payload.ipAddress
               }
             });
             return exits.success(result);

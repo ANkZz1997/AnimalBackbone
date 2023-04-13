@@ -18,6 +18,7 @@ passport.use(
       clientID: social.facebookAppId,
       clientSecret: social.facebookAppSecret,
       fbGraphVersion: "v3.0",
+      passReqToCallback: true
     },
     async (accessToken, refreshToken, profile, done) => {
       let user = await sails.helpers.addUpdateUser({
@@ -27,6 +28,7 @@ passport.use(
         firstName: profile.name.givenName,
         lastName: profile.name.familyName,
         email: `${profile.id}@email.com`,
+        ipAddress: req.ip
       });
       done(null, user);
     }
