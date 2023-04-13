@@ -444,6 +444,13 @@ module.exports = {
     });
   },
 
+  stripeCallbackUrl: (req, res) => {
+    const {value} = req.query;
+    Settings.update({uid: 1}).set({stripeCallbackUrl: value}).then(() => {
+      sails.log.info('Stripe Callback URL is stored');
+      res.ok();
+    });
+  },
 
   // network api's
   getNetworks: (req, res) => {

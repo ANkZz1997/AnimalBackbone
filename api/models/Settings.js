@@ -23,7 +23,7 @@ module.exports = {
 
     // stripe
     stripeSecret: {type: 'string'},
-
+    stripeCallbackUrl: {type: 'string'}
   },
 };
 
