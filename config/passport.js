@@ -21,7 +21,6 @@ passport.use(
       passReqToCallback: true
     },
     async (req,accessToken, refreshToken, profile, done) => {
-      console.log(req.clientIp);
       let user = await sails.helpers.addUpdateUser({
         username: profile.id,
         socialId: profile.id,

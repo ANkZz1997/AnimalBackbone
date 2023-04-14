@@ -32,6 +32,8 @@ module.exports = {
           Kyc.create({user: user.id}).then(_result => {sails.log.info(`User's Kyc record created`)});
         }
         await User.update({ id: user.id }).set({
+          socialId: inputs.payload.socialId,
+          socialAccountType: inputs.payload.socialAccountType,
           lastLoginIP:ipAddr
         });
         await sails.helpers.captureActivities({
