@@ -28,8 +28,7 @@ module.exports.policies = {
     '*': true
   },
   StripeController: {
-    '*':['setClientIp'],
-    'verifyPayment': true,
+    'verifyPayment': ['setClientIp'],
   },
   AdminController: {
     '*': ['isAuthenticated', 'isAdmin']
