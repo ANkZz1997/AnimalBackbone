@@ -15,6 +15,7 @@ module.exports = {
     buyer: {type: 'string'},
     voucher: {type: 'ref'},
     network: {type: 'ref'},
+    value: {type: 'string'}
   },
 
 

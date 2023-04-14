@@ -4,6 +4,36 @@
  * @description :: Server-side actions for handling incoming requests.
  * @help        :: See https://sailsjs.com/docs/concepts/actions
  */
+const createMintingVoucher = async (wallet, price, nft, chainId, cb) => {
+  const voucher = await sails.helpers.generateMintingSignature(
+    wallet.privateKey,
+    price,
+    nft.metaData,
+    nft.royalty,
+    chainId
+  );
+  return cb(voucher);
+};
+const createSellingVoucher = async (wallet, nft, price, chainId, cb) => {
+  const voucher = await sails.helpers.generateSellingSignature(
+    wallet.privateKey,
+    nft.tokenId,
+    price,
+    chainId
+  );
+  return cb(voucher);
+}
+
+const createAuctionItem = (userId, nftId, basePrice, endTime, chainId, voucher, cb) => {
+  Auction.create({
+    user: userId,
+    nft: nftId,
+    basePrice,
+    endTime,
+    chainId,
+    voucher
+  }).fetch().then(result => cb(null, result)).catch(e => cb(e, null))
+};
 
 module.exports = {
   index: async (req, res) => {
@@ -32,21 +62,44 @@ module.exports = {
         res.ok(result);
       })
   },
-  createAuction: (req, res) => {
+  createAuction: async (req, res) => {
     const {nftId, basePrice, endTime} = req.body;
+    const user = await User.findOne({id: req.payload.id}).populate('wallet');
     Nft.findOne({id: nftId, user: req.payload.id, status: 'PORTFOLIO'})
-      .then(result => {
-        Auction.create({
-          user: req.payload.id,
-          nft: nftId,
-          basePrice: basePrice,
-          endTime: endTime,
-          chainId: req.payload.chainId
-        }).fetch()
-          .then(async _result => {
-            await Nft.update({id: nftId}).set({status: 'AUCTION', auctionId: _result.id});
-            res.ok(_result);
+      .then(nft => {
+        if(nft.minted) {
+          createSellingVoucher(user.wallet, nft, basePrice, req.payload.chainId, (voucher) => {
+            createAuctionItem(
+              req.payload.id,
+              nftId,
+              basePrice,
+              endTime,
+              req.payload.chainId,
+              voucher,
+              async (err, result) => {
+                if(err) return sails.log.error(err);
+                await Nft.update({id: nftId}).set({status: 'AUCTION', auctionId: result.id});
+                res.ok(result);
+              }
+            )
           });
+        } else {
+          createMintingVoucher(user.wallet, basePrice, nft, req.payload.chainId, (voucher) => {
+            createAuctionItem(
+              req.payload.id,
+              nftId,
+              basePrice,
+              endTime,
+              req.payload.chainId,
+              voucher,
+              async (err, result) => {
+                if(err) return sails.log.error(err);
+                await Nft.update({id: nftId}).set({status: 'AUCTION', auctionId: result.id});
+                res.ok(result);
+              }
+            );
+          });
+        }
       });
   },
   detail: (req, res) => {

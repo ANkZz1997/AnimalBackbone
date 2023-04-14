@@ -15,7 +15,8 @@ module.exports = {
     minter: {type: 'string'},
     redeemer: {type: 'string'},
     voucher: {type: 'ref'},
-    network: {type: 'ref'}
+    network: {type: 'ref'},
+    value: {type: 'string'}
   },
 
 
