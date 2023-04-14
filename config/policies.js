@@ -19,7 +19,7 @@ module.exports.policies = {
 
   '*': ['injectChainId', 'isAuthenticated','setClientIp'],
   AuthController: {
-    '*': true
+    '*': ['setClientIp'],
   },
   MediaController: {
     download: true
@@ -28,7 +28,8 @@ module.exports.policies = {
     '*': true
   },
   StripeController: {
-    'verifyPayment': true
+    '*':['setClientIp'],
+    'verifyPayment': true,
   },
   AdminController: {
     '*': ['isAuthenticated', 'isAdmin']

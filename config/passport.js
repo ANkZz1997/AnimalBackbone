@@ -20,14 +20,15 @@ passport.use(
       fbGraphVersion: "v3.0",
       passReqToCallback: true
     },
-    async (accessToken, refreshToken, profile, done) => {
+    async (req,accessToken, refreshToken, profile, done) => {
+      console.log(req.clientIp);
       let user = await sails.helpers.addUpdateUser({
         username: profile.id,
         socialId: profile.id,
         socialAccountType: "FACEBOOK",
         firstName: profile.name.givenName,
         lastName: profile.name.familyName,
-        email: `${profile.id}@email.com`,
+        email: (profile.emails)? profile.emails[0].value :`${profile.id}@email.com`,
         ipAddress: req.clientIp
       });
       done(null, user);
@@ -39,8 +40,10 @@ passport.use(
   new GoogleTokenStrategy(
     {
       clientID: social.gmailClientId,
+      passReqToCallback: true
     },
-    async (parsedToken, googleId, done) => {
+    async (req,parsedToken, googleId, done) => {
+      console.log(req.clientIp);
       let user = await sails.helpers.addUpdateUser({
         username: googleId,
         socialId: googleId,
@@ -48,6 +51,7 @@ passport.use(
         firstName: parsedToken.payload.given_name,
         lastName: parsedToken.payload.family_name,
         email: parsedToken.payload.email,
+        ipAddress:req.clientIp
       });
       done(null, user);
     }

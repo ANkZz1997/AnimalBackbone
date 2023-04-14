@@ -75,7 +75,7 @@ module.exports = {
           result.token = await sails.helpers.signToken({ id: result.id });
           
           await User.update({ id: result.id }).set({
-            lastLoginIP:req.clientIp
+            lastLoginIP:req.ip
           });
 
           console.log('user ==> ', result.id);
@@ -86,7 +86,7 @@ module.exports = {
             user:result.id,
             payload:{
               loginAt:new Date(),
-              ipAddress:req.clientIp
+              ipAddress:req.ip
             }
           });
           res.ok(result);
@@ -147,7 +147,7 @@ ${wallet.nonce}`;
           .populateAll()
           .then(async (result) => {
             await User.update({ id: result.id }).set({
-              lastLoginIP:req.clientIp
+              lastLoginIP:req.ip
             });
             await sails.helpers.captureActivities({
               action:"AUTH",
@@ -155,7 +155,7 @@ ${wallet.nonce}`;
               user:result.id,
               payload:{
                 loginAt:new Date(),
-                ipAddress:req.clientIp
+                ipAddress:req.ip
               }
             });
             result.token = await sails.helpers.signToken({ id: result.id });
@@ -179,7 +179,7 @@ ${wallet.nonce}`;
           .fetch()
           .then(async (result) => {
             await User.update({ id: result.id }).set({
-              lastLoginIP:req.clientIp
+              lastLoginIP:req.ip
             });
             Kyc.create({user: result.id}).fetch().then(_result => {sails.log.info(`User's KYC record is created with id - ${_result.id}`)})
             result.wallet = wallet;
@@ -196,7 +196,7 @@ ${wallet.nonce}`;
                 user:result.id,
                 payload:{
                   loginAt:new Date(),
-                  ipAddress:req.clientIp
+                  ipAddress:req.ip
                 }
               });
             return res.ok(result);
@@ -247,7 +247,7 @@ ${wallet.nonce}`;
   },
   socialLogin: async (req, res) => {
     const { type } = req.body;
-    console.log(req.clientIp);
+    console.log(req.ip);
     switch (type) {
       case "GMAIL":
         passport.authenticate("google-id-token", async (error, user, info) => {
