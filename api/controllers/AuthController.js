@@ -26,9 +26,11 @@ module.exports = {
 
   },
   createUser: async (req, res) => {
+    let userDetails = req.body;
+    const user = await User.find({email:userDetails.email});
+    if(user.length > 0) return res.badRequest('This Email is already registered.');
     const account = web3.eth.accounts.create();
     const wallet = await Wallet.create(account).fetch();
-    let userDetails = req.body;
     req.body.wallet = wallet.id;
     req.file('avatar').upload({
       dirname: require('path').resolve(sails.config.appPath, 'uploads')
@@ -102,6 +104,9 @@ module.exports = {
     const { address } = req.body;
     const wallet = await Wallet.findOne({ address: address.toLowerCase() });
     if (wallet) {
+      if(!wallet.user){
+        wallet["newUser"] = true;
+      }
       res.ok(wallet);
     } else {
       Wallet.create({ address: address.toLowerCase() })
@@ -169,6 +174,8 @@ ${wallet.nonce}`;
             res.ok(result);
           });
       } else {
+        const user = await User.find({email:email});
+        if(user.length > 0) return res.badRequest('This Email is already registered.');
         User.create({
           type: "DECENTRALISED",
           firstName: "Unnamed",
