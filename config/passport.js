@@ -28,7 +28,7 @@ passport.use(
         firstName: profile.name.givenName,
         lastName: profile.name.familyName,
         email: `${profile.id}@email.com`,
-        ipAddress: req.ip
+        ipAddress: req.clientIp
       });
       done(null, user);
     }

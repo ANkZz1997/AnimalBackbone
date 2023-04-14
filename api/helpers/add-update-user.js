@@ -15,6 +15,7 @@ module.exports = {
     },
   },
   fn: async (inputs, exits) => {
+    const ipAddr = inputs.payload.ipAddress;
     if (inputs.payload.socialId) {
       const user = await User.findOne({
         or: [
@@ -31,7 +32,7 @@ module.exports = {
           Kyc.create({user: user.id}).then(_result => {sails.log.info(`User's Kyc record created`)});
         }
         await User.update({ id: user.id }).set({
-          lastLoginIP:req.ip
+          lastLoginIP:ipAddr
         });
         await sails.helpers.captureActivities({
           action:"AUTH",
@@ -39,7 +40,7 @@ module.exports = {
           user:user.id,
           payload:{
             loginAt:new Date(),
-            ipAddress:inputs.payload.ipAddress
+            ipAddress:ipAddr
           }
         });
         user.token = await sails.helpers.signToken({ id: user.id });
@@ -48,6 +49,7 @@ module.exports = {
         const account = web3.eth.accounts.create();
         const wallet = await Wallet.create(account).fetch();
         inputs.payload.wallet = wallet.id;
+        delete inputs.payload['ipAddress'];
         User.create(inputs.payload)
           .fetch()
           .then(async (result) => {
@@ -58,7 +60,7 @@ module.exports = {
             await Kyc.create({user: result.id}).then(_result => {sails.log.info(`User's Kyc record created`)});
             result.token = await sails.helpers.signToken({ id: result.id });
             await User.update({ id: result.id }).set({
-              lastLoginIP:req.ip
+              lastLoginIP:ipAddr
             });
             await sails.helpers.captureActivities({
               action:"AUTH",
@@ -66,7 +68,7 @@ module.exports = {
               user:result.id,
               payload:{
                 loginAt:new Date(),
-                ipAddress:inputs.payload.ipAddress
+                ipAddress:ipAddr
               }
             });
             return exits.success(result);

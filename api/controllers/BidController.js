@@ -25,7 +25,7 @@ module.exports = {
             auction:auctionId,
             bid:_result.id,
             payload:{
-              ipAddress:req.ip
+              ipAddress:req.clientIp
             }
           });
           res.ok(_result);

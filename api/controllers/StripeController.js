@@ -34,7 +34,7 @@ module.exports = {
         payload:{
           amount:amount,
           paymentIntentId:record.id,
-          ipAddress:req.ip
+          ipAddress:req.clientIp
         }
       });
       res.ok(record)
@@ -61,7 +61,7 @@ module.exports = {
                     payload:{
                       amount:paymentIntent.amount_received,
                       paymentIntentId:record.id,
-                      ipAddress:req.ip
+                      ipAddress:req.clientIp
                     }
                   });
                   res.redirect(`https://nft.sdnatech.com/paymentStatus?id=${record.id}`)
