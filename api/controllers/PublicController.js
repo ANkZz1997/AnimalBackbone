@@ -76,6 +76,16 @@ module.exports = {
       res.ok(r)
     })
 
+  },
+  emailSubscribe: async (req, res) => {
+    const {email} = req.body;
+    const emailSubscription = await Emailsubscription.find({email: email});
+    if(emailSubscription.length > 0){
+      res.badRequest('Already Subscribed');
+    } else{
+      await Emailsubscription.create({ email: email });
+      res.ok();
+    }
   }
 }
 

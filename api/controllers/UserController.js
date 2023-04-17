@@ -785,6 +785,24 @@ module.exports = {
       }).catch(e => {
         res.badRequest(e)
       })
+  },
+  changePassword : async (req, res) => {
+    try{
+      const { oldPassword, newPassword } = req.body;
+      const user = await User.findOne({id:req.payload.id});
+      if(user){
+        if(user.password === oldPassword){
+          await User.update({id:req.payload.id},{password:newPassword}).fetch();
+          res.ok();
+        } else {
+          res.badRequest("Old Password is not correct");
+        }
+      } else{
+        res.badRequest("Something went wrong");
+      }
+    } catch(err) {
+      return res.badRequest("Something went wrong");
+    }
   }
 };
 

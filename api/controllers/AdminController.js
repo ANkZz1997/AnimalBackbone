@@ -5,6 +5,7 @@
  * @help        :: See https://sailsjs.com/docs/concepts/actions
  */
 const moment = require("moment");
+const fs = require("fs");
 module.exports = {
   users: async (req, res) => {
     const {
@@ -493,5 +494,84 @@ module.exports = {
     })
     Network.update({id: networkId}).set({enabled: status}).fetch().then( r => res.ok(r))
       .catch(e => res.badRequest(e))
+  },
+
+  deleteNetwork: async (req, res) => {
+    try{
+      const {networkId} = req.body;
+      console.log(networkId);
+      const network = await Network.findOne({id:networkId});
+      if(network){
+        await Network.destroyOne({id:networkId});
+        const media = await Media.findOne({id:network.logo});
+        if(media){
+          await Media.destroyOne({id:network.logo});
+          fs.unlink(media.fd,(e) => {
+            if(e){
+              console.log('Media not removed');
+            } else{
+              console.log('Media Removed');
+            }
+            res.ok();
+          });
+        } else{
+          res.ok();
+        }
+      } else {
+        res.badRequest('Network not Found')
+      }
+    }catch(e){
+      res.badRequest(e);
+    }
+  },
+
+  editNetwork: async (req, res) => {
+    try{
+      const { host, chainId, address,name, networkId } = req.body;
+      const network = await Network.findOne({id:networkId});
+      if(network){
+        const file = req.file('logo');
+        if(file._files.length > 0)
+        {
+          req.file('logo').upload({
+            dirname: require('path').resolve(sails.config.appPath, 'uploads')
+          }, async (error, uploadedFile) => {
+            if(error) return res.badRequest(error);
+            if(uploadedFile.length > 0) {
+              const media = await Media.findOne({id:network.logo});
+              if(media){
+                await Media.destroy({id:network.logo});
+                fs.unlink(media.fd,(e) => {
+                  if(e){
+                    console.log('Media not removed');
+                  } else{
+                    console.log('Media Removed');
+                  }
+                });
+              }
+              const uploadedMedia = await Media.create({
+                fd: uploadedFile[0].fd,
+                size: uploadedFile[0].size,
+                type: uploadedFile[0].type,
+                filename: uploadedFile[0].filename,
+                status: uploadedFile[0].status,
+                field: uploadedFile[0].field,
+                extra: uploadedFile[0].extra,
+              }).fetch();
+              Network.update({id:networkId}).set({host, chainId, address, logo: uploadedMedia.id,name }).fetch().then( result => {
+                res.ok(result);
+              });
+            }
+          });
+        }else{
+          const networkUpdate = await Network.update({id:networkId}).set({host, chainId, address, name }).fetch();
+          res.ok(networkUpdate)
+        }
+      }else{
+        return res.badRequest('Network not found');
+      }
+    }catch(e){
+      res.badRequest(e);
+    }
   }
 };
