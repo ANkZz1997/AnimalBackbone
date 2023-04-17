@@ -1448,7 +1448,15 @@ module.exports = {
     Nft.findOne({id})
       .populate('minter')
       .populate('user')
+      .populate('wishlistedBy')
       .then(result => {
+        const wishlistedBy = result.wishlistedBy.filter(user=>user.id===req.payload.id);
+        if(wishlistedBy.length > 0){
+            result.markedFav = true
+        } else{
+            result.markedFav = false;
+        }
+        delete result.wishlistedBy;
         Nft.updateOne({id}).set({views: (result.views||0)+1}).then();
         res.ok(result);
       });
