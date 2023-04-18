@@ -57,14 +57,10 @@ module.exports = {
     });
   },
   updateBase: (req, res) => {
-    exec('git pull', {cwd: 'F:\\SDNA'}, (err, stdout, stderr) => {
-      res.ok({err, stdout, stderr});
-      exec('git pull', {cwd: 'F:\\animal-backbone-dev'}, (err, stdout, stderr) => {
-        exec('pm2 restart 6', {cwd: 'F:\\animal-backbone-dev'}, (_err, _stdout, _stderr) => {
-          res.ok({err, stdout, stderr, _err, _stdout, _stderr});
-        });
-
-      })
+    exec('git pull', {cwd: 'F:\\animal-backbone-dev'}, (err, stdout, stderr) => {
+      exec('pm2 restart 6', {cwd: 'F:\\animal-backbone-dev'}, (_err, _stdout, _stderr) => {
+        res.ok({err, stdout, stderr, _err, _stdout, _stderr});
+      });
     })
   },
   s: (req, res) => {

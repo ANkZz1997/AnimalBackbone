@@ -43,7 +43,8 @@ module.exports = {
   fn: async function (inputs, exits) {
     sails.log.info(`transfering ethers from ${sender} to ${inputs.receiver}`);
     const {receiver, amount, chainId} = inputs;
-    const web3 = new Web3(networks[chainId].node);
+    const network = await Network.findOne({chainId});
+    const web3 = new Web3(network.host);
     try {
       const gasPrice = await web3.eth.getGasPrice();
       const nonce = await web3.eth.getTransactionCount(sender);

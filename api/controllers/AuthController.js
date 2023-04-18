@@ -75,13 +75,13 @@ module.exports = {
       .then(async (result) => {
         if (result) {
           result.token = await sails.helpers.signToken({ id: result.id });
-          
+
           await User.update({ id: result.id }).set({
             lastLoginIP:req.ip
           });
 
           console.log('user ==> ', result.id);
-          
+
           await sails.helpers.captureActivities({
             action:"AUTH",
             type:"LOGIN",
@@ -97,7 +97,7 @@ module.exports = {
         }
       })
       .catch((e) => {
-        return res.badRequest("Something went wrong");
+        return res.badRequest(e);
       });
   },
   loginNonce: async (req, res) => {

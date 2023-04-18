@@ -141,6 +141,30 @@ module.exports = {
         res.badRequest('Something went wrong');
       });
   },
+  addToMarketPlaceWithVoucher: async (req, res) => {
+    const { nftId, price, voucher } = req.body;
+    const nft = await Nft.findOne({
+      id: nftId,
+      user: req.payload.id,
+      status: "PORTFOLIO",
+    });
+    createMatketplaceItem(req.payload.id, nft.id, price, voucher, req.payload.chainId, async (err, item) => {
+      if(err) return res.badRequest(err);
+      await sails.helpers.captureActivities({
+        action: "NFT",
+        type: "ADDTOMARKET",
+        user: req.payload.id,
+        payload: {},
+        nft: nft.id,
+        marketplace: item.id,
+      });
+      Nft.update({ id: nft.id })
+        .set({ status: "MARKETPLACE", marketPlaceId: item.id })
+        .then((_result) => {
+          res.ok(item);
+        });
+    })
+  },
   addToMarketPlace: async (req, res) => {
     const { nftId, price } = req.body;
     const wallet = await Wallet.findOne({user: req.payload.id});

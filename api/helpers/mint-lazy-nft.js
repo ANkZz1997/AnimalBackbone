@@ -43,7 +43,7 @@ module.exports = {
     const _voucher = [voucher.minPrice, voucher.uri, voucher.royaltyPercentage, voucher.signature];
     contract.on("Transfer", (from, to, tokenId) => {
       console.log({from, to, tokenId});
-      if(from === minter && to === redeemer) {
+      if(from.toLowerCase() === minter.toLocaleString() && to.toLocaleString() === redeemer.toLocaleString()) {
         sails.log.info("NFT Minted with ID " + parseInt(tokenId));
         return exits.success(parseInt(tokenId))
       }
