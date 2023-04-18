@@ -1473,7 +1473,7 @@ module.exports = {
   removeFromFavourite: async (req, res) => {
     const userId = req.payload.id;
     const nftId = req.query.id;
-    await User.User.removeFromCollection(userId, 'wishlist').members([nftId]);
+    await User.removeFromCollection(userId, 'wishlist').members([nftId]);
     await sails.helpers.captureActivities({
         action:"NFT",
         type:"UNMARKFAV",
