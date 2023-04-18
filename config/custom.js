@@ -773,5 +773,19 @@ module.exports.custom = {
       VERIFIED: '<%= user.firstName %> <%= user.lastName %> has paid Rs. <%= payload.amount/100 %> on stripe'
     }
   },
-  domain:'http://nft.sdnatech.com:8080/'
+  domain:'http://nft.sdnatech.com:8080/',
+  marketPlaceFilters:{
+    'plh':{
+      "price":1
+    },
+    'phl':{
+      "price":-1
+    },
+    'recent':{
+      "createdAt":-1
+    },
+    'oldest':{
+      "createdAt":1
+    }
+  }
 };

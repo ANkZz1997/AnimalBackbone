@@ -42,14 +42,36 @@ module.exports = {
     const {
       page = 1,
       limit = 20,
-      sort = "createdAt",
-      order = "DESC",
+      sort = "recent",
     } = req.query;
-    const criteria = req.body;
-    criteria.isDeleted = false;
-    criteria.chainId = req.payload.chainId;
-    const totalCount = await Marketplace.count(criteria);
-    Marketplace.find(criteria)
+
+    const {
+      search = ''
+    } = req.body;
+
+    let criteria = {
+      "status": "PENDING",
+      "isDeleted":{$ne:true}
+    };
+
+    if(req.payload.chainId){
+      criteria['chainId'] = req.payload.chainId
+    }
+    if(search){
+      criteria["nft.name"] = {"$regex":search, '$options' : 'i'}
+    }
+
+    let filter = sails.config.custom['recent'];
+
+    if(sails.config.custom.marketPlaceFilters[sort]){
+      filter = sails.config.custom.marketPlaceFilters[sort];
+    }
+
+    //const criteria = req.body;
+    //criteria.isDeleted = false;
+    //criteria.chainId = req.payload.chainId;
+    //const totalCount = await Marketplace.count(criteria);
+    /*Marketplace.find(criteria)
       .limit(limit)
       .skip((page - 1) * limit)
       .sort(`${sort} ${order}`)
@@ -63,6 +85,35 @@ module.exports = {
       })
       .catch((e) => {
         res.badRequest(e);
+      });*/
+      
+      Marketplace.native((e,collection) => {
+        collection.aggregate(
+            [
+              { $lookup: {from: 'nft', localField: 'nft', foreignField: '_id', as: 'nft' }},
+              { $lookup: {from: 'user', localField: 'user', foreignField: '_id', as: 'user'} },
+              { $unwind: "$nft" },
+              { $unwind: "$user" },
+              { $match : criteria},
+              { $facet: {
+                "records": [
+                  { $skip : Number(limit * (page - 1)) },
+                  { $limit: Number(limit) },
+                  { $sort: filter }
+                ],
+                "totalCount": [
+                  { "$count": "count" }
+                ]
+              }}
+            ],
+            async (err,result) => {
+              if (err) return res.badRequest(err);
+              result = await result.toArray();
+              res.ok({
+                records: result[0].records,
+                totalCount: (result[0].totalCount.length > 0)?result[0].totalCount[0].count:0
+              });
+            })
       });
   },
   list: (req, res) => {
