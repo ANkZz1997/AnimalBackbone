@@ -1445,21 +1445,12 @@ module.exports = {
   },
   detail: async (req, res) => {
     const {id} = req.query;
-    Nft.findOne({id})
-      .populate('minter')
-      .populate('user')
-      .populate('wishlistedBy')
-      .then(result => {
-        const wishlistedBy = result.wishlistedBy.filter(user=>user.id===req.payload.id);
-        if(wishlistedBy.length > 0){
-            result.markedFav = true
-        } else{
-            result.markedFav = false;
-        }
-        delete result.wishlistedBy;
-        Nft.updateOne({id}).set({views: (result.views||0)+1}).then();
-        res.ok(result);
-      });
+    try{
+        const nftDetails = await sails.helpers.nftDetails({id, loggedInUser:req.payload.id});
+        res.ok(nftDetails);
+    }catch(e){
+        res.badRequest('Something went wrong');
+    }
   },
   addToFavourite: (req, res) => {
     const userId = req.payload.id;

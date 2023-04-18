@@ -102,13 +102,19 @@ module.exports = {
         }
       });
   },
-  detail: (req, res) => {
+  detail: async (req, res) => {
     const {id} = req.query;
     Auction.findOne({id: id})
       .populate('user')
-      .populate('nft')
-      .then(result => {
+      .then( async result => {
+        if(result && result.nft){
+          const id = result.nft;
+          const nftDetails = await sails.helpers.nftDetails({id, loggedInUser:req.payload.id});
+          result['nft'] = nftDetails;
+        }
         res.ok(result);
+      }).catch((e)=> {
+        res.badRequest('Something went wrong');
       });
   },
   bids: async (req, res) => {
