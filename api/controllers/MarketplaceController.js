@@ -55,7 +55,7 @@ module.exports = {
     };
 
     if(req.payload.chainId){
-      criteria['chainId'] = req.payload.chainId
+      criteria['chainId'] =  Number(req.payload.chainId);
     }
     if(search){
       criteria["nft.name"] = {"$regex":search, '$options' : 'i'}
