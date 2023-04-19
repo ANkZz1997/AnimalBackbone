@@ -19,6 +19,8 @@ module.exports = {
       chainId: req.payload.chainId,
       marketplace: marketplaceId,
       auction: auctionId
+    }).fetch().then(result => {
+      return res.ok(result)
     });
   }
 };
