@@ -57,7 +57,7 @@ const transferAuctionedNft = async (auction) => {
   }
 }
 // Schedule task to run at the end of the day
-const task = cron.schedule('10,20,30,40,50,59 * * * * *', () => {
+const task = cron.schedule('59 * * * * *', () => {
   // Perform your task here
   sails.log.info('Scheduled task started');
   sails.log.info("checking for expired auctions");
@@ -77,4 +77,4 @@ const task = cron.schedule('10,20,30,40,50,59 * * * * *', () => {
 });
 
 // Start the scheduler
-// task.start();
+task.start();
