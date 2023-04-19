@@ -803,6 +803,15 @@ module.exports = {
     } catch(err) {
       return res.badRequest("Something went wrong");
     }
+  },
+  getUserAddress: (req, res) => {
+    const {user} = req.query;
+    Wallet.findOne({
+      where: {user},
+      select: ['address']
+    }).then(wallet => {
+      res.ok(wallet)
+    }).catch(e => res.badRequest(e));
   }
 };
 
