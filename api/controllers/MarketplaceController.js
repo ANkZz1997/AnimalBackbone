@@ -89,6 +89,7 @@ module.exports = {
         { $unwind: '$nft' },
         { $unwind: '$user' },
         { $match: criteria },
+        { $sort: filter },
         {
           $addFields: { 
             id:"$_id",
@@ -104,8 +105,7 @@ module.exports = {
           $facet: {
             records: [
               { $skip: Number(limit * (page - 1)) },
-              { $limit: Number(limit) },
-              { $sort: filter },
+              { $limit: Number(limit) }
             ],
             totalCount: [{ $count: 'count' }],
           },
