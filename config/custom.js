@@ -787,5 +787,19 @@ module.exports.custom = {
     'oldest':{
       "createdAt":1
     }
-  }
+  },
+  auctionFilters:{
+    'plh':{
+      "price":1
+    },
+    'phl':{
+      "price":-1
+    },
+    'recent':{
+      "createdAt":-1
+    },
+    'oldest':{
+      "createdAt":1
+    }
+  },
 };

@@ -67,54 +67,52 @@ module.exports = {
       filter = sails.config.custom.marketPlaceFilters[sort];
     }
 
-    //const criteria = req.body;
-    //criteria.isDeleted = false;
-    //criteria.chainId = req.payload.chainId;
-    //const totalCount = await Marketplace.count(criteria);
-    /*Marketplace.find(criteria)
-      .limit(limit)
-      .skip((page - 1) * limit)
-      .sort(`${sort} ${order}`)
-      .populate("nft")
-      .populate("user")
-      .then((result) => {
-        res.ok({
-          records: result,
-          totalCount,
-        });
-      })
-      .catch((e) => {
-        res.badRequest(e);
-      });*/
-      
-      Marketplace.native((e,collection) => {
-        collection.aggregate(
-            [
-              { $lookup: {from: 'nft', localField: 'nft', foreignField: '_id', as: 'nft' }},
-              { $lookup: {from: 'user', localField: 'user', foreignField: '_id', as: 'user'} },
-              { $unwind: "$nft" },
-              { $unwind: "$user" },
-              { $match : criteria},
-              { $facet: {
-                "records": [
-                  { $skip : Number(limit * (page - 1)) },
-                  { $limit: Number(limit) },
-                  { $sort: filter }
-                ],
-                "totalCount": [
-                  { "$count": "count" }
-                ]
-              }}
+    const db = Marketplace.getDatastore().manager;
+    db.collection('marketplace').aggregate(
+      [
+        {
+          $lookup: {
+            from: 'nft',
+            localField: 'nft',
+            foreignField: '_id',
+            as: 'nft',
+          },
+        },
+        {
+          $lookup: {
+            from: 'user',
+            localField: 'user',
+            foreignField: '_id',
+            as: 'user',
+          },
+        },
+        { $unwind: '$nft' },
+        { $unwind: '$user' },
+        { $match: criteria },
+        {
+          $facet: {
+            records: [
+              { $skip: Number(limit * (page - 1)) },
+              { $limit: Number(limit) },
+              { $sort: filter },
             ],
-            async (err,result) => {
-              if (err) return res.badRequest(err);
-              result = await result.toArray();
-              res.ok({
-                records: result[0].records,
-                totalCount: (result[0].totalCount.length > 0)?result[0].totalCount[0].count:0
-              });
-            })
-      });
+            totalCount: [{ $count: 'count' }],
+          },
+        },
+      ],
+      async (err, result) => {
+        if (err) return res.badRequest(err);
+        result = await result.toArray();
+        res.ok({
+          records:
+            result[0].records && result[0].records.length > 0
+              ? result[0].records
+              : [],
+          totalCount:
+            result[0].totalCount.length > 0 ? result[0].totalCount[0].count : 0,
+        });
+      }
+    );
   },
   list: (req, res) => {
     const { page, limit } = req.body;
