@@ -14,6 +14,14 @@ const transferAuctionedNft = async (auction) => {
     const seller = await Wallet.findOne({user: auction.user.id});
     const redeemer = await Wallet.findOne({user: auction.bid[0].user});
     const network = await Network.findOne({chainId: auction.chainId});
+    await NftTransaction.create({
+      fromUser: auction.user.id,
+      fromAddress: seller.address.toLowerCase(),
+      toUser: auction.bid[0].user,
+      toAddress: redeemer.address.toLowerCase(),
+      nftId: auction.nft.id,
+      auction: auction.id
+    })
     if(auction.nft.minted) {
       sails.log.info('NFT is already minted');
       sails.log.info('Initiating NFT Transfer');
@@ -69,4 +77,4 @@ const task = cron.schedule('10,20,30,40,50,59 * * * * *', () => {
 });
 
 // Start the scheduler
-task.start();
+// task.start();

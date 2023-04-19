@@ -41,24 +41,12 @@ module.exports = {
     const signer = new ethers.Wallet(privateKey, provider);
     const contract = new ethers.Contract(contractAddress, abi, signer);
     const _voucher = [voucher.minPrice, voucher.uri, voucher.royaltyPercentage, voucher.signature];
-    contract.on("Transfer", (from, to, tokenId) => {
-      console.log({from, to, tokenId});
-      if(from.toLowerCase() === minter.toLocaleString() && to.toLocaleString() === redeemer.toLocaleString()) {
-        sails.log.info("NFT Minted with ID " + parseInt(tokenId));
-        return exits.success(parseInt(tokenId))
-      }
-    });
-    console.log({
-      minter,
-      redeemer,
-      _voucher,
-    })
     contract.redeem(minter, redeemer, _voucher, {
       value: voucher.minPrice
     }).then(async (transaction) => {
-      const rt = await transaction.wait();
-      sails.log.info("transaction successful")
-      contract.off("Transfer");
+      sails.log.info("transaction successful");
+      return exits.success(transaction);
+      // contract.off("Transfer");
     }).catch((error) => {
       console.error('Error:', error);
       return exits.fail(error)

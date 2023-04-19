@@ -91,7 +91,7 @@ module.exports = {
         { $match: criteria },
         { $sort: filter },
         {
-          $addFields: { 
+          $addFields: {
             id:"$_id",
             nft:{
               id:"$nft._id"
@@ -277,11 +277,20 @@ module.exports = {
       if (!result) return res.badRequest();
       const minter = await Wallet.findOne({user: result.user});
       const redeemer = await Wallet.findOne({user: req.payload.id});
+      await NftTransaction.create({
+        fromUser: result.user,
+        fromAddress: minter.address.toLowerCase(),
+        toUser: req.payload.id,
+        toAddress: redeemer.address.toLowerCase(),
+        nftId: result.nft.id,
+        chainId: network.chainId,
+        marketplace: id
+      })
       if(!result.nft.minted) {
         sails.log.info('nft is not minted, minting now');
-        sails.helpers.mintLazyNft(redeemer.privateKey, minter.address, redeemer.address, result.voucher, network).then(tokenId => {
+        sails.helpers.mintLazyNft(redeemer.privateKey, minter.address, redeemer.address, result.voucher, network).then(transaction => {
           Nft.update({id: result.nft.id})
-            .set({user: req.payload.id, status: "PORTFOLIO", marketplaceId: "", minted: true, tokenId})
+            .set({user: req.payload.id, status: "PORTFOLIO", marketplaceId: "", minted: true})
             .then(async (_result) => {
               await sails.helpers.captureActivities({
                 action: "NFT",
@@ -300,7 +309,7 @@ module.exports = {
               await Marketplace.update({id: result.id}).set({
                 status: "COMPLETED",
               });
-              res.ok(tokenId);
+              res.ok(transaction);
             });
         }).catch(e => res.badRequest(e));
       } else {
