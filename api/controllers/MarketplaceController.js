@@ -90,6 +90,17 @@ module.exports = {
         { $unwind: '$user' },
         { $match: criteria },
         {
+          $addFields: { 
+            id:"$_id",
+            nft:{
+              id:"$nft._id"
+            },
+            user:{
+              id:"$user._id"
+            }
+          }
+        },
+        {
           $facet: {
             records: [
               { $skip: Number(limit * (page - 1)) },
