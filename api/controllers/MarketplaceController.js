@@ -282,7 +282,7 @@ module.exports = {
         fromAddress: minter.address.toLowerCase(),
         toUser: req.payload.id,
         toAddress: redeemer.address.toLowerCase(),
-        nftId: result.nft.id,
+        nft: result.nft.id,
         chainId: network.chainId,
         marketplace: id
       })

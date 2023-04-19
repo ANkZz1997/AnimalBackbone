@@ -19,7 +19,7 @@ const transferAuctionedNft = async (auction) => {
       fromAddress: seller.address.toLowerCase(),
       toUser: auction.bid[0].user,
       toAddress: redeemer.address.toLowerCase(),
-      nftId: auction.nft.id,
+      nft: auction.nft.id,
       auction: auction.id
     })
     if(auction.nft.minted) {

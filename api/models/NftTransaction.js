@@ -20,7 +20,7 @@ module.exports = {
     toAddress: {
       type: 'string',
     },
-    nftId: {
+    nft: {
       model: 'Nft',
     },
     status: {

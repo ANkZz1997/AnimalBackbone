@@ -15,7 +15,7 @@ module.exports = {
       fromAddress: from.wallet.address.toLowerCase(),
       toUser: to.id,
       toAddress: to.wallet.address.toLowerCase(),
-      nftId: nftId,
+      nft: nftId,
       chainId: req.payload.chainId,
       marketplace: marketplaceId,
       auction: auctionId
