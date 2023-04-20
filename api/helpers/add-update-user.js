@@ -2,6 +2,7 @@ const jwt = require("jsonwebtoken");
 const ethUtil = require("ethereumjs-util");
 const Web3 = require("web3");
 const web3 = new Web3(Web3.givenProvider || "ws://localhost:7545");
+const templates = require('./../constants/EmailTemplates');
 
 module.exports = {
   friendlyName: "Add Update User on Social Login",
