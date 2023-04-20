@@ -14,6 +14,14 @@ const transferAuctionedNft = async (auction) => {
     const seller = await Wallet.findOne({user: auction.user.id});
     const redeemer = await Wallet.findOne({user: auction.bid[0].user});
     const network = await Network.findOne({chainId: auction.chainId});
+    await NftTransaction.create({
+      fromUser: auction.user.id,
+      fromAddress: seller.address.toLowerCase(),
+      toUser: auction.bid[0].user,
+      toAddress: redeemer.address.toLowerCase(),
+      nft: auction.nft.id,
+      auction: auction.id
+    });
     if(auction.nft.minted) {
       sails.log.info('NFT is already minted');
       sails.log.info('Initiating NFT Transfer');
@@ -32,10 +40,9 @@ const transferAuctionedNft = async (auction) => {
     } else {
       sails.log.info('NFT is not minted')
       console.log(JSON.stringify([auction.voucher.minPrice, auction.voucher.uri, auction.voucher.royaltyPercentage, auction.voucher.signature]))
-      sails.helpers.mintLazyNft(redeemer.privateKey, seller.address, redeemer.address, auction.voucher, network, auction.bid[0].price).then(tokenId => {
-        sails.log.info('NFT is minted with token id: '+tokenId)
+      sails.helpers.mintLazyNft(redeemer.privateKey, seller.address, redeemer.address, auction.voucher, network, auction.bid[0].price).then(transaction => {
         Nft.update({id: auction.nft.id})
-          .set({user: auction.bid[0].user, status: "PORTFOLIO", auctionId: "", minted: true, tokenId})
+          .set({user: auction.bid[0].user, status: "PORTFOLIO", auctionId: "", minted: true})
           .then(async () => {
             sails.log.info('NFT record updated');
             await Auction.update({id: auction.id}).set({status: "ENDED"});
@@ -49,7 +56,7 @@ const transferAuctionedNft = async (auction) => {
   }
 }
 // Schedule task to run at the end of the day
-const task = cron.schedule('10,20,30,40,50,59 * * * * *', () => {
+const task = cron.schedule('59 * * * * *', () => {
   // Perform your task here
   sails.log.info('Scheduled task started');
   sails.log.info("checking for expired auctions");
