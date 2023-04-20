@@ -773,7 +773,9 @@ module.exports.custom = {
       VERIFIED: '<%= user.firstName %> <%= user.lastName %> has paid Rs. <%= payload.amount/100 %> on stripe'
     }
   },
-  domain:'http://nft.sdnatech.com:8080/',
+  domain:'https://nft.sdnatech.com/animal-api-dev',
+  mediaUrl:'https://nft.sdnatech.com/animal-api-dev/download',
+  websiteDomain:"https://nft.sdnatech.com/dev/",
   marketPlaceFilters:{
     'plh':{
       "price":1

@@ -17,8 +17,10 @@ const Otp = require("../models/Otp");
 
 module.exports = {
 
-  test: (req, res) => {
-    sails.helpers.sendMail('rahil1992@gmail.com', templates.welcomeEmail.subject('Raheel'), '', templates.welcomeEmail.content('Raheel')).then(r => {
+  test: async (req, res) => {
+    const settings = await sails.helpers.fetchSettings();
+    const info = { ...settings, name:'Manoj' };
+    sails.helpers.sendMail('manoj.kumar@sdnatech.com', templates.welcomeEmail.subject('Manoj'), '', templates.welcomeEmail.content(info)).then(r => {
       return res.ok(r);
     }).catch(e => {
       return res.badRequest(e)
@@ -54,7 +56,10 @@ module.exports = {
       User.create(userDetails)
       .fetch()
       .then(async (result) => {
-        sails.helpers.sendMail(result.email, templates.welcomeEmail.subject(`${result.firstName} ${result.lastName}`), '', templates.welcomeEmail.content(`${result.firstName} ${result.lastName}`)).then(r => {
+        const settings = await sails.helpers.fetchSettings();
+        const name = `${result.firstName} ${result.lastName}`;
+        const info = { ...settings, name:name };
+        sails.helpers.sendMail(result.email, templates.welcomeEmail.subject(name), '', templates.welcomeEmail.content(info)).then(r => {
           sails.log.info('Sending welcome email');
         })
         sails.log.info(`User created with the id ${result.id}`)
@@ -302,9 +307,11 @@ ${wallet.nonce}`;
             type: "EMAIL",
             for: "FORGOTPASSWORD",
           });
+          const settings = await sails.helpers.fetchSettings();
           let name =  `${result.firstName} ${result.lastName}`;
           (!name)? name = result.email : '';
-          sails.helpers.sendMail(result.email, templates.forgotPassword.subject(), '', templates.forgotPassword.content({name:name,OTP:otpDetails['otp'], token:otpDetails['token']})).then(r => {
+          
+          sails.helpers.sendMail(result.email, templates.forgotPassword.subject(), '', templates.forgotPassword.content({name:name,OTP:otpDetails['otp'], token:otpDetails['token'], ...settings})).then(r => {
             sails.log.info('Sending forgot password email');
           });
           res.ok({token:otpDetails['token']});
