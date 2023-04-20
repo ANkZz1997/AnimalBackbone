@@ -23,7 +23,11 @@ module.exports = {
 
     // stripe
     stripeSecret: {type: 'string'},
-    stripeCallbackUrl: {type: 'string'}
+    stripeCallbackUrl: {type: 'string'},
+
+    //platform
+    platformTitle:{type: 'string'},
+    platformLogo: {model: 'Media'}
   },
 };
 

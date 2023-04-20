@@ -453,6 +453,30 @@ module.exports = {
     });
   },
 
+  setplatformDetails: (req, res) => {
+    const {platformTitle} = req.body;
+    req.file('logo').upload({
+      dirname: require('path').resolve(sails.config.appPath, 'uploads')
+    }, async (error, uploadedFile) => {
+      if(error) return res.badRequest(error);
+      if(uploadedFile.length > 0) {
+        const media = await Media.create({
+          fd: uploadedFile[0].fd,
+          size: uploadedFile[0].size,
+          type: uploadedFile[0].type,
+          filename: uploadedFile[0].filename,
+          status: uploadedFile[0].status,
+          field: uploadedFile[0].field,
+          extra: uploadedFile[0].extra,
+        }).fetch();
+        Settings.update({uid: 1}).set({platformTitle, platformLogo:media.id}).then(() => {
+          sails.log.info('Company Logo and Title are stored');
+          res.ok();
+        });
+      }
+    });
+  },
+
   // network api's
   getNetworks: (req, res) => {
     Network.find().then(networks => res.ok(networks));
