@@ -7,7 +7,7 @@
 
 module.exports = {
   getNetworks: (req, res) => {
-    Network.find().then((networks) => res.ok(networks));
+    Network.find({enabled:true}).then((networks) => res.ok(networks));
   },
   getSettings: (req, res) => {
     Settings.findOne({uid: 1}).then(setting => {

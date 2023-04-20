@@ -52,5 +52,8 @@ module.exports.policies = {
   },
   AuctionController: {
     'index': ['injectChainId']
+  },
+  SettingsController:{
+    'getNetworks':true
   }
 };
