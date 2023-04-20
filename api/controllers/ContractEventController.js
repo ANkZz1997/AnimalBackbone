@@ -19,6 +19,7 @@ const handleTransfer = (from, to, tokenId) => {
           await Nft.update({id: result.nft.id}).set({tokenId: parseInt(tokenId)});
         }
         if(result.toUser.type === 'DECENTRALISED') {
+          await Nft.update({id: result.nft.id}).set({user: result.toUser.id, status: "PORTFOLIO", marketplaceId: "", minted: true, tokenId: parseInt(tokenId)});
           await Marketplace.update({id: result.marketplace.id}).set({status: "COMPLETED"})
         }
         await NftTransaction.update({id: result.id}).set({status: 'SUCCESS'});
