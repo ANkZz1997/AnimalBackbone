@@ -265,11 +265,16 @@ module.exports = {
       sort = "createdAt",
       order = "DESC",
     } = req.query;
-    const totalCount = await Kyc.count();
+    const criteria = req.body;
+    criteria['identityProof'] = {"!=":null};
+    criteria['addressProof'] = {"!=":null};
+    const totalCount = await Kyc.count(criteria);
     const populate = req.body.populate || [];
     delete req.body.populate;
-    const criteria = req.body;
+    
     const query = Kyc.find(criteria)
+      .populate('addressProofDocType')
+      .populate('identityProofDocType')
       .limit(limit)
       .skip((page - 1) * limit)
       .sort(`${sort} ${order}`)
@@ -593,6 +598,45 @@ module.exports = {
         }
       }else{
         return res.badRequest('Network not found');
+      }
+    }catch(e){
+      res.badRequest(e);
+    }
+  },
+
+  addKYCDocType: async (req, res) => {
+    const {name, addressProof=false, identitiyProof=false, enabled=false} = req.body;
+    KycDocType.create({ name, addressProof, identitiyProof, enabled }).fetch().then( result => {
+      res.ok(result);
+    });
+  },
+
+  getKYCDocType: (req, res) => {
+    KycDocType.find().then(documentTypes => res.ok(documentTypes));
+  },
+
+  setKYCDocTypeStatus: (req, res) => {
+    const {documentTypeId, status} = req.body;
+    KycDocType.findOne({id: documentTypeId}).then(document => {
+      if(document){
+        KycDocType.update({id: documentTypeId}).set({enabled: status}).then( r => res.ok())
+        .catch(e => res.badRequest(e));
+      } else {
+        res.badRequest('Document Not Found');
+      }
+    }).catch(e => res.badRequest('Something went wrong'));
+  },
+
+  editKYCDocType: async (req, res) => {
+    try{
+      const {name, addressProof=false, identitiyProof=false, enabled=false, documentTypeId} = req.body;
+      const documentType = await KycDocType.findOne({id:documentTypeId});
+      if(documentType){
+        KycDocType.update({id:documentTypeId}).set({name, addressProof, identitiyProof, enabled }).fetch().then( result => {
+          res.ok(result);
+        });
+      } else {
+        return res.badRequest('Document Not Found');
       }
     }catch(e){
       res.badRequest(e);

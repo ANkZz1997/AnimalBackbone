@@ -33,6 +33,7 @@ const fileUploadPromiseConverter = (file) => {
 module.exports = {
   //user api's
   updateKyc: (req, res) => {
+    const { addressProofDocType, identityProofDocType} = req.body;
     Promise.all([
       fileUploadPromiseConverter(req.file('addressProof')),
       fileUploadPromiseConverter(req.file('identityProof')),
@@ -41,11 +42,22 @@ module.exports = {
         status: 'PENDING',
         addressProof: r[0].id,
         identityProof: r[1].id,
+        addressProofDocType,
+        identityProofDocType
       }).fetch().then(result => {
         res.ok(result);
       }).catch(e => {
         sails.log.error(e)
       });
+    });
+  },
+
+  getKycDocTypes:(req, res)=> {
+    KycDocType.find({enabled:true})
+    .then(documentTypes => res.ok(documentTypes))
+    .catch(e => { 
+      sails.log.error(e);
+      res.badRequest('something went wrong');
     });
   },
 
