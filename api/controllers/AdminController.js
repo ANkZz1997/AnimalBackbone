@@ -265,14 +265,15 @@ module.exports = {
       sort = "createdAt",
       order = "DESC",
     } = req.query;
+    const populate = req.body.populate || [];
+    delete req.body.populate;
     const criteria = req.body;
     criteria['identityProof'] = {"!=":null};
     criteria['addressProof'] = {"!=":null};
     const totalCount = await Kyc.count(criteria);
-    const populate = req.body.populate || [];
-    delete req.body.populate;
     
     const query = Kyc.find(criteria)
+      .populate('user')
       .populate('addressProofDocType')
       .populate('identityProofDocType')
       .limit(limit)
