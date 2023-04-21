@@ -20,7 +20,7 @@ module.exports = {
         .sort(`createdAt DESC`);
 
         if(lastBid.length > 0 && lastBid[0].user === req.payload.id){
-          return res.badRequest('Last build was made by you. Please wait for another user to bid before placing a new bid on this auction.')
+          return res.badRequest('Last bid was made by you. Please wait for another user to bid before placing a new bid on this auction.');
         }
         
         Bid.create({
