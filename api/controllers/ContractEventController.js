@@ -29,28 +29,45 @@ const handleTransfer = (from, to, tokenId) => {
     });
 };
 
+function developListeningObject(n) {
+  web3Obj[n.chainId] = {};
+  sails.log.info('Setting provider: ' + n.host)
+  web3Obj[n.chainId].chainId = n.chainId;
+  web3Obj[n.chainId].provider = new ethers.JsonRpcProvider(n.host);
+  web3Obj[n.chainId].signer = new ethers.Wallet(privateKey, web3Obj[n.chainId].provider);
+  web3Obj[n.chainId].contract = new ethers.Contract(n.address, abi, web3Obj[n.chainId].signer);
+  sails.log.info('Subscribing for : ' + n.host)
+  web3Obj[n.chainId].contract.on("Transfer", (from, to, tokenId) => {
+    setTimeout(() => {
+      handleTransfer(from, to, tokenId)
+    }, 10000)
+    console.log({from, to, tokenId});
+  });
+}
+
 module.exports = {
   startListening:  (req, res) => {
     const contractABI = abi;
     Network.find().then(r => {
       r.forEach(n => {
-        web3Obj[n.chainId] = {};
-        sails.log.info('Setting provider: ' + n.host)
-        web3Obj[n.chainId].chainId = n.chainId;
-        web3Obj[n.chainId].provider = new ethers.JsonRpcProvider(n.host);
-        web3Obj[n.chainId].signer = new ethers.Wallet(privateKey, web3Obj[n.chainId].provider);
-        web3Obj[n.chainId].contract = new ethers.Contract(n.address, abi, web3Obj[n.chainId].signer);
-        sails.log.info('Subscribing for : ' + n.host)
-        web3Obj[n.chainId].contract.on("Transfer", (from, to, tokenId) => {
-          setTimeout(() => {handleTransfer(from, to, tokenId)}, 10000)
-          console.log({from, to, tokenId});
-        });
+        developListeningObject(n);
         // web3Obj[n.chainId].contract.on("Minted", (nftId, nftCreator, time) => {
         //   console.log({nftId, nftCreator, time});
         // });
       })
     })
     res.ok('started')
+  },
+  restartListeners: (req, res) => {
+    Object.keys(web3Obj).forEach(e => {
+      web3Obj[e].contract.removeAllListeners();
+    });
+    Network.find().then(r => {
+      r.forEach(n => {
+        developListeningObject(n);
+      })
+      return res.ok('Restarted');
+    })
   }
 };
 
