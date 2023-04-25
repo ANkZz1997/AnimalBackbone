@@ -14,8 +14,8 @@ module.exports = {
       sort = "createdAt",
       order = "DESC",
     } = req.query;
-    const totalCount = await User.count();
     const criteria = req.body;
+    const totalCount = await User.count(criteria);
     User.find(criteria)
       .limit(limit)
       .populate("user")
@@ -42,10 +42,10 @@ module.exports = {
       sort = "createdAt",
       order = "DESC",
     } = req.query;
-    const totalCount = await Nft.count();
     const populate = req.body.populate || [];
     delete req.body.populate;
     const criteria = req.body;
+    const totalCount = await Nft.count(criteria);
     const query = Nft.find(criteria)
       .limit(limit)
       .skip((page - 1) * limit)
@@ -72,10 +72,10 @@ module.exports = {
       sort = "createdAt",
       order = "DESC",
     } = req.query;
-    const totalCount = await Auction.count();
     const populate = req.body.populate || [];
     delete req.body.populate;
     const criteria = req.body;
+    const totalCount = await Auction.count(criteria);
     const query = Auction.find(criteria)
       .limit(limit)
       .skip((page - 1) * limit)
@@ -100,10 +100,10 @@ module.exports = {
       sort = "createdAt",
       order = "DESC",
     } = req.query;
-    const totalCount = await Marketplace.count();
     const populate = req.body.populate || [];
     delete req.body.populate;
     const criteria = req.body;
+    const totalCount = await Marketplace.count(criteria);
     const query = Marketplace.find(criteria)
       .limit(limit)
       .skip((page - 1) * limit)
@@ -241,9 +241,9 @@ module.exports = {
       sort = "createdAt",
       order = "DESC",
     } = req.query;
-    const totalCount = await Dispute.count();
     const criteria = req.body;
-
+    const totalCount = await Dispute.count(criteria);
+    
     Dispute.find(criteria)
       .limit(limit)
       .populate('user')
