@@ -6,6 +6,7 @@
  */
 const fs = require('fs')
 const path = require('path');
+const User = require('../models/User');
 
 const fileUploadPromiseConverter = (file) => {
   return new Promise((resolve, reject) => {
@@ -63,15 +64,21 @@ module.exports = {
 
 
   // admin api's
-  verifyKyc: (req, res) => {
+  verifyKyc: async (req, res) => {
       const {id} = req.query;
-      Kyc.update({id}).set({status: 'APPROVED'}).fetch().then(result => {
+      Kyc.update({id}).set({status: 'APPROVED'}).fetch().then(async result => {
+        if(result.user) {
+          await User.update({id:result.user}).set({kycVerified:true}).fetch();
+        }
         res.ok(result);
       })
   },
   rejectKyc: (req, res) => {
       const {id} = req.query;
-      Kyc.update({id}).set({status: 'REJECTED'}).fetch().then(result => {
+      Kyc.update({id}).set({status: 'REJECTED'}).fetch().then(async result => {
+        if(result.user) {
+          await User.update({id:result.user}).set({kycVerified:false}).fetch();
+        }
         res.ok(result);
       })
   },

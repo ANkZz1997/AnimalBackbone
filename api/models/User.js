@@ -32,6 +32,10 @@ module.exports = {
       type: 'boolean',
       defaultsTo: false
     },
+    kycVerified: {
+      type: 'boolean',
+      defaultsTo: false
+    },
     contact: {
       type: 'string',
     },
