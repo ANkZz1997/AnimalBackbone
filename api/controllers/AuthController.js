@@ -278,7 +278,7 @@ ${wallet.nonce}`;
             res.ok(user);
           } else {
             console.log(info);
-            res.badRequest("Something went wrong");
+            res.badRequest(error.message);
           }
         })(req, res);
         break;

@@ -60,7 +60,7 @@ passport.use(
         });
         return done(null, user);
       } catch (err) {
-        return done('Something went wrong');
+        return done(err);
       }
     }
   )
