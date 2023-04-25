@@ -78,6 +78,9 @@ module.exports = {
     User.findOne({ username: req.body.username, password: req.body.password })
       .populateAll()
       .then(async (result) => {
+        if(result.status === 'BLOCKED' || result.status === 'INACTIVE'){
+          return res.badRequest("your account is suspended by admin");
+        }
         if (result) {
           result.token = await sails.helpers.signToken({ id: result.id });
 
@@ -156,6 +159,11 @@ ${wallet.nonce}`;
         User.findOne({ id: wallet.user })
           .populateAll()
           .then(async (result) => {
+
+            if(result.status === 'BLOCKED' || result.status === 'INACTIVE'){
+              return res.badRequest("your account is suspended by admin");
+            }
+
             await User.update({ id: result.id }).set({
               lastLoginIP:req.ip
             });

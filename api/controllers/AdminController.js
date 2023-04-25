@@ -246,6 +246,7 @@ module.exports = {
 
     Dispute.find(criteria)
       .limit(limit)
+      .populate('user')
       .skip((page - 1) * limit)
       .sort(`${sort} ${order}`)
       .then((result) => {

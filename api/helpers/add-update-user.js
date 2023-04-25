@@ -32,6 +32,9 @@ module.exports = {
         if(!kyc.length){
           Kyc.create({user: user.id}).then(_result => {sails.log.info(`User's Kyc record created`)});
         }
+        if(user.status === 'BLOCKED' || user.status === 'INACTIVE'){
+          return res.badRequest("your account is suspended by admin");
+        }
         await User.update({ id: user.id }).set({
           socialId: inputs.payload.socialId,
           socialAccountType: inputs.payload.socialAccountType,
