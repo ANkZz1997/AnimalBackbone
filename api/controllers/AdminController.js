@@ -52,7 +52,7 @@ module.exports = {
       criteria["$or"] = [{ "name" : {"$regex":search, '$options' : 'i'}},{ "user.firstName" : {"$regex":search, '$options' : 'i'}}, { "user.lastName" : {"$regex":search, '$options' : 'i'}},{ "user.email" : {"$regex":search, '$options' : 'i'}}];
     }
     if(chainId){
-      criteria['chainId'] = chainId;
+      criteria['chainId'] = Number(chainId);;
     }
     const db = Nft.getDatastore().manager;
     db.collection('nft').aggregate(
@@ -145,7 +145,7 @@ module.exports = {
       criteria["$or"] = [{ "nft.name" : {"$regex":search, '$options' : 'i'}},{ "user.firstName" : {"$regex":search, '$options' : 'i'}}, { "user.lastName" : {"$regex":search, '$options' : 'i'}},{ "user.email" : {"$regex":search, '$options' : 'i'}}];
     }
     if(chainId){
-      criteria['chainId'] = chainId;
+      criteria['chainId'] = Number(chainId);
     }
     if(category){
       criteria['nft.category'] = category;
@@ -251,7 +251,7 @@ module.exports = {
       criteria["$or"] = [{ "nft.name" : {"$regex":search, '$options' : 'i'}},{ "user.firstName" : {"$regex":search, '$options' : 'i'}}, { "user.lastName" : {"$regex":search, '$options' : 'i'}},{ "user.email" : {"$regex":search, '$options' : 'i'}}];
     }
     if(chainId){
-      criteria['chainId'] = chainId;
+      criteria['chainId'] = Number(chainId);
     }
     if(category){
       criteria['nft.category'] = category;
