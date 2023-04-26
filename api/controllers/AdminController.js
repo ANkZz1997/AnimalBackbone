@@ -15,7 +15,7 @@ module.exports = {
       order = "DESC",
     } = req.query;
     const criteria = req.body;
-    const totalCount = await User.count(criteria);
+    const totalCount = await User.count(criteria).meta({makeLikeModifierCaseInsensitive: true});
     User.find(criteria)
       .limit(limit)
       .populate("user")
@@ -23,6 +23,7 @@ module.exports = {
       .populate("marketplace")
       .populate("auction")
       .populate("bid")
+      .meta({makeLikeModifierCaseInsensitive: true})
       .skip((page - 1) * limit)
       .sort(`${sort} ${order}`)
       .then((result) => {
