@@ -36,34 +36,98 @@ module.exports = {
       });
   },
   nft: async (req, res) => {
+    try{
     const {
       page = 1,
       limit = 20,
       sort = "createdAt",
       order = "DESC",
     } = req.query;
-    const populate = req.body.populate || [];
-    delete req.body.populate;
-    const criteria = req.body;
-    const totalCount = await Nft.count(criteria);
-    const query = Nft.find(criteria)
-      .limit(limit)
-      .skip((page - 1) * limit)
-      .sort(`${sort} ${order}`);
+    
+    const {chainId, search} = req.body;
+    const criteria = { };
+    const filter = {};
+    filter[sort] = (order === 'DESC')?-1:1;
+    if(search) {
+      criteria["$or"] = [{ "name" : {"$regex":search, '$options' : 'i'}},{ "user.firstName" : {"$regex":search, '$options' : 'i'}}, { "user.lastName" : {"$regex":search, '$options' : 'i'}},{ "user.email" : {"$regex":search, '$options' : 'i'}}];
+    }
+    if(chainId){
+      criteria['chainId'] = chainId;
+    }
+    const db = Nft.getDatastore().manager;
+    db.collection('nft').aggregate(
+      [
+        {
+          $lookup: {
+            from: 'user',
+            localField: 'user',
+            foreignField: '_id',
+            as: 'user',
+          },
+        },
+        { $unwind: '$user' },
+        { $match: criteria },
+        { $sort: filter },
+        {
+          $addFields: {
+            id:"$_id",
+            user:{
+              id:"$user._id"
+            }
+          }
+        },
+        {
+          $facet: {
+            records: [
+              { $skip: Number(limit * (page - 1)) },
+              { $limit: Number(limit) }
+            ],
+            totalCount: [{ $count: 'count' }],
+          },
+        },
+      ],
+      async (err, result) => {
+        if (err) return res.badRequest(err);
+        try{
+          result = await result.toArray();
+          res.ok({
+            records:
+              result[0].records && result[0].records.length > 0
+                ? result[0].records
+                : [],
+            totalCount:
+              result[0].totalCount.length > 0 ? result[0].totalCount[0].count : 0,
+          });
+        }catch(e){
+          res.badRequest('Something went wrong');
+        }
+      }
+    );
+    }catch(e){
+      res.badRequest(e);
+    }
+    
+    //const totalCount = await Nft.count(criteria);
+    
+    
+    // const query = Nft.find(criteria)
+    //   .limit(limit)
+    //   .skip((page - 1) * limit)
+    //   .sort(`${sort} ${order}`);
 
-    populate.forEach(e => {
-      query.populate(e)
-    })
+    // populate.forEach(e => {
+    //   query.populate(e)
+    // })
 
-    query.then((result) => {
-        res.ok({
-          records: result,
-          totalCount,
-        });
-      })
-      .catch((e) => {
-        res.badRequest(e);
-      });
+    // query.then((result) => {
+    //     res.ok({
+    //       records: result,
+    //       totalCount,
+    //     });
+    //   })
+    //   .catch((e) => {
+    //     res.badRequest(e);
+    //   });
   },
   auctions: async (req, res) => {
     const {
@@ -72,26 +136,104 @@ module.exports = {
       sort = "createdAt",
       order = "DESC",
     } = req.query;
-    const populate = req.body.populate || [];
-    delete req.body.populate;
-    const criteria = req.body;
-    const totalCount = await Auction.count(criteria);
-    const query = Auction.find(criteria)
-      .limit(limit)
-      .skip((page - 1) * limit)
-      .sort(`${sort} ${order}`);
-    populate.forEach(e => {
-      query.populate(e)
-    })
-    query.then((result) => {
-        res.ok({
-          records: result,
-          totalCount,
-        });
-      })
-      .catch((e) => {
-        res.badRequest(e);
-      });
+
+    const {chainId, search, category} = req.body;
+    const criteria = { };
+    const filter = {};
+    filter[sort] = (order === 'DESC')?-1:1;
+    if(search) {
+      criteria["$or"] = [{ "nft.name" : {"$regex":search, '$options' : 'i'}},{ "user.firstName" : {"$regex":search, '$options' : 'i'}}, { "user.lastName" : {"$regex":search, '$options' : 'i'}},{ "user.email" : {"$regex":search, '$options' : 'i'}}];
+    }
+    if(chainId){
+      criteria['chainId'] = chainId;
+    }
+    if(category){
+      criteria['nft.category'] = category;
+    }
+    const db = Auction.getDatastore().manager;
+    db.collection('auction').aggregate(
+      [
+        {
+          $lookup: {
+            from: 'nft',
+            localField: 'nft',
+            foreignField: '_id',
+            as: 'nft',
+          },
+        },
+        {
+          $lookup: {
+            from: 'user',
+            localField: 'user',
+            foreignField: '_id',
+            as: 'user',
+          },
+        },
+        { $unwind: '$user' },
+        { $unwind: '$nft' },
+        { $match: criteria },
+        { $sort: filter },
+        {
+          $addFields: {
+            id:"$_id",
+            nft:{
+              id:"$nft._id"
+            },
+            user:{
+              id:"$user._id"
+            }
+          }
+        },
+        {
+          $facet: {
+            records: [
+              { $skip: Number(limit * (page - 1)) },
+              { $limit: Number(limit) }
+            ],
+            totalCount: [{ $count: 'count' }],
+          },
+        },
+      ],
+      async (err, result) => {
+        if (err) return res.badRequest(err);
+        try{
+          result = await result.toArray();
+          res.ok({
+            records:
+              result[0].records && result[0].records.length > 0
+                ? result[0].records
+                : [],
+            totalCount:
+              result[0].totalCount.length > 0 ? result[0].totalCount[0].count : 0,
+          });
+        }catch(e){
+          res.badRequest('Something went wrong');
+        }
+      }
+    );
+
+
+
+    // const populate = req.body.populate || [];
+    // delete req.body.populate;
+    // const criteria = req.body;
+    // const totalCount = await Auction.count(criteria);
+    // const query = Auction.find(criteria)
+    //   .limit(limit)
+    //   .skip((page - 1) * limit)
+    //   .sort(`${sort} ${order}`);
+    // populate.forEach(e => {
+    //   query.populate(e)
+    // })
+    // query.then((result) => {
+    //     res.ok({
+    //       records: result,
+    //       totalCount,
+    //     });
+    //   })
+    //   .catch((e) => {
+    //     res.badRequest(e);
+    //   });
   },
   marketplace: async (req, res) => {
     const {
@@ -100,26 +242,102 @@ module.exports = {
       sort = "createdAt",
       order = "DESC",
     } = req.query;
-    const populate = req.body.populate || [];
-    delete req.body.populate;
-    const criteria = req.body;
-    const totalCount = await Marketplace.count(criteria);
-    const query = Marketplace.find(criteria)
-      .limit(limit)
-      .skip((page - 1) * limit)
-      .sort(`${sort} ${order}`);
-    populate.forEach(e => {
-      query.populate(e)
-    })
-    query.then((result) => {
-        res.ok({
-          records: result,
-          totalCount,
-        });
-      })
-      .catch((e) => {
-        res.badRequest(e);
-      });
+    
+    const {chainId, search, category} = req.body;
+    const criteria = { };
+    const filter = {};
+    filter[sort] = (order === 'DESC')?-1:1;
+    if(search) {
+      criteria["$or"] = [{ "nft.name" : {"$regex":search, '$options' : 'i'}},{ "user.firstName" : {"$regex":search, '$options' : 'i'}}, { "user.lastName" : {"$regex":search, '$options' : 'i'}},{ "user.email" : {"$regex":search, '$options' : 'i'}}];
+    }
+    if(chainId){
+      criteria['chainId'] = chainId;
+    }
+    if(category){
+      criteria['nft.category'] = category;
+    }
+    const db = Marketplace.getDatastore().manager;
+    db.collection('marketplace').aggregate(
+      [
+        {
+          $lookup: {
+            from: 'nft',
+            localField: 'nft',
+            foreignField: '_id',
+            as: 'nft',
+          },
+        },
+        {
+          $lookup: {
+            from: 'user',
+            localField: 'user',
+            foreignField: '_id',
+            as: 'user',
+          },
+        },
+        { $unwind: '$user' },
+        { $unwind: '$nft' },
+        { $match: criteria },
+        { $sort: filter },
+        {
+          $addFields: {
+            id:"$_id",
+            nft:{
+              id:"$nft._id"
+            },
+            user:{
+              id:"$user._id"
+            }
+          }
+        },
+        {
+          $facet: {
+            records: [
+              { $skip: Number(limit * (page - 1)) },
+              { $limit: Number(limit) }
+            ],
+            totalCount: [{ $count: 'count' }],
+          },
+        },
+      ],
+      async (err, result) => {
+        if (err) return res.badRequest(err);
+        try{
+          result = await result.toArray();
+          res.ok({
+            records:
+              result[0].records && result[0].records.length > 0
+                ? result[0].records
+                : [],
+            totalCount:
+              result[0].totalCount.length > 0 ? result[0].totalCount[0].count : 0,
+          });
+        }catch(e){
+          res.badRequest('Something went wrong');
+        }
+      }
+    );
+    
+    // const populate = req.body.populate || [];
+    // delete req.body.populate;
+    // const criteria = req.body;
+    // const totalCount = await Marketplace.count(criteria);
+    // const query = Marketplace.find(criteria)
+    //   .limit(limit)
+    //   .skip((page - 1) * limit)
+    //   .sort(`${sort} ${order}`);
+    // populate.forEach(e => {
+    //   query.populate(e)
+    // })
+    // query.then((result) => {
+    //     res.ok({
+    //       records: result,
+    //       totalCount,
+    //     });
+    //   })
+    //   .catch((e) => {
+    //     res.badRequest(e);
+    //   });
   },
   bids: async (req, res) => {
     const {
