@@ -15,8 +15,12 @@ module.exports = {
     },
   },
   fn: async function (inputs, exits) {
-    const id = inputs.payload.id;
-    Nft.findOne({ id })
+    const {id, chainId} = inputs.payload;
+    const criteria = {id};
+    if(chainId){
+      criteria['chainId'] = chainId;
+    }
+    Nft.findOne(criteria)
       .populate("minter")
       .populate("user")
       .populate("wishlistedBy")

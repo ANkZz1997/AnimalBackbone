@@ -741,7 +741,7 @@ module.exports = {
       });
   },
   updateProfile: async (req, res) => {
-    const { firstName, lastName, contact } = req.body;
+    const { firstName, lastName, contact, socialLinks } = req.body;
     req.file('avatar').upload({
       dirname: require('path').resolve(sails.config.appPath, 'uploads')
     },async (error, uploadedFile) => {
@@ -768,7 +768,8 @@ module.exports = {
         avatar: media.id || user.avatar,
         firstName: firstName || user.firstName,
         lastName: lastName || user.lastName,
-        contact: contact || user.contact
+        contact: contact || user.contact,
+        socialLinks: socialLinks || user.socialLinks
       };
       const updatedUser = await User.update({id:req.payload.id},userDetails).fetch();
       res.status(200).json(updatedUser);

@@ -6,6 +6,8 @@
  */
 const moment = require("moment");
 const fs = require("fs");
+var objectid = require('objectid')
+
 module.exports = {
   users: async (req, res) => {
     const {
@@ -45,17 +47,21 @@ module.exports = {
       order = "DESC",
     } = req.query;
     
-    const {chainId, search} = req.body;
-    const criteria = { };
+    const {chainId, search, minter} = req.body;
+    const criteria = req.body;
     const filter = {};
     filter[sort] = (order === 'DESC')?-1:1;
+    const db = Nft.getDatastore().manager;
     if(search) {
       criteria["$or"] = [{ "name" : {"$regex":search, '$options' : 'i'}},{ "user.firstName" : {"$regex":search, '$options' : 'i'}}, { "user.lastName" : {"$regex":search, '$options' : 'i'}},{ "user.email" : {"$regex":search, '$options' : 'i'}}];
     }
     if(chainId){
       criteria['chainId'] = Number(chainId);;
     }
-    const db = Nft.getDatastore().manager;
+    if(minter){
+      criteria['minter'] = objectid(minter);
+    }
+  
     db.collection('nft').aggregate(
       [
         {
@@ -107,28 +113,6 @@ module.exports = {
     }catch(e){
       res.badRequest(e);
     }
-    
-    //const totalCount = await Nft.count(criteria);
-    
-    
-    // const query = Nft.find(criteria)
-    //   .limit(limit)
-    //   .skip((page - 1) * limit)
-    //   .sort(`${sort} ${order}`);
-
-    // populate.forEach(e => {
-    //   query.populate(e)
-    // })
-
-    // query.then((result) => {
-    //     res.ok({
-    //       records: result,
-    //       totalCount,
-    //     });
-    //   })
-    //   .catch((e) => {
-    //     res.badRequest(e);
-    //   });
   },
   auctions: async (req, res) => {
     const {
@@ -212,29 +196,6 @@ module.exports = {
         }
       }
     );
-
-
-
-    // const populate = req.body.populate || [];
-    // delete req.body.populate;
-    // const criteria = req.body;
-    // const totalCount = await Auction.count(criteria);
-    // const query = Auction.find(criteria)
-    //   .limit(limit)
-    //   .skip((page - 1) * limit)
-    //   .sort(`${sort} ${order}`);
-    // populate.forEach(e => {
-    //   query.populate(e)
-    // })
-    // query.then((result) => {
-    //     res.ok({
-    //       records: result,
-    //       totalCount,
-    //     });
-    //   })
-    //   .catch((e) => {
-    //     res.badRequest(e);
-    //   });
   },
   marketplace: async (req, res) => {
     const {
@@ -318,27 +279,6 @@ module.exports = {
         }
       }
     );
-    
-    // const populate = req.body.populate || [];
-    // delete req.body.populate;
-    // const criteria = req.body;
-    // const totalCount = await Marketplace.count(criteria);
-    // const query = Marketplace.find(criteria)
-    //   .limit(limit)
-    //   .skip((page - 1) * limit)
-    //   .sort(`${sort} ${order}`);
-    // populate.forEach(e => {
-    //   query.populate(e)
-    // })
-    // query.then((result) => {
-    //     res.ok({
-    //       records: result,
-    //       totalCount,
-    //     });
-    //   })
-    //   .catch((e) => {
-    //     res.badRequest(e);
-    //   });
   },
   bids: async (req, res) => {
     const {
@@ -346,28 +286,88 @@ module.exports = {
       limit = 20,
       sort = "createdAt",
       order = "DESC",
-      auction = null,
     } = req.query;
-    const criteria = req.body;
+    const criteria ={};
+    const { auction, search } = req.body;
+    const filter = {};
+    filter[sort] = (order === 'DESC')?-1:1;
     if (auction) {
-      criteria["auction"] = auction;
+      criteria["auction"] = objectId(auction);
     }
-    const totalCount = await Bid.count(criteria);
-    Bid.find(criteria)
-      .limit(limit)
-      .populate("user")
-      .skip((page - 1) * limit)
-      .sort(`${sort} ${order}`)
-      .populate("auction.nft")
-      .then((result) => {
-        res.ok({
-          records: result,
-          totalCount,
-        });
-      })
-      .catch((e) => {
-        res.badRequest(e);
-      });
+    if(search) {
+      criteria["$or"] = [{ "auction.nft.name" : {"$regex":search, '$options' : 'i'}}];
+    }
+    const db = Bid.getDatastore().manager;
+    db.collection('bid').aggregate(
+      [
+        {
+          $lookup: {
+            from: 'auction',
+            localField: 'auction',
+            foreignField: '_id',
+            as: 'auction',
+          },
+        },
+        {
+          $lookup: {
+            from: 'user',
+            localField: 'user',
+            foreignField: '_id',
+            as: 'user',
+          },
+        },
+        { $unwind: '$user' },
+        { $unwind: '$auction' },
+        {
+          $lookup: {
+            from: 'nft',
+            localField: 'auction.nft',
+            foreignField: '_id',
+            as: 'auction.nft',
+          },
+        },
+        { $unwind: '$auction.nft' },
+        { $match: criteria },
+        { $sort: filter },
+        {
+          $addFields: {
+            id:"$_id",
+            auction:{
+              id:"$auction._id",
+              nft:{ id:"$auction.nft._id" }
+            },
+            user:{
+              id:"$user._id"
+            }
+          }
+        },
+        {
+          $facet: {
+            records: [
+              { $skip: Number(limit * (page - 1)) },
+              { $limit: Number(limit) }
+            ],
+            totalCount: [{ $count: 'count' }],
+          },
+        },
+      ],
+      async (err, result) => {
+        if (err) return res.badRequest(err);
+        try{
+          result = await result.toArray();
+          res.ok({
+            records:
+              result[0].records && result[0].records.length > 0
+                ? result[0].records
+                : [],
+            totalCount:
+              result[0].totalCount.length > 0 ? result[0].totalCount[0].count : 0,
+          });
+        }catch(e){
+          res.badRequest('Something went wrong');
+        }
+      }
+    );
   },
   dashboard: async (req, res) => {
     const startOfDay = moment().startOf("day").valueOf();
@@ -679,28 +679,35 @@ module.exports = {
     });
   },
 
-  setplatformDetails: (req, res) => {
+  setplatformDetails: async (req, res) => {
     const {platformTitle} = req.body;
-    req.file('logo').upload({
-      dirname: require('path').resolve(sails.config.appPath, 'uploads')
-    }, async (error, uploadedFile) => {
-      if(error) return res.badRequest(error);
-      if(uploadedFile.length > 0) {
-        const media = await Media.create({
-          fd: uploadedFile[0].fd,
-          size: uploadedFile[0].size,
-          type: uploadedFile[0].type,
-          filename: uploadedFile[0].filename,
-          status: uploadedFile[0].status,
-          field: uploadedFile[0].field,
-          extra: uploadedFile[0].extra,
-        }).fetch();
-        Settings.update({uid: 1}).set({platformTitle, platformLogo:media.id}).then(() => {
-          sails.log.info('Company Logo and Title are stored');
-          res.ok();
-        });
-      }
-    });
+    const file = req.file('logo');
+    if(file._files.length > 0)
+    {
+      req.file('logo').upload({
+        dirname: require('path').resolve(sails.config.appPath, 'uploads')
+      }, async (error, uploadedFile) => {
+        if(error) return res.badRequest(error);
+        if(uploadedFile.length > 0) {
+          const media = await Media.create({
+            fd: uploadedFile[0].fd,
+            size: uploadedFile[0].size,
+            type: uploadedFile[0].type,
+            filename: uploadedFile[0].filename,
+            status: uploadedFile[0].status,
+            field: uploadedFile[0].field,
+            extra: uploadedFile[0].extra,
+          }).fetch();
+          Settings.update({uid: 1}).set({platformTitle, platformLogo:media.id}).then(() => {
+            sails.log.info('Company Logo and Title are stored');
+            res.ok();
+          });
+        }
+      });
+    } else {
+      const settings = await Settings.update({uid: 1}).set({ platformTitle }).fetch();
+      res.ok(settings);
+    }
   },
 
   // network api's

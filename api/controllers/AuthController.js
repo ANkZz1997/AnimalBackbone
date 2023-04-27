@@ -266,7 +266,7 @@ ${wallet.nonce}`;
       });
   },
   socialLogin: async (req, res) => {
-    const { type } = req.body;
+    const { type, email } = req.body;
     console.log(req.ip);
     switch (type) {
       case "GMAIL":

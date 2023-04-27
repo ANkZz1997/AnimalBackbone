@@ -66,6 +66,11 @@ module.exports = {
     },
     lastLoginIP:{
       type: 'string'
+    },
+    socialLinks: {
+      type: 'json',
+      columnType: 'json',
+      defaultsTo: {}
     }
   },
   customToJSON: function() {

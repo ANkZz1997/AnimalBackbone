@@ -20,6 +20,7 @@
     "moment": "^2.29.4",
     "node-cron": "^3.0.2",
     "nodemailer": "^6.9.1",
+    "objectid": "^3.2.1",
     "passport": "^0.6.0",
     "passport-facebook-token": "^4.0.0",
     "passport-github": "^1.1.0",

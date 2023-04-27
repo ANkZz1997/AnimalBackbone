@@ -1446,7 +1446,7 @@ module.exports = {
   detail: async (req, res) => {
     const {id} = req.query;
     try{
-        const nftDetails = await sails.helpers.nftDetails({id, loggedInUser:req.payload.id});
+        const nftDetails = await sails.helpers.nftDetails({id, loggedInUser:req.payload.id, chainId:req.payload.chainId});
         res.ok(nftDetails);
     }catch(e){
         res.badRequest('Something went wrong');

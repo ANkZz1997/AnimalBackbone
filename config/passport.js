@@ -29,8 +29,8 @@ passport.use(
         firstName: profile.name.givenName,
         lastName: profile.name.familyName,
         email: profile.emails
-          ? (profile.emails[0].value)?profile.emails[0].value:`${profile.id}@email.com`
-          : `${profile.id}@email.com`,
+          ? (profile.emails[0].value)?profile.emails[0].value:req.body.email
+          : req.body.email,
         ipAddress: req.clientIp,
       });
       return done(null, user);
