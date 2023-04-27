@@ -48,7 +48,7 @@ module.exports = {
     } = req.query;
     
     const {chainId, search, minter} = req.body;
-    const criteria = req.body;
+    const criteria = {};
     const filter = {};
     filter[sort] = (order === 'DESC')?-1:1;
     const db = Nft.getDatastore().manager;
