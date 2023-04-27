@@ -193,7 +193,7 @@ module.exports = {
       .then( async result => {
         if(result && result.nft){
           const id = result.nft;
-          const nftDetails = await sails.helpers.nftDetails({id, loggedInUser:req.payload.id});
+          const nftDetails = await sails.helpers.nftDetails({id, loggedInUser:req.payload.id, chainId:req.payload.chainId});
           result['nft'] = nftDetails;
         }
         res.ok(result);
