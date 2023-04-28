@@ -71,6 +71,12 @@ const task = cron.schedule('59 * * * * *', () => {
       })
     }
   })
+
+  const deadlineForPendingTransaction = moment().subtract(2, 'minute').valueOf();
+  NftTransaction.destroy({createdAt: {'<': deadlineForPendingTransaction}, status: 'PENDING'}).fetch().then((r) => {
+    if(r.length)
+      sails.log.info(r.length + ' pending transaction deleted');
+  })
 }, {
   scheduled: false
 });
