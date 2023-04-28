@@ -804,4 +804,5 @@ module.exports.custom = {
       "createdAt":1
     }
   },
+  bannerAttributes:['id','name','link','image']
 };
