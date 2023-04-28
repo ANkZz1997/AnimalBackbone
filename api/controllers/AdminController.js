@@ -485,33 +485,89 @@ module.exports = {
       sort = "createdAt",
       order = "DESC",
     } = req.query;
-    const populate = req.body.populate || [];
     delete req.body.populate;
-    const criteria = req.body;
-    criteria['identityProof'] = {"!=":null};
-    criteria['addressProof'] = {"!=":null};
-    const totalCount = await Kyc.count(criteria);
-    
-    const query = Kyc.find(criteria)
-      .populate('user')
-      .populate('addressProofDocType')
-      .populate('identityProofDocType')
-      .limit(limit)
-      .skip((page - 1) * limit)
-      .sort(`${sort} ${order}`)
-    populate.forEach(e => {
-      query.populate(e)
-    })
-
-    query.then((result) => {
-        res.ok({
-          records: result,
-          totalCount,
-        });
-      })
-      .catch((e) => {
-        res.badRequest(e);
-      });
+    const { status='', search='' } = req.body;
+    const filter = {}, criteria = {};
+    filter[sort] = (order === 'DESC')?-1:1;
+    if (status) {
+      criteria["status"] = status
+    }
+    if(search) {
+      criteria["$or"] = [{ "user.firstName" : {"$regex":search, '$options' : 'i'}}, { "user.lastName" : {"$regex":search, '$options' : 'i'}},{ "user.email" : {"$regex":search, '$options' : 'i'}}];
+    }
+    const db = Kyc.getDatastore().manager;
+    db.collection('kyc').aggregate(
+      [
+        {
+          $lookup: {
+            from: 'kycdoctype',
+            localField: 'addressProofDocType',
+            foreignField: '_id',
+            as: 'addressProofDocType',
+          },
+        },
+        {
+          $lookup: {
+            from: 'kycdoctype',
+            localField: 'identityProofDocType',
+            foreignField: '_id',
+            as: 'identityProofDocType',
+          }
+        },
+        {
+          $lookup: {
+            from: 'user',
+            localField: 'user',
+            foreignField: '_id',
+            as: 'user',
+          },
+        },
+        { $unwind: '$user' },
+        { $unwind: '$addressProofDocType' },
+        { $unwind: '$identityProofDocType' },
+        { $match: criteria },
+        { $sort: filter },
+        {
+          $addFields: {
+            id:"$_id",
+            addressProofDocType:{
+              id:"$addressProofDocType._id"
+            },
+            identityProofDocType:{
+              id:"$identityProofDocType._id"
+            },
+            user:{
+              id:"$user._id"
+            }
+          }
+        },
+        {
+          $facet: {
+            records: [
+              { $skip: Number(limit * (page - 1)) },
+              { $limit: Number(limit) }
+            ],
+            totalCount: [{ $count: 'count' }],
+          },
+        },
+      ],
+      async (err, result) => {
+        if (err) return res.badRequest(err);
+        try{
+          result = await result.toArray();
+          res.ok({
+            records:
+              result[0].records && result[0].records.length > 0
+                ? result[0].records
+                : [],
+            totalCount:
+              result[0].totalCount.length > 0 ? result[0].totalCount[0].count : 0,
+          });
+        }catch(e){
+          res.badRequest('Something went wrong');
+        }
+      }
+    );
   },
 
   getActivities: async (req, res) => {
@@ -521,7 +577,10 @@ module.exports = {
       sort = "createdAt",
       order = "DESC",
     } = req.query;
-    const criteria = req.body;
+    const criteria = {
+      ...req.body,
+      action: { "!=": 'AUTH' }
+    };
     const totalCount = await Activity.count(criteria);
     Activity.find(criteria)
       .populateAll()

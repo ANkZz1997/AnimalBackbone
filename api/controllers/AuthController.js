@@ -192,6 +192,7 @@ ${wallet.nonce}`;
         User.create({
           type: "DECENTRALISED",
           firstName: "Unnamed",
+          socialAccountType:"METAMASK",
           wallet: wallet.id,
           username: address.toLowerCase(),
           email: email,

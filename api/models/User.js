@@ -44,7 +44,7 @@ module.exports = {
     },
     socialAccountType:{
       type: 'string',
-      isIn: ['FACEBOOK', 'GMAIL', 'INSTAGRAM', 'LINKEDIN', 'GITHUB', 'TWITTER'],
+      isIn: ['FACEBOOK', 'GMAIL', 'INSTAGRAM', 'LINKEDIN', 'GITHUB', 'TWITTER', 'METAMASK'],
       defaultsTo: ''
     },
     wallet: {
