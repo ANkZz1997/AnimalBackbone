@@ -67,6 +67,9 @@ module.exports = {
     lastLoginIP:{
       type: 'string'
     },
+    lastLoggedInTime:{
+      type:'number'
+    },
     socialLinks: {
       type: 'json',
       columnType: 'json',

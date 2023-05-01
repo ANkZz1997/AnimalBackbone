@@ -928,5 +928,83 @@ module.exports = {
     }catch(e){
       res.badRequest(e);
     }
+  },
+
+  editProfile: async (req, res) => {
+    const { name } = req.body;
+    const file = req.file("avatar");
+    if (file._files.length > 0) {
+      req.file("avatar").upload(
+        {
+          dirname: require("path").resolve(sails.config.appPath, "uploads"),
+        },
+        async (error, uploadedFile) => {
+          if (error) {
+            return res.badRequest(error);
+          }
+          const admin = await Admin.findOne({ id: req.payload.id });
+          if (uploadedFile.length > 0) {
+            let media = await Media.findOne({ id: admin.avatar });
+            if (media) {
+              await Media.destroyOne({ id: network.logo });
+              fs.unlink(media.fd, (e) => {
+                if (e) {
+                  console.log("Media not removed");
+                } else {
+                  console.log("Media Removed");
+                }
+              });
+            }
+            media = {};
+            media = await Media.create({
+              fd: uploadedFile[0].fd,
+              size: uploadedFile[0].size,
+              type: uploadedFile[0].type,
+              filename: uploadedFile[0].filename,
+              status: uploadedFile[0].status,
+              field: uploadedFile[0].field,
+              extra: uploadedFile[0].extra,
+            }).fetch();
+
+            const adminDetails = {
+              avatar: media.id || user.avatar,
+              name: name || admin.name,
+            };
+            const updatedUser = await Admin.update(
+              { id: req.payload.id },
+              adminDetails
+            ).fetch();
+            res.status(200).json(updatedUser);
+          }
+        }
+      );
+    } else {
+      const editProfile = await Admin.update({ id: req.payload.id })
+        .set({ name })
+        .fetch();
+      res.ok(editProfile);
+    }
+  },
+
+  changePassword: async (req, res) => {
+    try {
+      const { oldPassword, newPassword } = req.body;
+      const admin = await Admin.findOne({ id: req.payload.id }).decrypt()();
+      if (admin) {
+        if (admin.password === oldPassword) {
+          await Admin.update(
+            { id: req.payload.id },
+            { password: newPassword }
+          ).fetch();
+          res.ok();
+        } else {
+          res.badRequest("Old Password is not correct");
+        }
+      } else {
+        res.badRequest("Something went wrong");
+      }
+    } catch (err) {
+      return res.badRequest("Something went wrong");
+    }
   }
 };

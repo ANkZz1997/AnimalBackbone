@@ -13,7 +13,7 @@ const GOOGLE_CLIENT_ID =
   "144163062893-c48rp2sgka2ms7bl9o1r3nsln6mnctvt.apps.googleusercontent.com";
 const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 const templates = require('./../constants/EmailTemplates');
-const Otp = require("../models/Otp");
+const moment = require("moment/moment");
 
 module.exports = {
 
@@ -85,7 +85,8 @@ module.exports = {
           result.token = await sails.helpers.signToken({ id: result.id });
 
           await User.update({ id: result.id }).set({
-            lastLoginIP:req.ip
+            lastLoginIP:req.ip,
+            lastLoggedInTime: moment().valueOf()
           });
 
           console.log('user ==> ', result.id);
@@ -165,7 +166,8 @@ ${wallet.nonce}`;
             }
 
             await User.update({ id: result.id }).set({
-              lastLoginIP:req.ip
+              lastLoginIP:req.ip,
+              lastLoggedInTime: moment().valueOf()
             });
             await sails.helpers.captureActivities({
               action:"AUTH",
@@ -200,7 +202,8 @@ ${wallet.nonce}`;
           .fetch()
           .then(async (result) => {
             await User.update({ id: result.id }).set({
-              lastLoginIP:req.ip
+              lastLoginIP:req.ip,
+              lastLoggedInTime: moment().valueOf()
             });
             Kyc.create({user: result.id}).fetch().then(_result => {sails.log.info(`User's KYC record is created with id - ${_result.id}`)})
             result.wallet = wallet;

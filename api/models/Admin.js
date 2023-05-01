@@ -20,7 +20,10 @@ module.exports = {
       type: 'string',
       required: true,
       encrypt: true
-    }
+    },
+    avatar:{
+      type: 'string'
+    },
   },
   customToJSON: function() {
     // Return a shallow copy of this record with the password and ssn removed.

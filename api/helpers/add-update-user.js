@@ -3,6 +3,7 @@ const ethUtil = require("ethereumjs-util");
 const Web3 = require("web3");
 const web3 = new Web3(Web3.givenProvider || "ws://localhost:7545");
 const templates = require('./../constants/EmailTemplates');
+const moment = require("moment/moment");
 
 module.exports = {
   friendlyName: "Add Update User on Social Login",
@@ -39,7 +40,8 @@ module.exports = {
         await User.update({ id: user.id }).set({
           socialId: inputs.payload.socialId,
           socialAccountType: inputs.payload.socialAccountType,
-          lastLoginIP:ipAddr
+          lastLoginIP:ipAddr,
+          lastLoggedInTime: moment().valueOf()
         });
         await sails.helpers.captureActivities({
           action:"AUTH",
@@ -73,7 +75,8 @@ module.exports = {
             await Kyc.create({user: result.id}).then(_result => {sails.log.info(`User's Kyc record created`)});
             result.token = await sails.helpers.signToken({ id: result.id });
             await User.update({ id: result.id }).set({
-              lastLoginIP:ipAddr
+              lastLoginIP:ipAddr,
+              lastLoggedInTime: moment().valueOf()
             });
             await sails.helpers.captureActivities({
               action:"AUTH",
