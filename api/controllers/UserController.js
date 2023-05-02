@@ -741,7 +741,8 @@ module.exports = {
       });
   },
   updateProfile: async (req, res) => {
-    const { firstName, lastName, contact, socialLinks } = req.body;
+    const { firstName, lastName, contact } = req.body;
+    let { socialLinks } = req.body;
     try{
       socialLinks = JSON.parse(socialLinks);
     } catch (err){
