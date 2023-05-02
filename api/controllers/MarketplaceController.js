@@ -4,6 +4,7 @@
  * @description :: Server-side actions for handling incoming requests.
  * @help        :: See https://sailsjs.com/docs/concepts/actions
  */
+ const objectid = require('objectid');
 
 
 const createMintingVoucher = async (wallet, price, nft, chainId, cb) => {
@@ -46,7 +47,8 @@ module.exports = {
     } = req.query;
 
     const {
-      search = ''
+      search = '',
+      user
     } = req.body;
 
     let criteria = {
@@ -59,6 +61,10 @@ module.exports = {
     }
     if(search){
       criteria["nft.name"] = {"$regex":search, '$options' : 'i'}
+    }
+
+    if(user && objectid.isValid(user)){
+      criteria['user._id'] = objectid(user);
     }
 
     let filter = sails.config.custom['recent'];
