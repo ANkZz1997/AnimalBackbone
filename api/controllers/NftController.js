@@ -1517,5 +1517,36 @@ module.exports = {
       res.status(500).json(err);
     });
   },
+
+  history: async (req, res) => {
+    const {
+        page = 1,
+        limit = 20,
+        sort = "createdAt",
+        order = "ASC",
+        nft
+      } = req.query;
+      const criteria = {
+        nft,
+        action: "NFT",
+        type: {"!":"BID"}
+      };
+      const totalCount = await Activity.count(criteria);
+      Activity.find(criteria)
+        .populateAll()
+        .limit(limit)
+        .skip((page - 1) * limit)
+        .sort(`${sort} ${order}`)
+        .then(async (result) => {
+          const data = await sails.helpers.displayActivities(result);
+          res.ok({
+            records: data,
+            totalCount,
+          });
+        })
+        .catch((e) => {
+          res.badRequest(e);
+        });
+  }
 };
 
