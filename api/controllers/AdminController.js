@@ -122,7 +122,7 @@ module.exports = {
       order = "DESC",
     } = req.query;
 
-    const {chainId, search, category} = req.body;
+    const {chainId, search, category, status} = req.body;
     const criteria = { };
     const filter = {};
     filter[sort] = (order === 'DESC')?-1:1;
@@ -134,6 +134,10 @@ module.exports = {
     }
     if(category){
       criteria['nft.category'] = category;
+    }
+
+    if(status){
+      criteria['status'] = status;
     }
     const db = Auction.getDatastore().manager;
     db.collection('auction').aggregate(
