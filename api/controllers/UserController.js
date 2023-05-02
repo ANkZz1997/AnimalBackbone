@@ -728,15 +728,16 @@ module.exports = {
       .populateAll()
       .then(async (result) => {
         const kyc = await Kyc.findOne({user: req.payload.id});
-        const createdCount = await Nft.count({minter: req.payload.id});
-        const collectedCount = await Nft.count({user: req.payload.id, minter: {'!=': req.payload.id}});
+        const createdCount = await Nft.count({user:req.payload.id, minter: req.payload.id});
+        const collectedCount = await Nft.count({user: req.payload.id, minted: true});
         const ticketCount = await Dispute.count({user: req.payload.id});
-        const favCount = 0;
+        const userWishlist = await User.findOne({ id: userId }).populate('wishlist');
+        const wishlistCount = userWishlist.wishlist && userWishlist.wishlist.length > 0 ? userWishlist.wishlist.length : 0; 
         result.kyc = kyc;
         result.createdCount = createdCount;
         result.collectedCount = collectedCount;
         result.ticketCount = ticketCount;
-        result.favCount = favCount;
+        result.favCount = wishlistCount;
         res.status(200).json(result);
       });
   },
