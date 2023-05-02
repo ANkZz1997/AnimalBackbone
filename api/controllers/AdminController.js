@@ -409,22 +409,33 @@ module.exports = {
         res.badRequest(e);
       });
   },
-  getMarketplaceDetail: (req, res) => {
+  getMarketplaceDetail: async (req, res) => {
     const { id } = req.query;
     Marketplace.findOne({ id })
       .populateAll()
-      .then((result) => {
+      .then(async (result) => {
+        const nftDetails =  await Nft.findOne({ id }).populate('wishlistedBy');
+        nftDetails.wishlistedCount = (nftDetails.wishlistedBy)?nftDetails.wishlistedBy.length : 0;
+        delete nftDetails['wishlistedBy'];
+        result['nft'] = nftDetails;
         res.ok(result);
       })
       .catch((e) => {
         res.badRequest(e);
       });
   },
-  getAuctionDetail: (req, res) => {
+  getAuctionDetail: async (req, res) => {
     const { id } = req.query;
     Auction.findOne({ id })
       .populateAll()
-      .then((result) => {
+      .then(async(result) => {
+        const nftId = result.nft.id;
+        if(nftId){
+          const nftDetails =  await Nft.findOne({ id:nftId }).populate('wishlistedBy');
+          nftDetails.wishlistedCount = (nftDetails.wishlistedBy)?nftDetails.wishlistedBy.length : 0;
+          delete nftDetails['wishlistedBy'];
+          result['nft'] = nftDetails;
+        }
         res.ok(result);
       })
       .catch((e) => {
@@ -447,6 +458,8 @@ module.exports = {
     Nft.findOne({ id })
       .populateAll()
       .then((result) => {
+        result.wishlistedCount = (result.wishlistedBy)?result.wishlistedBy.length : 0;
+        delete result.wishlistedBy;
         res.ok(result);
       })
       .catch((e) => {
