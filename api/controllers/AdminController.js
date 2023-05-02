@@ -414,10 +414,13 @@ module.exports = {
     Marketplace.findOne({ id })
       .populateAll()
       .then(async (result) => {
-        const nftDetails =  await Nft.findOne({ id }).populate('wishlistedBy');
-        nftDetails.wishlistedCount = (nftDetails.wishlistedBy)?nftDetails.wishlistedBy.length : 0;
-        delete nftDetails['wishlistedBy'];
-        result['nft'] = nftDetails;
+        const nftId = result.nft.id;
+        if(nftId){
+          const nftDetails =  await Nft.findOne({ id:nftId }).populate('wishlistedBy');
+          nftDetails.wishlistedCount = (nftDetails.wishlistedBy)?nftDetails.wishlistedBy.length : 0;
+          delete nftDetails['wishlistedBy'];
+          result['nft'] = nftDetails;
+        }
         res.ok(result);
       })
       .catch((e) => {
