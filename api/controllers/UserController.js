@@ -742,6 +742,11 @@ module.exports = {
   },
   updateProfile: async (req, res) => {
     const { firstName, lastName, contact, socialLinks } = req.body;
+    try{
+      socialLinks = JSON.parse(socialLinks);
+    } catch (err){
+      socialLinks = null;
+    }
     req.file('avatar').upload({
       dirname: require('path').resolve(sails.config.appPath, 'uploads')
     },async (error, uploadedFile) => {
