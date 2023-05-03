@@ -7,6 +7,7 @@
 
 module.exports = {
   create: async (req, res) => {
+    try{
     const {auctionId, price} = req.body;
     Auction.findOne({id: auctionId, status: 'ACTIVE'})
       .then(async result => {
@@ -22,7 +23,21 @@ module.exports = {
         if(lastBid.length > 0 && lastBid[0].user === req.payload.id){
           return res.badRequest('Last bid was made by you. Please wait for another user to bid before placing a new bid on this auction.');
         }
-        
+
+        const userDetails = await User.findOne({id:req.payload.id}).populate('wallet');
+
+        if(userDetails && userDetails.wallet && userDetails.wallet.address){
+          const walletBalance =   await sails.helpers.etherBalance(
+            userDetails.wallet.address,
+            req.payload.chainId
+          );
+          if(Number(walletBalance) < price){
+            return res.badRequest('Insufficient balance');
+          }
+        } else {
+          return res.badRequest('Something went wrong');
+        }
+
         Bid.create({
           user: req.payload.id,
           auction: auctionId,
@@ -40,10 +55,11 @@ module.exports = {
             }
           });
           res.ok(_result);
-        }).catch(e => {
-          res.badRequest(e)
-        });
+        })
       });
+    }catch(e){
+      res.badRequest(e);
+    }
   },
 
   lastBid: async (req, res) => {
