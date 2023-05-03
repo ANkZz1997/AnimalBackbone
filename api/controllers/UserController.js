@@ -788,7 +788,7 @@ module.exports = {
       .populate('wallet')
       .then(async result => {
         result.address = result.wallet.address
-        const createdCount = await Nft.count({user:id, minter: id, minted: false});
+        const createdCount = await Nft.count({user:id, minter: id, minted: false, status:{in:['MARKETPLACE', 'AUCTION']}});
         const collectedCount = await Nft.count({user: id, minted: true});
         result.createdCount = createdCount;
         result.collectedCount = collectedCount;
