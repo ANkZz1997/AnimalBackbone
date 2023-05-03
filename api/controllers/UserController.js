@@ -788,8 +788,8 @@ module.exports = {
       .populate('wallet')
       .then(async result => {
         result.address = result.wallet.address
-        const createdCount = await Nft.count({user:req.payload.id, minter: req.payload.id, minted: false});
-        const collectedCount = await Nft.count({user: req.payload.id, minted: true});
+        const createdCount = await Nft.count({user:id, minter: id, minted: false});
+        const collectedCount = await Nft.count({user: id, minted: true});
         result.createdCount = createdCount;
         result.collectedCount = collectedCount;
         delete result.wallet
