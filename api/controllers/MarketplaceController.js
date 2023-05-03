@@ -256,8 +256,13 @@ module.exports = {
         res.badRequest(e);
       });
   },
-  removeFromMarketplace: (req, res) => {
+  removeFromMarketplace: async (req, res) => {
     const { id } = req.body;
+    const marketplace = await Marketplace.findOne({
+      id: id,
+      user: req.payload.id,
+    });
+    if (!marketplace) return res.badRequest();
     Marketplace.update({ id: id, user: req.payload.id })
       .set({ isDeleted: true, status: "DELETED" })
       .fetch()
@@ -266,7 +271,7 @@ module.exports = {
           action: "NFT",
           type: "REMOVEFROMMARKET",
           user: req.payload.id,
-          nft: result.nft,
+          nft: marketplace.nft,
           marketplace: id,
         });
         await Nft.update({ id: result[0].nft }).set({

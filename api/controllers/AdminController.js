@@ -6,7 +6,7 @@
  */
 const moment = require("moment");
 const fs = require("fs");
-var objectid = require('objectid')
+const objectid = require('objectid');
 
 module.exports = {
   users: async (req, res) => {
@@ -402,16 +402,30 @@ module.exports = {
         res.badRequest(e);
       });
   },
-  getUserDetail: (req, res) => {
+  getUserDetail: async (req, res) => {
     const { id } = req.query;
-    User.findOne({ id })
-      .populateAll()
-      .then((result) => {
-        res.ok(result);
-      })
-      .catch((e) => {
-        res.badRequest(e);
-      });
+    try {
+      const result = await User.findOne({ id }).populateAll();
+      const activeNetworks = await Network.find({ enabled: true });
+      let networks = [];
+      if (activeNetworks.length > 0) {
+        for(const network of activeNetworks) {
+          const amount = await sails.helpers.etherBalance(
+            result.wallet.address,
+            network.chainId
+          );
+          networks.push({
+            name:network.name,
+            logo:network.logo,
+            amount
+          });
+        };
+      }
+      result.networks = networks;
+      res.ok(result);
+    } catch (e) {
+      res.badRequest(e);
+    }
   },
   getMarketplaceDetail: async (req, res) => {
     const { id } = req.query;
