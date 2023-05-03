@@ -65,7 +65,8 @@ module.exports = {
 
     const {
       search = '',
-      user
+      user,
+      status
     } = req.body;
 
     let criteria = {
@@ -81,6 +82,10 @@ module.exports = {
 
     if(user && objectid.isValid(user)){
       criteria['user._id'] = objectid(user);
+    }
+
+    if(status){
+      criteria['status'] = status;
     }
 
     let filter = sails.config.custom['recent'];
