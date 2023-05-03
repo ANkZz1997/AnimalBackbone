@@ -728,9 +728,9 @@ module.exports = {
       .populateAll()
       .then(async (result) => {
         const kyc = await Kyc.findOne({user: req.payload.id});
-        const createdCount = await Nft.count({user:req.payload.id, minter: req.payload.id, minted: false});
-        const collectedCount = await Nft.count({user: req.payload.id, minted: true});
-        const ticketCount = await Dispute.count({user: req.payload.id});
+        const createdCount = await Nft.count({user:req.payload.id, minter: req.payload.id, minted: false, chainId:req.payload.chainId});
+        const collectedCount = await Nft.count({user: req.payload.id, minted: true, chainId:req.payload.chainId});
+        const ticketCount = await Dispute.count({user: req.payload.id, chainId:req.payload.chainId});
         const userWishlist = await User.findOne({ id: req.payload.id }).populate('wishlist');
         const wishlistCount = userWishlist.wishlist && userWishlist.wishlist.length > 0 ? userWishlist.wishlist.length : 0; 
         result.kyc = kyc;
@@ -788,8 +788,8 @@ module.exports = {
       .populate('wallet')
       .then(async result => {
         result.address = result.wallet.address
-        const createdCount = await Nft.count({user:id, minter: id, minted: false, status:{in:['MARKETPLACE', 'AUCTION']}});
-        const collectedCount = await Nft.count({user: id, minted: true});
+        const createdCount = await Nft.count({user:id, minter: id, minted: false, status:{in:['MARKETPLACE', 'AUCTION']}, chainId:req.payload.chainId});
+        const collectedCount = await Nft.count({user: id, minted: true, status:{in:['MARKETPLACE', 'AUCTION']},chainId:req.payload.chainId});
         result.createdCount = createdCount;
         result.collectedCount = collectedCount;
         delete result.wallet

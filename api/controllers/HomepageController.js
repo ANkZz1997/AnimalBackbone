@@ -9,8 +9,8 @@ module.exports = {
   index: async (req, res) => {
     const response = {
       banners: await Banner.find({select: sails.config.custom.bannerAttributes, where:{isActive:true, isDeleted: false }}).sort('order ASC').limit(5),
-      createdCount: await Nft.count({user:req.payload.id, minter: req.payload.id, minted: false}),
-      collectedCount: await Nft.count({user: req.payload.id, minted:true}),
+      createdCount: await Nft.count({user:req.payload.id, minter: req.payload.id, minted: false, chainId:req.payload.chainId}),
+      collectedCount: await Nft.count({user: req.payload.id, minted:true, chainId:req.payload.chainId}),
       auction: await Auction.find().populate('nft').limit(10),
       marketplace: await Marketplace.find().populate('nft').limit(10),
       nft: await Nft.find().populate('nft').limit(10),
