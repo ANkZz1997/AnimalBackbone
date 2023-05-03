@@ -728,7 +728,7 @@ module.exports = {
       .populateAll()
       .then(async (result) => {
         const kyc = await Kyc.findOne({user: req.payload.id});
-        const createdCount = await Nft.count({user:req.payload.id, minter: req.payload.id});
+        const createdCount = await Nft.count({user:req.payload.id, minter: req.payload.id, minted: false});
         const collectedCount = await Nft.count({user: req.payload.id, minted: true});
         const ticketCount = await Dispute.count({user: req.payload.id});
         const userWishlist = await User.findOne({ id: req.payload.id }).populate('wishlist');
@@ -782,12 +782,16 @@ module.exports = {
       res.status(200).json(updatedUser);
     });
   },
-  getUserProfile: (req, res) => {
+  getUserProfile: async (req, res) => {
     const {id} = req.query;
     User.findOne({id})
       .populate('wallet')
-      .then(result => {
+      .then(async result => {
         result.address = result.wallet.address
+        const createdCount = await Nft.count({user:req.payload.id, minter: req.payload.id, minted: false});
+        const collectedCount = await Nft.count({user: req.payload.id, minted: true});
+        result.createdCount = createdCount;
+        result.collectedCount = collectedCount;
         delete result.wallet
         res.ok(result)
       }).catch(e => {

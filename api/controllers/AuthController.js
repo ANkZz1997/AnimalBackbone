@@ -127,7 +127,7 @@ module.exports = {
     }
   },
   verifySignature: async (req, res) => {
-    let { address, signature, email } = req.body;
+    let { address, signature, email, firstName, lastName } = req.body;
     const wallet = await Wallet.findOne({ address: address.toLowerCase() });
     const msg = `
 Welcome to SDNA Crypt
@@ -193,11 +193,12 @@ ${wallet.nonce}`;
         if(user.length > 0) return res.badRequest('This Email is already registered.');
         User.create({
           type: "DECENTRALISED",
-          firstName: "Unnamed",
           socialAccountType:"METAMASK",
           wallet: wallet.id,
           username: address.toLowerCase(),
           email: email,
+          firstName,
+          lastName
         })
           .fetch()
           .then(async (result) => {
