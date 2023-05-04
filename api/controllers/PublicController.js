@@ -3,6 +3,8 @@ const randomWords = require('random-words');
 const crypto = require('crypto');
 const Web3 = require("web3");
 const web3 = new Web3(Web3.givenProvider || "ws://localhost:7545");
+const templates = require('./../constants/EmailTemplates');
+
 
 var exec = require('child_process').exec;
 
@@ -84,10 +86,31 @@ module.exports = {
     const emailSubscription = await Emailsubscription.find({email: email});
     if(emailSubscription.length > 0){
       res.badRequest('Already Subscribed');
-    } else{
+    } else {
       await Emailsubscription.create({ email: email });
       res.ok();
     }
+  },
+
+  contactUs: async (req, res) => {
+    try {
+      const { name, email, phoneNumber, message } = req.body;
+      await ContactUs.create({name, email, phoneNumber, message });
+      const settings = await sails.helpers.fetchSettings();
+      const info = { ...settings, name, email, phoneNumber, message };
+      
+      sails.helpers.sendMail(sails.config.custom.contactEmail, templates.contactusEmail.subject(), '', templates.contactusEmail.content(info)).then(r => {
+        sails.log.info('Sending Thankyou email on contactus');
+      });
+
+      const thankInfo = { ...settings, name };
+      sails.helpers.sendMail(email, templates.thankyouEmail.subject(), '', templates.thankyouEmail.content(thankInfo)).then(r => {
+        sails.log.info('Sending Thankyou email on contactus');
+      });
+
+      res.ok();
+    } catch (err) {
+      return res.badRequest(err);
+    }
   }
 }
-

@@ -804,5 +804,6 @@ module.exports.custom = {
       "createdAt":1
     }
   },
-  bannerAttributes:['id','name','link','image']
+  bannerAttributes:['id','name','link','image'],
+  contactEmail:'vinod.kumar@sdnatech.com'
 };
