@@ -965,6 +965,7 @@ module.exports = {
   },
 
   editProfile: async (req, res) => {
+    try{
     const { name } = req.body;
     const file = req.file("avatar");
     if (file._files.length > 0) {
@@ -977,18 +978,7 @@ module.exports = {
             return res.badRequest(error);
           }
           const admin = await Admin.findOne({ id: req.payload.id });
-          if (uploadedFile.length > 0) {
-            let media = await Media.findOne({ id: admin.avatar });
-            if (media) {
-              await Media.destroyOne({ id: network.logo });
-              fs.unlink(media.fd, (e) => {
-                if (e) {
-                  console.log("Media not removed");
-                } else {
-                  console.log("Media Removed");
-                }
-              });
-            }
+          
             media = {};
             media = await Media.create({
               fd: uploadedFile[0].fd,
@@ -1001,14 +991,32 @@ module.exports = {
             }).fetch();
 
             const adminDetails = {
-              avatar: media.id || user.avatar,
+              avatar: media.id,
               name: name || admin.name,
             };
             const updatedUser = await Admin.update(
               { id: req.payload.id },
-              adminDetails
-            ).fetch();
-            res.status(200).json(updatedUser);
+            ).set(adminDetails).fetch();
+
+
+            if (uploadedFile.length > 0) {
+              if(admin.avatar){
+                let media = await Media.findOne({ id: admin.avatar });
+                if (media) {
+                  await Media.destroyOne({ id: media.id });
+                  fs.unlink(media.fd, (e) => {
+                    if (e) {
+                      console.log("Media not removed");
+                    } else {
+                      console.log("Media Removed");
+                    }
+                  });
+                }
+              }
+
+
+
+            res.ok(updatedUser);
           }
         }
       );
@@ -1018,6 +1026,9 @@ module.exports = {
         .fetch();
       res.ok(editProfile);
     }
+  }catch(e){
+    return res.badRequest('Document Not Found');
+  }
   },
 
   changePassword: async (req, res) => {
