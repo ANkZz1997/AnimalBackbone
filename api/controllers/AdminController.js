@@ -412,7 +412,7 @@ module.exports = {
         for(const network of activeNetworks) {
           const amount = await sails.helpers.etherBalance(
             result.wallet.address,
-            network.chainId
+              network.chainId
           );
           networks.push({
             name:network.name,
@@ -422,6 +422,14 @@ module.exports = {
         };
       }
       result.networks = networks;
+      const createdCount = await Nft.count({user:id, minter: id, minted: false});
+      const purchasedCount = await Nft.count({user: id, minted: true});
+      const soldCount = await Nft.count({ minted: true, minter: id});
+      const wishlistCount = result.wishlist && result.wishlist.length > 0 ? result.wishlist.length : 0;   
+      result.createdCount = createdCount;
+      result.purchasedCount = purchasedCount;
+      result.soldCount = soldCount;
+      result.favCount = wishlistCount;
       res.ok(result);
     } catch (e) {
       res.badRequest(e);
