@@ -630,7 +630,7 @@ module.exports = {
     } = req.query;
     const criteria = {
       ...req.body,
-      action: { "!=": 'AUTH' }
+      type : { "!=": ['LOGIN','CHANGEPASSWORD'] }
     };
     const totalCount = await Activity.count(criteria);
     Activity.find(criteria)
