@@ -1042,7 +1042,7 @@ module.exports = {
   changePassword: async (req, res) => {
     try {
       const { oldPassword, newPassword } = req.body;
-      const admin = await Admin.findOne({ id: req.payload.id }).decrypt()();
+      const admin = await Admin.findOne({ id: req.payload.id }).decrypt();
       if (admin) {
         if (admin.password === oldPassword) {
           await Admin.update(
