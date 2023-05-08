@@ -14,7 +14,7 @@ module.exports = {
     },
     type: {
       type: 'string',
-      isIn: ['LOGIN', 'CHANGEPASSWORD', 'CREATE', 'BUY', 'MARKFAV', 'UNMARKFAV', 'ADDTOMARKET', 'REMOVEFROMMARKET', 'UPDATEPRICE', 'BID', 'INTENT', 'VERIFIED','SOLD'],
+      isIn: ['LOGIN', 'CHANGEPASSWORD', 'CREATE', 'BUY', 'MARKFAV', 'UNMARKFAV', 'ADDTOMARKET', 'REMOVEFROMMARKET', 'UPDATEPRICE', 'BID', 'INTENT', 'VERIFIED','SOLD','USERSTATUS'],
       required: true
     },
     user: {

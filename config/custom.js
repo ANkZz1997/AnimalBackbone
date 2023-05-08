@@ -767,6 +767,7 @@ module.exports.custom = {
     AUTH: {
       LOGIN: "<%= user.firstName %> <%= user.lastName %> logged in at <%= new Date(payload.loginAt) %>",
       CHANGEPASSWORD: "<%= user.firstName %> <%= user.lastName %> has updated his password",
+      USERSTATUS:"Admin updated user status to <%= payload.status %> of user <%= user.firstName %> <%= user.lastName %>"
     },
     PAYMENT:{
       INTENT: '<%= user.firstName %> <%= user.lastName %> has created an payment intent for Rs. <%= payload.amount/100 %> on stripe',
@@ -805,5 +806,7 @@ module.exports.custom = {
     }
   },
   bannerAttributes:['id','name','link','image'],
-  contactEmail:'vinod.kumar@sdnatech.com'
+  contactEmail:'vinod.kumar@sdnatech.com',
+  facebookAppId: "428119419405148",
+  facebookAppSecret: "8ef503b0a52e6baa446240302c8bca3c",
 };

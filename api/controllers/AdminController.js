@@ -390,12 +390,21 @@ module.exports = {
       blockedUserCount,
     });
   },
-  updateUserStatus: (req, res) => {
+  updateUserStatus: async (req, res) => {
     const { id, status } = req.body;
     User.update({ id })
       .set({ status })
       .fetch()
-      .then((result) => {
+      .then(async (result) => {
+        await sails.helpers.captureActivities({
+          action:"AUTH",
+          type:"USERSTATUS",
+          user:id,
+          payload:{
+            ipAddress:req.ip,
+            status:status
+          }
+        });
         res.ok(result);
       })
       .catch((e) => {
