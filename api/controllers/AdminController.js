@@ -629,8 +629,8 @@ module.exports = {
       order = "DESC",
     } = req.query;
     const criteria = {
-      ...req.body,
-      type : { "!=": ['LOGIN','CHANGEPASSWORD'] }
+      type : { "!=": ['LOGIN','CHANGEPASSWORD'] },
+      ...req.body
     };
     const totalCount = await Activity.count(criteria);
     Activity.find(criteria)
