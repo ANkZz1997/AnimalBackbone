@@ -11,7 +11,16 @@ module.exports = {
   },
   fn: async (inputs,exits)=>{
     let payload = jwt.verify(inputs.token,'secret');
-    return exits.success(payload);
+    if(!payload.isAdmin){
+      const user = await User.findOne({id:payload.id});
+      if(user.status === 'BLOCKED' || user.status === 'INACTIVE'|| user.status === 'DELETED'){
+        return exits.error('invalid token');
+      }else{
+        return exits.success(payload);
+      }
+    }else{
+      return exits.success(payload);
+    }
   }
 };
 
