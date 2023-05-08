@@ -11,5 +11,5 @@
 
 module.exports.bootstrap = async function() {
   await sails.config.onboarding();
-  // await sails.config.rpcListener();
+  await sails.config.rpcListener();
 };
