@@ -21,17 +21,20 @@ module.exports = {
       required: true
     },
     endTime: {
-      type: 'string',
+      type: 'number',
       required: true
     },
     status: {
       type: 'string',
-      isIn: ['ACTIVE', 'ENDED', 'REMOVED'],
+      isIn: ['ACTIVE', 'ENDED', 'REMOVED', 'FAILED'],
       defaultsTo: 'ACTIVE'
     },
     bid: {
       collection: 'Bid',
       via: 'auction'
+    },
+    voucher: {
+      type: 'json'
     },
     chainId: {
       type: 'number'

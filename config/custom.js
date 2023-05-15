@@ -767,11 +767,46 @@ module.exports.custom = {
     AUTH: {
       LOGIN: "<%= user.firstName %> <%= user.lastName %> logged in at <%= new Date(payload.loginAt) %>",
       CHANGEPASSWORD: "<%= user.firstName %> <%= user.lastName %> has updated his password",
+      USERSTATUS:"Admin updated user status to <%= payload.status %> of user <%= user.firstName %> <%= user.lastName %>"
     },
     PAYMENT:{
       INTENT: '<%= user.firstName %> <%= user.lastName %> has created an payment intent for Rs. <%= payload.amount/100 %> on stripe',
       VERIFIED: '<%= user.firstName %> <%= user.lastName %> has paid Rs. <%= payload.amount/100 %> on stripe'
     }
   },
-  domain:'http://nft.sdnatech.com:8080/'
+  domain:'https://nft.sdnatech.com/animal-api-dev',
+  mediaUrl:'https://nft.sdnatech.com/animal-api-dev/download',
+  websiteDomain:"https://nft.sdnatech.com/dev/",
+  marketPlaceFilters:{
+    'plh':{
+      "price":1
+    },
+    'phl':{
+      "price":-1
+    },
+    'recent':{
+      "createdAt":-1
+    },
+    'oldest':{
+      "createdAt":1
+    }
+  },
+  auctionFilters:{
+    'plh':{
+      "price":1
+    },
+    'phl':{
+      "price":-1
+    },
+    'recent':{
+      "createdAt":-1
+    },
+    'oldest':{
+      "createdAt":1
+    }
+  },
+  bannerAttributes:['id','name','link','image'],
+  contactEmail:'vinod.kumar@sdnatech.com',
+  facebookAppId: "428119419405148",
+  facebookAppSecret: "8ef503b0a52e6baa446240302c8bca3c",
 };

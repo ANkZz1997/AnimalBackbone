@@ -30,6 +30,12 @@ module.exports = {
     addressProof: {
       model: 'Media'
     },
+    addressProofDocType:{
+      model:'KycDocType',
+    },
+    identityProofDocType:{
+      model:'KycDocType',
+    },
     remarks: {
       type: 'string',
     }

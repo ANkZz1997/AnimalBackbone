@@ -47,17 +47,9 @@ module.exports = {
     *                                                                          *
     ***************************************************************************/
     default: {
-      // adapter: 'sails-mysql',
-      // url: 'mysql://user:password@host:port/database',
-      //--------------------------------------------------------------------------
-      //  /\   To avoid checking it in to version control, you might opt to set
-      //  ||   sensitive credentials like `url` using an environment variable.
-      //
-      //  For example:
-      //  ```
-      //  sails_datastores__default__url=mysql://admin:myc00lpAssw2D@db.example.com:3306/my_prod_db
-      //  ```
-      //--------------------------------------------------------------------------
+      adapter: 'sails-mongo',
+      url: 'mongodb://sdnatech:Sdna123@ac-nk4lgsf-shard-00-00.acvpfhs.mongodb.net:27017,ac-nk4lgsf-shard-00-01.acvpfhs.mongodb.net:27017,ac-nk4lgsf-shard-00-02.acvpfhs.mongodb.net:27017/?ssl=true&replicaSet=atlas-mbh4lk-shard-0&authSource=admin&retryWrites=true&w=majority',
+
 
       /****************************************************************************
       *                                                                           *
@@ -355,7 +347,7 @@ module.exports = {
   * this, just try deploying without setting it and see if it works.)       *
   *                                                                         *
   ***************************************************************************/
-  // port: 80,
+  port: 81,
 
 
 

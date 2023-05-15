@@ -728,20 +728,27 @@ module.exports = {
       .populateAll()
       .then(async (result) => {
         const kyc = await Kyc.findOne({user: req.payload.id});
-        const createdCount = await Nft.count({minter: req.payload.id});
-        const collectedCount = await Nft.count({user: req.payload.id, minter: {'!=': req.payload.id}});
+        const createdCount = await Nft.count({user:req.payload.id, minter: req.payload.id, minted: false, chainId:req.payload.chainId});
+        const collectedCount = await Nft.count({user: req.payload.id, minted: true, chainId:req.payload.chainId});
         const ticketCount = await Dispute.count({user: req.payload.id});
-        const favCount = 0;
+        const userWishlist = await User.findOne({ id: req.payload.id }).populate('wishlist');
+        const wishlistCount = userWishlist.wishlist && userWishlist.wishlist.length > 0 ? userWishlist.wishlist.length : 0; 
         result.kyc = kyc;
         result.createdCount = createdCount;
         result.collectedCount = collectedCount;
         result.ticketCount = ticketCount;
-        result.favCount = favCount;
+        result.favCount = wishlistCount;
         res.status(200).json(result);
       });
   },
   updateProfile: async (req, res) => {
     const { firstName, lastName, contact } = req.body;
+    let { socialLinks } = req.body;
+    try{
+      socialLinks = JSON.parse(socialLinks);
+    } catch (err){
+      socialLinks = null;
+    }
     req.file('avatar').upload({
       dirname: require('path').resolve(sails.config.appPath, 'uploads')
     },async (error, uploadedFile) => {
@@ -768,23 +775,55 @@ module.exports = {
         avatar: media.id || user.avatar,
         firstName: firstName || user.firstName,
         lastName: lastName || user.lastName,
-        contact: contact || user.contact
+        contact: contact || user.contact,
+        socialLinks: socialLinks || user.socialLinks
       };
       const updatedUser = await User.update({id:req.payload.id},userDetails).fetch();
       res.status(200).json(updatedUser);
     });
   },
-  getUserProfile: (req, res) => {
+  getUserProfile: async (req, res) => {
     const {id} = req.query;
     User.findOne({id})
       .populate('wallet')
-      .then(result => {
+      .then(async result => {
         result.address = result.wallet.address
+        const createdCount = await Nft.count({user:id, minter: id, minted: false, status:{in:['MARKETPLACE', 'AUCTION']}, chainId:req.payload.chainId});
+        const collectedCount = await Nft.count({user: id, minted: true, status:{in:['MARKETPLACE', 'AUCTION']},chainId:req.payload.chainId});
+        result.createdCount = createdCount;
+        result.collectedCount = collectedCount;
         delete result.wallet
         res.ok(result)
       }).catch(e => {
         res.badRequest(e)
       })
+  },
+  changePassword : async (req, res) => {
+    try{
+      const { oldPassword, newPassword } = req.body;
+      const user = await User.findOne({id:req.payload.id});
+      if(user){
+        if(user.password === oldPassword){
+          await User.update({id:req.payload.id},{password:newPassword}).fetch();
+          res.ok();
+        } else {
+          res.badRequest("Old Password is not correct");
+        }
+      } else{
+        res.badRequest("Something went wrong");
+      }
+    } catch(err) {
+      return res.badRequest("Something went wrong");
+    }
+  },
+  getUserAddress: (req, res) => {
+    const {user} = req.query;
+    Wallet.findOne({
+      where: {user},
+      select: ['address']
+    }).then(wallet => {
+      res.ok(wallet)
+    }).catch(e => res.badRequest(e));
   }
 };
 

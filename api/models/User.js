@@ -32,6 +32,10 @@ module.exports = {
       type: 'boolean',
       defaultsTo: false
     },
+    kycVerified: {
+      type: 'boolean',
+      defaultsTo: false
+    },
     contact: {
       type: 'string',
     },
@@ -40,7 +44,7 @@ module.exports = {
     },
     socialAccountType:{
       type: 'string',
-      isIn: ['FACEBOOK', 'GMAIL', 'INSTAGRAM', 'LINKEDIN', 'GITHUB', 'TWITTER'],
+      isIn: ['FACEBOOK', 'GMAIL', 'INSTAGRAM', 'LINKEDIN', 'GITHUB', 'TWITTER', 'METAMASK'],
       defaultsTo: ''
     },
     wallet: {
@@ -59,6 +63,17 @@ module.exports = {
     wishlist: {
       collection: 'Nft',
       via: 'wishlistedBy'
+    },
+    lastLoginIP:{
+      type: 'string'
+    },
+    lastLoggedInTime:{
+      type:'number'
+    },
+    socialLinks: {
+      type: 'json',
+      columnType: 'json',
+      defaultsTo: {}
     }
   },
   customToJSON: function() {

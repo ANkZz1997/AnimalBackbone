@@ -1445,13 +1445,12 @@ module.exports = {
   },
   detail: async (req, res) => {
     const {id} = req.query;
-    Nft.findOne({id})
-      .populate('minter')
-      .populate('user')
-      .then(result => {
-        Nft.updateOne({id}).set({views: (result.views||0)+1}).then();
-        res.ok(result);
-      });
+    try{
+        const nftDetails = await sails.helpers.nftDetails({id, loggedInUser:req.payload.id, chainId:req.payload.chainId});
+        res.ok(nftDetails);
+    }catch(e){
+        res.badRequest('Something went wrong');
+    }
   },
   addToFavourite: (req, res) => {
     const userId = req.payload.id;
@@ -1474,7 +1473,7 @@ module.exports = {
   removeFromFavourite: async (req, res) => {
     const userId = req.payload.id;
     const nftId = req.query.id;
-    await User.User.removeFromCollection(userId, 'wishlist').members([nftId]);
+    await User.removeFromCollection(userId, 'wishlist').members([nftId]);
     await sails.helpers.captureActivities({
         action:"NFT",
         type:"UNMARKFAV",
@@ -1518,5 +1517,36 @@ module.exports = {
       res.status(500).json(err);
     });
   },
+
+  history: async (req, res) => {
+    const {
+        page = 1,
+        limit = 20,
+        sort = "createdAt",
+        order = "ASC",
+        nft
+      } = req.query;
+      const criteria = {
+        nft,
+        action: "NFT",
+        type: {"!":"BID"}
+      };
+      const totalCount = await Activity.count(criteria);
+      Activity.find(criteria)
+        .populateAll()
+        .limit(limit)
+        .skip((page - 1) * limit)
+        .sort(`${sort} ${order}`)
+        .then(async (result) => {
+          const data = await sails.helpers.displayActivities(result);
+          res.ok({
+            records: data,
+            totalCount,
+          });
+        })
+        .catch((e) => {
+          res.badRequest(e);
+        });
+  }
 };
 

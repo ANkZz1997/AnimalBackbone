@@ -5,6 +5,9 @@
  * @help        :: See https://sailsjs.com/docs/concepts/actions
  */
 const moment = require("moment");
+const fs = require("fs");
+const objectid = require('objectid');
+
 module.exports = {
   users: async (req, res) => {
     const {
@@ -13,8 +16,8 @@ module.exports = {
       sort = "createdAt",
       order = "DESC",
     } = req.query;
-    const totalCount = await User.count();
     const criteria = req.body;
+    const totalCount = await User.count(criteria).meta({makeLikeModifierCaseInsensitive: true});
     User.find(criteria)
       .limit(limit)
       .populate("user")
@@ -22,6 +25,7 @@ module.exports = {
       .populate("marketplace")
       .populate("auction")
       .populate("bid")
+      .meta({makeLikeModifierCaseInsensitive: true})
       .skip((page - 1) * limit)
       .sort(`${sort} ${order}`)
       .then((result) => {
@@ -35,34 +39,80 @@ module.exports = {
       });
   },
   nft: async (req, res) => {
+    try{
     const {
       page = 1,
       limit = 20,
       sort = "createdAt",
       order = "DESC",
     } = req.query;
-    const totalCount = await Nft.count();
-    const populate = req.body.populate || [];
-    delete req.body.populate;
-    const criteria = req.body;
-    const query = Nft.find(criteria)
-      .limit(limit)
-      .skip((page - 1) * limit)
-      .sort(`${sort} ${order}`);
-
-    populate.forEach(e => {
-      query.populate(e)
-    })
-
-    query.then((result) => {
-        res.ok({
-          records: result,
-          totalCount,
-        });
-      })
-      .catch((e) => {
-        res.badRequest(e);
-      });
+    
+    const {chainId, search, minter} = req.body;
+    const criteria = {};
+    const filter = {};
+    filter[sort] = (order === 'DESC')?-1:1;
+    const db = Nft.getDatastore().manager;
+    if(search) {
+      criteria["$or"] = [{ "name" : {"$regex":search, '$options' : 'i'}},{ "user.firstName" : {"$regex":search, '$options' : 'i'}}, { "user.lastName" : {"$regex":search, '$options' : 'i'}},{ "user.email" : {"$regex":search, '$options' : 'i'}}];
+    }
+    if(chainId){
+      criteria['chainId'] = Number(chainId);;
+    }
+    if(minter){
+      criteria['minter'] = objectid(minter);
+    }
+  
+    db.collection('nft').aggregate(
+      [
+        {
+          $lookup: {
+            from: 'user',
+            localField: 'user',
+            foreignField: '_id',
+            as: 'user',
+          },
+        },
+        { $unwind: '$user' },
+        { $match: criteria },
+        { $sort: filter },
+        {
+          $addFields: {
+            id:"$_id",
+            user:{
+              id:"$user._id"
+            }
+          }
+        },
+        {
+          $facet: {
+            records: [
+              { $skip: Number(limit * (page - 1)) },
+              { $limit: Number(limit) }
+            ],
+            totalCount: [{ $count: 'count' }],
+          },
+        },
+      ],
+      async (err, result) => {
+        if (err) return res.badRequest(err);
+        try{
+          result = await result.toArray();
+          res.ok({
+            records:
+              result[0].records && result[0].records.length > 0
+                ? result[0].records
+                : [],
+            totalCount:
+              result[0].totalCount.length > 0 ? result[0].totalCount[0].count : 0,
+          });
+        }catch(e){
+          res.badRequest('Something went wrong');
+        }
+      }
+    );
+    }catch(e){
+      res.badRequest(e);
+    }
   },
   auctions: async (req, res) => {
     const {
@@ -71,26 +121,85 @@ module.exports = {
       sort = "createdAt",
       order = "DESC",
     } = req.query;
-    const totalCount = await Auction.count();
-    const populate = req.body.populate || [];
-    delete req.body.populate;
-    const criteria = req.body;
-    const query = Auction.find(criteria)
-      .limit(limit)
-      .skip((page - 1) * limit)
-      .sort(`${sort} ${order}`);
-    populate.forEach(e => {
-      query.populate(e)
-    })
-    query.then((result) => {
-        res.ok({
-          records: result,
-          totalCount,
-        });
-      })
-      .catch((e) => {
-        res.badRequest(e);
-      });
+
+    const {chainId, search, category, status} = req.body;
+    const criteria = { };
+    const filter = {};
+    filter[sort] = (order === 'DESC')?-1:1;
+    if(search) {
+      criteria["$or"] = [{ "nft.name" : {"$regex":search, '$options' : 'i'}},{ "user.firstName" : {"$regex":search, '$options' : 'i'}}, { "user.lastName" : {"$regex":search, '$options' : 'i'}},{ "user.email" : {"$regex":search, '$options' : 'i'}}];
+    }
+    if(chainId){
+      criteria['chainId'] = Number(chainId);
+    }
+    if(category){
+      criteria['nft.category'] = category;
+    }
+
+    if(status){
+      criteria['status'] = status;
+    }
+    const db = Auction.getDatastore().manager;
+    db.collection('auction').aggregate(
+      [
+        {
+          $lookup: {
+            from: 'nft',
+            localField: 'nft',
+            foreignField: '_id',
+            as: 'nft',
+          },
+        },
+        {
+          $lookup: {
+            from: 'user',
+            localField: 'user',
+            foreignField: '_id',
+            as: 'user',
+          },
+        },
+        { $unwind: '$user' },
+        { $unwind: '$nft' },
+        { $match: criteria },
+        { $sort: filter },
+        {
+          $addFields: {
+            id:"$_id",
+            nft:{
+              id:"$nft._id"
+            },
+            user:{
+              id:"$user._id"
+            }
+          }
+        },
+        {
+          $facet: {
+            records: [
+              { $skip: Number(limit * (page - 1)) },
+              { $limit: Number(limit) }
+            ],
+            totalCount: [{ $count: 'count' }],
+          },
+        },
+      ],
+      async (err, result) => {
+        if (err) return res.badRequest(err);
+        try{
+          result = await result.toArray();
+          res.ok({
+            records:
+              result[0].records && result[0].records.length > 0
+                ? result[0].records
+                : [],
+            totalCount:
+              result[0].totalCount.length > 0 ? result[0].totalCount[0].count : 0,
+          });
+        }catch(e){
+          res.badRequest('Something went wrong');
+        }
+      }
+    );
   },
   marketplace: async (req, res) => {
     const {
@@ -99,26 +208,81 @@ module.exports = {
       sort = "createdAt",
       order = "DESC",
     } = req.query;
-    const totalCount = await Marketplace.count();
-    const populate = req.body.populate || [];
-    delete req.body.populate;
-    const criteria = req.body;
-    const query = Marketplace.find(criteria)
-      .limit(limit)
-      .skip((page - 1) * limit)
-      .sort(`${sort} ${order}`);
-    populate.forEach(e => {
-      query.populate(e)
-    })
-    query.then((result) => {
-        res.ok({
-          records: result,
-          totalCount,
-        });
-      })
-      .catch((e) => {
-        res.badRequest(e);
-      });
+    
+    const {chainId, search, category} = req.body;
+    const criteria = { };
+    const filter = {};
+    filter[sort] = (order === 'DESC')?-1:1;
+    if(search) {
+      criteria["$or"] = [{ "nft.name" : {"$regex":search, '$options' : 'i'}},{ "user.firstName" : {"$regex":search, '$options' : 'i'}}, { "user.lastName" : {"$regex":search, '$options' : 'i'}},{ "user.email" : {"$regex":search, '$options' : 'i'}}];
+    }
+    if(chainId){
+      criteria['chainId'] = Number(chainId);
+    }
+    if(category){
+      criteria['nft.category'] = category;
+    }
+    const db = Marketplace.getDatastore().manager;
+    db.collection('marketplace').aggregate(
+      [
+        {
+          $lookup: {
+            from: 'nft',
+            localField: 'nft',
+            foreignField: '_id',
+            as: 'nft',
+          },
+        },
+        {
+          $lookup: {
+            from: 'user',
+            localField: 'user',
+            foreignField: '_id',
+            as: 'user',
+          },
+        },
+        { $unwind: '$user' },
+        { $unwind: '$nft' },
+        { $match: criteria },
+        { $sort: filter },
+        {
+          $addFields: {
+            id:"$_id",
+            nft:{
+              id:"$nft._id"
+            },
+            user:{
+              id:"$user._id"
+            }
+          }
+        },
+        {
+          $facet: {
+            records: [
+              { $skip: Number(limit * (page - 1)) },
+              { $limit: Number(limit) }
+            ],
+            totalCount: [{ $count: 'count' }],
+          },
+        },
+      ],
+      async (err, result) => {
+        if (err) return res.badRequest(err);
+        try{
+          result = await result.toArray();
+          res.ok({
+            records:
+              result[0].records && result[0].records.length > 0
+                ? result[0].records
+                : [],
+            totalCount:
+              result[0].totalCount.length > 0 ? result[0].totalCount[0].count : 0,
+          });
+        }catch(e){
+          res.badRequest('Something went wrong');
+        }
+      }
+    );
   },
   bids: async (req, res) => {
     const {
@@ -126,28 +290,88 @@ module.exports = {
       limit = 20,
       sort = "createdAt",
       order = "DESC",
-      auction = null,
     } = req.query;
-    const criteria = req.body;
+    const criteria ={};
+    const { auction, search } = req.body;
+    const filter = {};
+    filter[sort] = (order === 'DESC')?-1:1;
     if (auction) {
-      criteria["auction"] = auction;
+      criteria["auction"] = objectId(auction);
     }
-    const totalCount = await Bid.count(criteria);
-    Bid.find(criteria)
-      .limit(limit)
-      .populate("user")
-      .skip((page - 1) * limit)
-      .sort(`${sort} ${order}`)
-      .populate("auction.nft")
-      .then((result) => {
-        res.ok({
-          records: result,
-          totalCount,
-        });
-      })
-      .catch((e) => {
-        res.badRequest(e);
-      });
+    if(search) {
+      criteria["$or"] = [{ "auction.nft.name" : {"$regex":search, '$options' : 'i'}}];
+    }
+    const db = Bid.getDatastore().manager;
+    db.collection('bid').aggregate(
+      [
+        {
+          $lookup: {
+            from: 'auction',
+            localField: 'auction',
+            foreignField: '_id',
+            as: 'auction',
+          },
+        },
+        {
+          $lookup: {
+            from: 'user',
+            localField: 'user',
+            foreignField: '_id',
+            as: 'user',
+          },
+        },
+        { $unwind: '$user' },
+        { $unwind: '$auction' },
+        {
+          $lookup: {
+            from: 'nft',
+            localField: 'auction.nft',
+            foreignField: '_id',
+            as: 'auction.nft',
+          },
+        },
+        { $unwind: '$auction.nft' },
+        { $match: criteria },
+        { $sort: filter },
+        {
+          $addFields: {
+            id:"$_id",
+            auction:{
+              id:"$auction._id",
+              nft:{ id:"$auction.nft._id" }
+            },
+            user:{
+              id:"$user._id"
+            }
+          }
+        },
+        {
+          $facet: {
+            records: [
+              { $skip: Number(limit * (page - 1)) },
+              { $limit: Number(limit) }
+            ],
+            totalCount: [{ $count: 'count' }],
+          },
+        },
+      ],
+      async (err, result) => {
+        if (err) return res.badRequest(err);
+        try{
+          result = await result.toArray();
+          res.ok({
+            records:
+              result[0].records && result[0].records.length > 0
+                ? result[0].records
+                : [],
+            totalCount:
+              result[0].totalCount.length > 0 ? result[0].totalCount[0].count : 0,
+          });
+        }catch(e){
+          res.badRequest('Something went wrong');
+        }
+      }
+    );
   },
   dashboard: async (req, res) => {
     const startOfDay = moment().startOf("day").valueOf();
@@ -166,45 +390,90 @@ module.exports = {
       blockedUserCount,
     });
   },
-  updateUserStatus: (req, res) => {
+  updateUserStatus: async (req, res) => {
     const { id, status } = req.body;
     User.update({ id })
       .set({ status })
       .fetch()
-      .then((result) => {
+      .then(async (result) => {
+        await sails.helpers.captureActivities({
+          action:"AUTH",
+          type:"USERSTATUS",
+          user:id,
+          payload:{
+            ipAddress:req.ip,
+            status:status
+          }
+        });
         res.ok(result);
       })
       .catch((e) => {
         res.badRequest(e);
       });
   },
-  getUserDetail: (req, res) => {
+  getUserDetail: async (req, res) => {
     const { id } = req.query;
-    User.findOne({ id })
-      .populateAll()
-      .then((result) => {
-        res.ok(result);
-      })
-      .catch((e) => {
-        res.badRequest(e);
-      });
+    try {
+      const result = await User.findOne({ id }).populateAll();
+      const activeNetworks = await Network.find({ enabled: true });
+      let networks = [];
+      if (activeNetworks.length > 0) {
+        for(const network of activeNetworks) {
+          const amount = await sails.helpers.etherBalance(
+            result.wallet.address,
+              network.chainId
+          );
+          networks.push({
+            name:network.name,
+            logo:network.logo,
+            amount
+          });
+        };
+      }
+      result.networks = networks;
+      const createdCount = await Nft.count({user:id, minter: id, minted: false});
+      const purchasedCount = await Nft.count({user: id, minted: true});
+      const soldCount = await Nft.count({ minted: true, minter: id});
+      const wishlistCount = result.wishlist && result.wishlist.length > 0 ? result.wishlist.length : 0;   
+      result.createdCount = createdCount;
+      result.purchasedCount = purchasedCount;
+      result.soldCount = soldCount;
+      result.favCount = wishlistCount;
+      res.ok(result);
+    } catch (e) {
+      res.badRequest(e);
+    }
   },
-  getMarketplaceDetail: (req, res) => {
+  getMarketplaceDetail: async (req, res) => {
     const { id } = req.query;
     Marketplace.findOne({ id })
       .populateAll()
-      .then((result) => {
+      .then(async (result) => {
+        const nftId = result.nft.id;
+        if(nftId){
+          const nftDetails =  await Nft.findOne({ id:nftId }).populate('wishlistedBy');
+          nftDetails.wishlistedCount = (nftDetails.wishlistedBy)?nftDetails.wishlistedBy.length : 0;
+          delete nftDetails['wishlistedBy'];
+          result['nft'] = nftDetails;
+        }
         res.ok(result);
       })
       .catch((e) => {
         res.badRequest(e);
       });
   },
-  getAuctionDetail: (req, res) => {
+  getAuctionDetail: async (req, res) => {
     const { id } = req.query;
     Auction.findOne({ id })
       .populateAll()
-      .then((result) => {
+      .then(async(result) => {
+        const nftId = result.nft.id;
+        if(nftId){
+          const nftDetails =  await Nft.findOne({ id:nftId }).populate('wishlistedBy');
+          nftDetails.wishlistedCount = (nftDetails.wishlistedBy)?nftDetails.wishlistedBy.length : 0;
+          delete nftDetails['wishlistedBy'];
+          result['nft'] = nftDetails;
+        }
         res.ok(result);
       })
       .catch((e) => {
@@ -227,6 +496,8 @@ module.exports = {
     Nft.findOne({ id })
       .populateAll()
       .then((result) => {
+        result.wishlistedCount = (result.wishlistedBy)?result.wishlistedBy.length : 0;
+        delete result.wishlistedBy;
         res.ok(result);
       })
       .catch((e) => {
@@ -240,11 +511,12 @@ module.exports = {
       sort = "createdAt",
       order = "DESC",
     } = req.query;
-    const totalCount = await Dispute.count();
     const criteria = req.body;
-
+    const totalCount = await Dispute.count(criteria);
+    
     Dispute.find(criteria)
       .limit(limit)
+      .populate('user')
       .skip((page - 1) * limit)
       .sort(`${sort} ${order}`)
       .then((result) => {
@@ -264,22 +536,89 @@ module.exports = {
       sort = "createdAt",
       order = "DESC",
     } = req.query;
-    const totalCount = await Kyc.count();
-    const criteria = req.body;
-
-    Kyc.find(criteria)
-      .limit(limit)
-      .skip((page - 1) * limit)
-      .sort(`${sort} ${order}`)
-      .then((result) => {
-        res.ok({
-          records: result,
-          totalCount,
-        });
-      })
-      .catch((e) => {
-        res.badRequest(e);
-      });
+    delete req.body.populate;
+    const { status='', search='' } = req.body;
+    const filter = {}, criteria = {};
+    filter[sort] = (order === 'DESC')?-1:1;
+    if (status) {
+      criteria["status"] = status
+    }
+    if(search) {
+      criteria["$or"] = [{ "user.firstName" : {"$regex":search, '$options' : 'i'}}, { "user.lastName" : {"$regex":search, '$options' : 'i'}},{ "user.email" : {"$regex":search, '$options' : 'i'}}];
+    }
+    const db = Kyc.getDatastore().manager;
+    db.collection('kyc').aggregate(
+      [
+        {
+          $lookup: {
+            from: 'kycdoctype',
+            localField: 'addressProofDocType',
+            foreignField: '_id',
+            as: 'addressProofDocType',
+          },
+        },
+        {
+          $lookup: {
+            from: 'kycdoctype',
+            localField: 'identityProofDocType',
+            foreignField: '_id',
+            as: 'identityProofDocType',
+          }
+        },
+        {
+          $lookup: {
+            from: 'user',
+            localField: 'user',
+            foreignField: '_id',
+            as: 'user',
+          },
+        },
+        { $unwind: '$user' },
+        { $unwind: '$addressProofDocType' },
+        { $unwind: '$identityProofDocType' },
+        { $match: criteria },
+        { $sort: filter },
+        {
+          $addFields: {
+            id:"$_id",
+            addressProofDocType:{
+              id:"$addressProofDocType._id"
+            },
+            identityProofDocType:{
+              id:"$identityProofDocType._id"
+            },
+            user:{
+              id:"$user._id"
+            }
+          }
+        },
+        {
+          $facet: {
+            records: [
+              { $skip: Number(limit * (page - 1)) },
+              { $limit: Number(limit) }
+            ],
+            totalCount: [{ $count: 'count' }],
+          },
+        },
+      ],
+      async (err, result) => {
+        if (err) return res.badRequest(err);
+        try{
+          result = await result.toArray();
+          res.ok({
+            records:
+              result[0].records && result[0].records.length > 0
+                ? result[0].records
+                : [],
+            totalCount:
+              result[0].totalCount.length > 0 ? result[0].totalCount[0].count : 0,
+          });
+        }catch(e){
+          res.badRequest('Something went wrong');
+        }
+      }
+    );
   },
 
   getActivities: async (req, res) => {
@@ -289,7 +628,10 @@ module.exports = {
       sort = "createdAt",
       order = "DESC",
     } = req.query;
-    const criteria = req.body;
+    const criteria = {
+      type : { "!=": ['LOGIN','CHANGEPASSWORD'] },
+      ...req.body
+    };
     const totalCount = await Activity.count(criteria);
     Activity.find(criteria)
       .populateAll()
@@ -439,13 +781,51 @@ module.exports = {
     });
   },
 
+  stripeCallbackUrl: (req, res) => {
+    const {stripeCallbackUrl} = req.body;
+    Settings.update({uid: 1}).set({stripeCallbackUrl}).then(() => {
+      sails.log.info('Stripe Callback URL is stored');
+      res.ok();
+    });
+  },
+
+  setplatformDetails: async (req, res) => {
+    const {platformTitle} = req.body;
+    const file = req.file('logo');
+    if(file._files.length > 0)
+    {
+      req.file('logo').upload({
+        dirname: require('path').resolve(sails.config.appPath, 'uploads')
+      }, async (error, uploadedFile) => {
+        if(error) return res.badRequest(error);
+        if(uploadedFile.length > 0) {
+          const media = await Media.create({
+            fd: uploadedFile[0].fd,
+            size: uploadedFile[0].size,
+            type: uploadedFile[0].type,
+            filename: uploadedFile[0].filename,
+            status: uploadedFile[0].status,
+            field: uploadedFile[0].field,
+            extra: uploadedFile[0].extra,
+          }).fetch();
+          Settings.update({uid: 1}).set({platformTitle, platformLogo:media.id}).then(() => {
+            sails.log.info('Company Logo and Title are stored');
+            res.ok();
+          });
+        }
+      });
+    } else {
+      const settings = await Settings.update({uid: 1}).set({ platformTitle }).fetch();
+      res.ok(settings);
+    }
+  },
 
   // network api's
   getNetworks: (req, res) => {
     Network.find().then(networks => res.ok(networks));
   },
   addNetwork: (req, res) => {
-    const { host, chainId, address } = req.body;
+    const { host, chainId, address,name } = req.body;
     req.file('logo').upload({
       dirname: require('path').resolve(sails.config.appPath, 'uploads')
     }, async (error, uploadedFile) => {
@@ -461,7 +841,7 @@ module.exports = {
           field: uploadedFile[0].field,
           extra: uploadedFile[0].extra,
         }).fetch();
-        Network.create({host, chainId, address, logo: media.id }).fetch().then( result => {
+        Network.create({host, chainId, address, logo: media.id,name }).fetch().then( result => {
           res.ok(result)
         })
       }
@@ -481,5 +861,212 @@ module.exports = {
     })
     Network.update({id: networkId}).set({enabled: status}).fetch().then( r => res.ok(r))
       .catch(e => res.badRequest(e))
+  },
+
+  deleteNetwork: async (req, res) => {
+    try{
+      const {networkId} = req.body;
+      console.log(networkId);
+      const network = await Network.findOne({id:networkId});
+      if(network){
+        await Network.destroyOne({id:networkId});
+        const media = await Media.findOne({id:network.logo});
+        if(media){
+          await Media.destroyOne({id:network.logo});
+          fs.unlink(media.fd,(e) => {
+            if(e){
+              console.log('Media not removed');
+            } else{
+              console.log('Media Removed');
+            }
+            res.ok();
+          });
+        } else{
+          res.ok();
+        }
+      } else {
+        res.badRequest('Network not Found')
+      }
+    }catch(e){
+      res.badRequest(e);
+    }
+  },
+
+  editNetwork: async (req, res) => {
+    try{
+      const { host, chainId, address,name, networkId } = req.body;
+      const network = await Network.findOne({id:networkId});
+      if(network){
+        const file = req.file('logo');
+        if(file._files.length > 0)
+        {
+          req.file('logo').upload({
+            dirname: require('path').resolve(sails.config.appPath, 'uploads')
+          }, async (error, uploadedFile) => {
+            if(error) return res.badRequest(error);
+            if(uploadedFile.length > 0) {
+              const media = await Media.findOne({id:network.logo});
+              if(media){
+                await Media.destroy({id:network.logo});
+                fs.unlink(media.fd,(e) => {
+                  if(e){
+                    console.log('Media not removed');
+                  } else{
+                    console.log('Media Removed');
+                  }
+                });
+              }
+              const uploadedMedia = await Media.create({
+                fd: uploadedFile[0].fd,
+                size: uploadedFile[0].size,
+                type: uploadedFile[0].type,
+                filename: uploadedFile[0].filename,
+                status: uploadedFile[0].status,
+                field: uploadedFile[0].field,
+                extra: uploadedFile[0].extra,
+              }).fetch();
+              Network.update({id:networkId}).set({host, chainId, address, logo: uploadedMedia.id,name }).fetch().then( result => {
+                res.ok(result);
+              });
+            }
+          });
+        }else{
+          const networkUpdate = await Network.update({id:networkId}).set({host, chainId, address, name }).fetch();
+          res.ok(networkUpdate)
+        }
+      }else{
+        return res.badRequest('Network not found');
+      }
+    }catch(e){
+      res.badRequest(e);
+    }
+  },
+
+  addKYCDocType: async (req, res) => {
+    const {name, addressProof=false, identitiyProof=false, enabled=false} = req.body;
+    KycDocType.create({ name, addressProof, identitiyProof, enabled }).fetch().then( result => {
+      res.ok(result);
+    });
+  },
+
+  getKYCDocType: (req, res) => {
+    KycDocType.find().then(documentTypes => res.ok(documentTypes));
+  },
+
+  setKYCDocTypeStatus: (req, res) => {
+    const {documentTypeId, status} = req.body;
+    KycDocType.findOne({id: documentTypeId}).then(document => {
+      if(document){
+        KycDocType.update({id: documentTypeId}).set({enabled: status}).then( r => res.ok())
+        .catch(e => res.badRequest(e));
+      } else {
+        res.badRequest('Document Not Found');
+      }
+    }).catch(e => res.badRequest('Something went wrong'));
+  },
+
+  editKYCDocType: async (req, res) => {
+    try{
+      const {name, addressProof=false, identitiyProof=false, enabled=false, documentTypeId} = req.body;
+      const documentType = await KycDocType.findOne({id:documentTypeId});
+      if(documentType){
+        KycDocType.update({id:documentTypeId}).set({name, addressProof, identitiyProof, enabled }).fetch().then( result => {
+          res.ok(result);
+        });
+      } else {
+        return res.badRequest('Document Not Found');
+      }
+    }catch(e){
+      res.badRequest(e);
+    }
+  },
+
+  editProfile: async (req, res) => {
+    try{
+    const { name } = req.body;
+    const file = req.file("avatar");
+    if (file._files.length > 0) {
+      req.file("avatar").upload(
+        {
+          dirname: require("path").resolve(sails.config.appPath, "uploads"),
+        },
+        async (error, uploadedFile) => {
+          if (error) {
+            return res.badRequest(error);
+          }
+          const admin = await Admin.findOne({ id: req.payload.id });
+          
+            media = {};
+            media = await Media.create({
+              fd: uploadedFile[0].fd,
+              size: uploadedFile[0].size,
+              type: uploadedFile[0].type,
+              filename: uploadedFile[0].filename,
+              status: uploadedFile[0].status,
+              field: uploadedFile[0].field,
+              extra: uploadedFile[0].extra,
+            }).fetch();
+
+            const adminDetails = {
+              avatar: media.id,
+              name: name || admin.name,
+            };
+            const updatedUser = await Admin.update(
+              { id: req.payload.id },
+            ).set(adminDetails).fetch();
+
+
+            if (uploadedFile.length > 0) {
+              if(admin.avatar){
+                let media = await Media.findOne({ id: admin.avatar });
+                if (media) {
+                  await Media.destroyOne({ id: media.id });
+                  fs.unlink(media.fd, (e) => {
+                    if (e) {
+                      console.log("Media not removed");
+                    } else {
+                      console.log("Media Removed");
+                    }
+                  });
+                }
+              }
+
+
+
+            res.ok(updatedUser);
+          }
+        }
+      );
+    } else {
+      const editProfile = await Admin.update({ id: req.payload.id })
+        .set({ name })
+        .fetch();
+      res.ok(editProfile);
+    }
+  }catch(e){
+    return res.badRequest('Document Not Found');
+  }
+  },
+
+  changePassword: async (req, res) => {
+    try {
+      const { oldPassword, newPassword } = req.body;
+      const admin = await Admin.findOne({ id: req.payload.id }).decrypt();
+      if (admin) {
+        if (admin.password === oldPassword) {
+          await Admin.update(
+            { id: req.payload.id },
+            { password: newPassword }
+          ).fetch();
+          res.ok();
+        } else {
+          res.badRequest("Old Password is not correct");
+        }
+      } else {
+        res.badRequest("Something went wrong");
+      }
+    } catch (err) {
+      return res.badRequest("Something went wrong");
+    }
   }
 };

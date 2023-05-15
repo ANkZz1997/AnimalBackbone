@@ -11,6 +11,7 @@ module.exports = {
     host: {type: 'string'},
     chainId: {type: 'string', unique: true},
     address: {type: 'string'},
+    name:{type:'string'},
     logo: {model: 'Media'},
     enabled: {type: 'boolean', defaultsTo: false},
     isDefault: {type: 'boolean', defaultsTo: false}

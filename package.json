@@ -18,7 +18,9 @@
     "ipfs-http-client": "^56.0.2",
     "jsonwebtoken": "^8.5.1",
     "moment": "^2.29.4",
+    "node-cron": "^3.0.2",
     "nodemailer": "^6.9.1",
+    "objectid": "^3.2.1",
     "passport": "^0.6.0",
     "passport-facebook-token": "^4.0.0",
     "passport-github": "^1.1.0",
@@ -40,7 +42,7 @@
     "eslint": "5.16.0"
   },
   "scripts": {
-    "start": "NODE_ENV=production node app.js",
+    "start": "node app.js",
     "dev": "node app.js",
     "test": "npm run lint && npm run custom-tests && echo 'Done.'",
     "lint": "./node_modules/eslint/bin/eslint.js . --max-warnings=0 --report-unused-disable-directives && echo '✔  Your .js files look good.'",

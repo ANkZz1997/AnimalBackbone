@@ -13,12 +13,14 @@ const GOOGLE_CLIENT_ID =
   "144163062893-c48rp2sgka2ms7bl9o1r3nsln6mnctvt.apps.googleusercontent.com";
 const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 const templates = require('./../constants/EmailTemplates');
-const Otp = require("../models/Otp");
+const moment = require("moment/moment");
 
 module.exports = {
 
-  test: (req, res) => {
-    sails.helpers.sendMail('rahil1992@gmail.com', templates.welcomeEmail.subject('Raheel'), '', templates.welcomeEmail.content('Raheel')).then(r => {
+  test: async (req, res) => {
+    const settings = await sails.helpers.fetchSettings();
+    const info = { ...settings, name:'Manoj' };
+    sails.helpers.sendMail('manoj.kumar@sdnatech.com', templates.welcomeEmail.subject('Manoj'), '', templates.welcomeEmail.content(info)).then(r => {
       return res.ok(r);
     }).catch(e => {
       return res.badRequest(e)
@@ -26,9 +28,11 @@ module.exports = {
 
   },
   createUser: async (req, res) => {
+    let userDetails = req.body;
+    const user = await User.find({email:userDetails.email});
+    if(user.length > 0) return res.badRequest('This Email is already registered.');
     const account = web3.eth.accounts.create();
     const wallet = await Wallet.create(account).fetch();
-    let userDetails = req.body;
     req.body.wallet = wallet.id;
     req.file('avatar').upload({
       dirname: require('path').resolve(sails.config.appPath, 'uploads')
@@ -52,7 +56,10 @@ module.exports = {
       User.create(userDetails)
       .fetch()
       .then(async (result) => {
-        sails.helpers.sendMail(result.email, templates.welcomeEmail.subject(`${result.firstName} ${result.lastName}`), '', templates.welcomeEmail.content(`${result.firstName} ${result.lastName}`)).then(r => {
+        const settings = await sails.helpers.fetchSettings();
+        const name = `${result.firstName} ${result.lastName}`;
+        const info = { ...settings, name:name };
+        sails.helpers.sendMail(result.email, templates.welcomeEmail.subject(name), '', templates.welcomeEmail.content(info)).then(r => {
           sails.log.info('Sending welcome email');
         })
         sails.log.info(`User created with the id ${result.id}`)
@@ -71,11 +78,19 @@ module.exports = {
     User.findOne({ username: req.body.username, password: req.body.password })
       .populateAll()
       .then(async (result) => {
+        if(result.status === 'BLOCKED' || result.status === 'INACTIVE'){
+          return res.badRequest("your account is suspended by admin");
+        }
         if (result) {
           result.token = await sails.helpers.signToken({ id: result.id });
-          
+
+          await User.update({ id: result.id }).set({
+            lastLoginIP:req.ip,
+            lastLoggedInTime: moment().valueOf()
+          });
+
           console.log('user ==> ', result.id);
-          
+
           await sails.helpers.captureActivities({
             action:"AUTH",
             type:"LOGIN",
@@ -91,24 +106,28 @@ module.exports = {
         }
       })
       .catch((e) => {
-        return res.badRequest("Something went wrong");
+        return res.badRequest(e);
       });
   },
   loginNonce: async (req, res) => {
     const { address } = req.body;
     const wallet = await Wallet.findOne({ address: address.toLowerCase() });
     if (wallet) {
+      if(!wallet.user){
+        wallet["newUser"] = true;
+      }
       res.ok(wallet);
     } else {
       Wallet.create({ address: address.toLowerCase() })
         .fetch()
         .then((result) => {
+          result["newUser"] = true;
           res.ok(result);
         });
     }
   },
   verifySignature: async (req, res) => {
-    let { address, signature } = req.body;
+    let { address, signature, email, firstName, lastName } = req.body;
     const wallet = await Wallet.findOne({ address: address.toLowerCase() });
     const msg = `
 Welcome to SDNA Crypt
@@ -141,6 +160,24 @@ ${wallet.nonce}`;
         User.findOne({ id: wallet.user })
           .populateAll()
           .then(async (result) => {
+
+            if(result.status === 'BLOCKED' || result.status === 'INACTIVE'){
+              return res.badRequest("your account is suspended by admin");
+            }
+
+            await User.update({ id: result.id }).set({
+              lastLoginIP:req.ip,
+              lastLoggedInTime: moment().valueOf()
+            });
+            await sails.helpers.captureActivities({
+              action:"AUTH",
+              type:"LOGIN",
+              user:result.id,
+              payload:{
+                loginAt:new Date(),
+                ipAddress:req.ip
+              }
+            });
             result.token = await sails.helpers.signToken({ id: result.id });
             Wallet.update({ address: address.toLowerCase() })
               .set({
@@ -152,15 +189,23 @@ ${wallet.nonce}`;
             res.ok(result);
           });
       } else {
+        const user = await User.find({email:email});
+        if(user.length > 0) return res.badRequest('This Email is already registered.');
         User.create({
           type: "DECENTRALISED",
-          firstName: "Unnamed",
+          socialAccountType:"METAMASK",
           wallet: wallet.id,
           username: address.toLowerCase(),
-          email: `${address.toLowerCase()}@email.com`,
+          email: email,
+          firstName,
+          lastName
         })
           .fetch()
           .then(async (result) => {
+            await User.update({ id: result.id }).set({
+              lastLoginIP:req.ip,
+              lastLoggedInTime: moment().valueOf()
+            });
             Kyc.create({user: result.id}).fetch().then(_result => {sails.log.info(`User's KYC record is created with id - ${_result.id}`)})
             result.wallet = wallet;
             result.token = await sails.helpers.signToken({ id: result.id });
@@ -170,6 +215,15 @@ ${wallet.nonce}`;
                 nonce: Math.floor(Math.random() * 1000000),
               })
               .then((result) => {sails.log.info(`User wallet nonce is updated`)});
+              await sails.helpers.captureActivities({
+                action:"AUTH",
+                type:"LOGIN",
+                user:result.id,
+                payload:{
+                  loginAt:new Date(),
+                  ipAddress:req.ip
+                }
+              });
             return res.ok(result);
           })
           .catch((e) => {
@@ -217,14 +271,19 @@ ${wallet.nonce}`;
       });
   },
   socialLogin: async (req, res) => {
-    const { type } = req.body;
+    const { type, email } = req.body;
+    console.log(req.ip);
     switch (type) {
       case "GMAIL":
         passport.authenticate("google-id-token", async (error, user, info) => {
+          if(error){
+            console.log(error);
+          }
           if (user) {
             res.ok(user);
           } else {
-            res.badRequest("Something went wrong");
+            console.log(info);
+            res.badRequest(error.message);
           }
         })(req, res);
         break;
@@ -261,9 +320,11 @@ ${wallet.nonce}`;
             type: "EMAIL",
             for: "FORGOTPASSWORD",
           });
+          const settings = await sails.helpers.fetchSettings();
           let name =  `${result.firstName} ${result.lastName}`;
           (!name)? name = result.email : '';
-          sails.helpers.sendMail(result.email, templates.forgotPassword.subject(), '', templates.forgotPassword.content({name:name,OTP:otpDetails['otp'], token:otpDetails['token']})).then(r => {
+          
+          sails.helpers.sendMail(result.email, templates.forgotPassword.subject(), '', templates.forgotPassword.content({name:name,OTP:otpDetails['otp'], token:otpDetails['token'], ...settings})).then(r => {
             sails.log.info('Sending forgot password email');
           });
           res.ok({token:otpDetails['token']});

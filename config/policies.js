@@ -17,9 +17,9 @@ module.exports.policies = {
    *                                                                          *
    ***************************************************************************/
 
-  '*': ['injectChainId', 'isAuthenticated'],
+  '*': ['injectChainId', 'isAuthenticated','setClientIp'],
   AuthController: {
-    '*': true
+    '*': ['setClientIp'],
   },
   MediaController: {
     download: true
@@ -28,7 +28,7 @@ module.exports.policies = {
     '*': true
   },
   StripeController: {
-    'verifyPayment': true
+    'verifyPayment': ['setClientIp'],
   },
   AdminController: {
     '*': ['isAuthenticated', 'isAdmin']
@@ -52,5 +52,8 @@ module.exports.policies = {
   },
   AuctionController: {
     'index': ['injectChainId']
+  },
+  SettingsController:{
+    'getNetworks':true
   }
 };

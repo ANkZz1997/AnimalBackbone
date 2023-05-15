@@ -18,17 +18,25 @@ passport.use(
       clientID: social.facebookAppId,
       clientSecret: social.facebookAppSecret,
       fbGraphVersion: "v3.0",
+      passReqToCallback: true,
     },
-    async (accessToken, refreshToken, profile, done) => {
+    async (req, accessToken, refreshToken, profile, done) => {
+      try {
       let user = await sails.helpers.addUpdateUser({
         username: profile.id,
         socialId: profile.id,
         socialAccountType: "FACEBOOK",
         firstName: profile.name.givenName,
         lastName: profile.name.familyName,
-        email: `${profile.id}@email.com`,
+        email: profile.emails
+          ? (profile.emails[0].value)?profile.emails[0].value:req.body.email
+          : req.body.email,
+        ipAddress: req.clientIp,
       });
-      done(null, user);
+      return done(null, user);
+    } catch (err) {
+      return done('Something went wrong');
+    }
     }
   )
 );
@@ -37,17 +45,23 @@ passport.use(
   new GoogleTokenStrategy(
     {
       clientID: social.gmailClientId,
+      passReqToCallback: true,
     },
-    async (parsedToken, googleId, done) => {
-      let user = await sails.helpers.addUpdateUser({
-        username: googleId,
-        socialId: googleId,
-        socialAccountType: "GMAIL",
-        firstName: parsedToken.payload.given_name,
-        lastName: parsedToken.payload.family_name,
-        email: parsedToken.payload.email,
-      });
-      done(null, user);
+    async (req, parsedToken, googleId, done) => {
+      try {
+        let user = await sails.helpers.addUpdateUser({
+          username: googleId,
+          socialId: googleId,
+          socialAccountType: "GMAIL",
+          firstName: parsedToken.payload.given_name,
+          lastName: parsedToken.payload.family_name,
+          email: parsedToken.payload.email,
+          ipAddress: req.clientIp,
+        });
+        return done(null, user);
+      } catch (err) {
+        return done(err);
+      }
     }
   )
 );

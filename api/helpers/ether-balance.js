@@ -32,7 +32,8 @@ module.exports = {
   fn: async function (inputs, exits) {
     // TODO
     const {address, chainId} = inputs
-    const web3 = new Web3(networks[chainId].node);
+    const network = await Network.findOne({chainId});
+    const web3 = new Web3(network.host);
     web3.eth.getBalance(address, (error, balance) => {
       if (error) {
         return exits.fail(error)

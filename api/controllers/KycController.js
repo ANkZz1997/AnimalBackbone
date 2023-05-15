@@ -33,6 +33,7 @@ const fileUploadPromiseConverter = (file) => {
 module.exports = {
   //user api's
   updateKyc: (req, res) => {
+    const { addressProofDocType, identityProofDocType} = req.body;
     Promise.all([
       fileUploadPromiseConverter(req.file('addressProof')),
       fileUploadPromiseConverter(req.file('identityProof')),
@@ -41,6 +42,8 @@ module.exports = {
         status: 'PENDING',
         addressProof: r[0].id,
         identityProof: r[1].id,
+        addressProofDocType,
+        identityProofDocType
       }).fetch().then(result => {
         res.ok(result);
       }).catch(e => {
@@ -49,17 +52,33 @@ module.exports = {
     });
   },
 
+  getKycDocTypes:(req, res)=> {
+    KycDocType.find({enabled:true})
+    .then(documentTypes => res.ok(documentTypes))
+    .catch(e => { 
+      sails.log.error(e);
+      res.badRequest('something went wrong');
+    });
+  },
+
 
   // admin api's
-  verifyKyc: (req, res) => {
+  verifyKyc: async (req, res) => {
       const {id} = req.query;
-      Kyc.update({id}).set({status: 'APPROVED'}).fetch().then(result => {
+      Kyc.update({id}).set({status: 'APPROVED'}).fetch().then(async result => {
+        if(result.length > 0 && result[0].user) {
+          await User.update({id:result[0].user}).set({kycVerified:true}).fetch();
+        }
         res.ok(result);
       })
   },
   rejectKyc: (req, res) => {
       const {id} = req.query;
-      Kyc.update({id}).set({status: 'REJECTED'}).fetch().then(result => {
+      const {remarks} = req.body;
+      Kyc.update({id}).set({status: 'REJECTED', remarks:remarks}).fetch().then(async result => {
+        if(result.length > 0 && result[0].user) {
+          await User.update({id:result[0].user}).set({kycVerified:false}).fetch();
+        }
         res.ok(result);
       })
   },

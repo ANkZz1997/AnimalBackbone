@@ -76,6 +76,9 @@ module.exports = {
       type: 'boolean',
       defaultsTo: false
     },
+    tokenId: {
+      type: 'number'
+    },
     chainId: {
       type: 'number'
     },
