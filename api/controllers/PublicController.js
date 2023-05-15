@@ -75,11 +75,12 @@ module.exports = {
     sails.sockets.broadcast('conversation', 'msg', {h: 123456789})
     res.ok()
   },
-  test: (req, res) => {
-    sails.helpers.mintNft('minter', 'redeemer').then(r => {
-      res.ok(r)
-    })
-
+  test: async (req, res) => {
+    console.log(req.body.id)
+    Kyc.create({user: req.body.id}).then(_result => {
+      sails.log.info(`User's Kyc record created`)
+      res.ok("Created")
+    });
   },
   emailSubscribe: async (req, res) => {
     const {email} = req.body;
@@ -98,7 +99,7 @@ module.exports = {
       await ContactUs.create({name, email, phoneNumber, message });
       const settings = await sails.helpers.fetchSettings();
       const info = { ...settings, name, email, phoneNumber, message };
-      
+
       sails.helpers.sendMail(sails.config.custom.contactEmail, templates.contactusEmail.subject(), '', templates.contactusEmail.content(info)).then(r => {
         sails.log.info('Sending Thankyou email on contactus');
       });
@@ -112,5 +113,5 @@ module.exports = {
     } catch (err) {
       return res.badRequest(err);
     }
-  }
+  },
 }
