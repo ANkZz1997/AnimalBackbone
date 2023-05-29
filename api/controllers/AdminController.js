@@ -126,7 +126,7 @@ module.exports = {
       order = "DESC",
     } = req.query;
 
-    const {chainId, search, category, status, minted} = req.body;
+    const {chainId, search, category, status, minted=''} = req.body;
     const criteria = { };
     const filter = {};
     filter[sort] = (order === 'DESC')?-1:1;
@@ -217,7 +217,7 @@ module.exports = {
       order = "DESC",
     } = req.query;
     
-    const {chainId, search, category, minted} = req.body;
+    const {chainId, search, category, minted=''} = req.body;
     const criteria = { };
     const filter = {};
     filter[sort] = (order === 'DESC')?-1:1;
