@@ -47,7 +47,7 @@ module.exports = {
       order = "DESC",
     } = req.query;
     
-    const {chainId, search, minter} = req.body;
+    const {chainId, search, minter, minted=''} = req.body;
     const criteria = {};
     const filter = {};
     filter[sort] = (order === 'DESC')?-1:1;
@@ -61,6 +61,10 @@ module.exports = {
     if(minter){
       criteria['minter'] = objectid(minter);
     }
+    if(minted !== '') {
+      criteria['minted'] = minted;
+    }
+
   
     db.collection('nft').aggregate(
       [
@@ -122,7 +126,7 @@ module.exports = {
       order = "DESC",
     } = req.query;
 
-    const {chainId, search, category, status} = req.body;
+    const {chainId, search, category, status, minted} = req.body;
     const criteria = { };
     const filter = {};
     filter[sort] = (order === 'DESC')?-1:1;
@@ -134,6 +138,10 @@ module.exports = {
     }
     if(category){
       criteria['nft.category'] = category;
+    }
+
+    if(minted !== '') {
+      criteria['nft.minted'] = minted;
     }
 
     if(status){
@@ -209,7 +217,7 @@ module.exports = {
       order = "DESC",
     } = req.query;
     
-    const {chainId, search, category} = req.body;
+    const {chainId, search, category, minted} = req.body;
     const criteria = { };
     const filter = {};
     filter[sort] = (order === 'DESC')?-1:1;
@@ -222,6 +230,10 @@ module.exports = {
     if(category){
       criteria['nft.category'] = category;
     }
+    if(minted !== '') {
+      criteria['nft.minted'] = minted;
+    }
+
     const db = Marketplace.getDatastore().manager;
     db.collection('marketplace').aggregate(
       [

@@ -6,6 +6,26 @@ const revertFailedAuction = async (auction) => {
   await Auction.update({id: auction.id}).set({status: 'FAILED'});
   await Nft.update({id: auction.nft.id}).set({auctionId: "", status: 'PORTFOLIO'});
 };
+
+const updateNftHistory = async (auction) => {
+  await sails.helpers.captureActivities({
+    action: "NFT",
+    type: "BUY",
+    user: auction.bid[0].user,
+    nft: auction.nft.id,
+    auction: auction.id,
+  });
+  
+  await sails.helpers.captureActivities({
+    action: "NFT",
+    type: "SOLD",
+    user: auction.user.id,
+    nft: auction.nft.id,
+    auction: auction.id,
+  });
+}
+
+
 const transferAuctionedNft = async (auction) => {
   if(!auction.bid.length) {
     sails.log.info(`No Bid found for auction id: ${auction.id}`)
@@ -32,6 +52,7 @@ const transferAuctionedNft = async (auction) => {
           .then(async () => {
             sails.log.info('NFT record updated');
             await Auction.update({id: auction.id}).set({status: "ENDED"});
+            updateNftHistory(auction);
             sails.log.info('Auction Ended');
           }).catch(e => sails.log.error(e));
       }).catch(e=> {
@@ -46,6 +67,7 @@ const transferAuctionedNft = async (auction) => {
           .then(async () => {
             sails.log.info('NFT record updated');
             await Auction.update({id: auction.id}).set({status: "ENDED"});
+            updateNftHistory(auction);
             sails.log.info('Auction ended');
           }).catch(e => sails.log.error(e))
       }).catch(e=> {
@@ -56,13 +78,14 @@ const transferAuctionedNft = async (auction) => {
   }
 }
 // Schedule task to run at the end of the day
-const task = cron.schedule('59 * * * * *', () => {
+const task = cron.schedule('59 * * * * *', async () => {
   // Perform your task here
   sails.log.info('Scheduled task started');
   sails.log.info("checking for expired auctions");
   const currentTime = moment().valueOf();
   console.log(`Current time is ${currentTime}`)
   Auction.find({endTime: {'<': currentTime}, status: 'ACTIVE'}).populate('nft').populate('user').populate('bid', {sort: 'price DESC', limit: 1}).then(auctions => {
+    console.log('auction counts', auctions.length);
     if(auctions.length) {
       sails.log.info('Found Expired Auctions');
       auctions.forEach(e => {
