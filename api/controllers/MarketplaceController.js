@@ -352,4 +352,84 @@ module.exports = {
       }
     });
   },
+  popularNft: async (req, res) => {
+      const {
+        page = 1,
+        limit = 10,
+        sort = "mostviewed",
+      } = req.query;
+
+      let criteria = {
+        "status": "PENDING",
+        "isDeleted":{$ne:true}
+      };
+  
+      if(req.payload.chainId){
+        criteria['chainId'] =  Number(req.payload.chainId);
+      }
+      
+      let filter = sails.config.custom['recent'];
+  
+      if(sails.config.custom.marketPlaceFilters[sort]){
+        filter = sails.config.custom.marketPlaceFilters[sort];
+      }
+  
+      const db = Marketplace.getDatastore().manager;
+      db.collection('marketplace').aggregate(
+        [
+          {
+            $lookup: {
+              from: 'nft',
+              localField: 'nft',
+              foreignField: '_id',
+              as: 'nft',
+            },
+          },
+          {
+            $lookup: {
+              from: 'user',
+              localField: 'user',
+              foreignField: '_id',
+              as: 'user',
+            },
+          },
+          { $unwind: '$nft' },
+          { $unwind: '$user' },
+          { $match: criteria },
+          { $sort: filter },
+          {
+            $addFields: {
+              id:"$_id",
+              nft:{
+                id:"$nft._id"
+              },
+              user:{
+                id:"$user._id"
+              }
+            }
+          },
+          {
+            $facet: {
+              records: [
+                { $skip: Number(limit * (page - 1)) },
+                { $limit: Number(limit) }
+              ],
+              totalCount: [{ $count: 'count' }],
+            },
+          },
+        ],
+        async (err, result) => {
+          if (err) return res.badRequest(err);
+          result = await result.toArray();
+          res.ok({
+            records:
+              result[0].records && result[0].records.length > 0
+                ? result[0].records
+                : [],
+            totalCount:
+              result[0].totalCount.length > 0 ? result[0].totalCount[0].count : 0,
+          });
+        }
+      );
+  }
 };
