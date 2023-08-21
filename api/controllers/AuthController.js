@@ -255,11 +255,18 @@ ${wallet.nonce}`;
   adminLogin: (req, res) => {
     const { username, password } = req.body;
     Admin.findOne({ username })
+      .populate('role')
       .decrypt()
       .then(async (result) => {
         if (!result) return res.badRequest("User not exist");
         if (result.password !== password)
           return res.badRequest("Invalid Password");
+          const permissions = await Role.findOne({id:result.role.id}).populate('accessCodes');
+          const accessCodes = [];
+          permissions.accessCodes.forEach((accessCode)=>{
+            accessCodes.push(accessCode.code);
+          });
+          result.permissions = accessCodes;
         result.token = await sails.helpers.signToken({
           id: result.id,
           isAdmin: true,

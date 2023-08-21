@@ -1080,5 +1080,27 @@ module.exports = {
     } catch (err) {
       return res.badRequest("Something went wrong");
     }
+  },
+  createAdminUser: async (req, res) => {
+    try {
+      
+      const { name, username, password, role } = req.body;
+      const user = await Admin.find({username});
+      if(user.length > 0) return res.badRequest('This user is already exists.');
+      const userRole = await Role.find({id:role});
+      if(!userRole.length) res.badRequest('Role not exists');
+      Admin.create({
+          username,
+          name,
+          role,
+          password
+        })
+        .fetch()
+        .then(async (result) => {
+          res.ok(result);
+        })
+    } catch (e) {
+      return res.badRequest('Something went wrong');
+    }
   }
 };
