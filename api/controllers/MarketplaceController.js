@@ -48,6 +48,7 @@ module.exports = {
 
     const {
       search = '',
+      category = '',
       user
     } = req.body;
 
@@ -71,6 +72,10 @@ module.exports = {
 
     if(sails.config.custom.marketPlaceFilters[sort]){
       filter = sails.config.custom.marketPlaceFilters[sort];
+    }
+
+    if(category){
+      criteria["nft.category"] = {$eq:category};
     }
 
     const db = Marketplace.getDatastore().manager;

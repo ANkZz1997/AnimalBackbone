@@ -443,9 +443,9 @@ module.exports = {
         };
       }
       result.networks = networks;
-      const createdCount = await Nft.count({user:id, minter: id, minted: false});
-      const purchasedCount = await Nft.count({user: id, minted: true});
-      const soldCount = await Nft.count({ minted: true, minter: id});
+      const createdCount = await Nft.count({minter: id});
+      const purchasedCount = await Activity.count({user:id, type:'BUY'});
+      const soldCount = await Activity.count({user:id, type:'SOLD'});
       const wishlistCount = result.wishlist && result.wishlist.length > 0 ? result.wishlist.length : 0;   
       result.createdCount = createdCount;
       result.purchasedCount = purchasedCount;
