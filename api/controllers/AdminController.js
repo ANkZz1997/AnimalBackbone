@@ -1083,7 +1083,6 @@ module.exports = {
   },
   createAdminUser: async (req, res) => {
     try {
-      
       const { name, username, password, role } = req.body;
       const user = await Admin.find({username});
       if(user.length > 0) return res.badRequest('This user is already exists.');
@@ -1102,5 +1101,50 @@ module.exports = {
     } catch (e) {
       return res.badRequest('Something went wrong');
     }
+  },
+
+  fetchAdminUsers: async (req, res) => {
+    const {
+      page = 1,
+      limit = 20,
+      sort = 'createdAt',
+      order = 'DESC',
+    } = req.query;
+    const criteria = {};
+    const {search = ''} = req.body || {};
+    if(search) {
+      criteria["$or"] = [{ "name" : {"$regex":search, '$options' : 'i'}},{ "username" : {"$regex":search, '$options' : 'i'}}];
+    }
+
+    const totalCount = await Admin.count().meta({
+      makeLikeModifierCaseInsensitive: true,
+    });
+
+    Admin.find()
+      .populate('role')
+      .limit(limit)
+      .skip((page - 1) * limit)
+      .sort(`${sort} ${order}`)
+      .then(async (result) => {
+        if (!result) return res.badRequest('No Result found');
+        for (let user of result){
+          const permissions = await Role.findOne({ id: user.role.id }).populate(
+            'accessCodes'
+          );
+          const accessCodes = [];
+          permissions.accessCodes.forEach((accessCode) => {
+            accessCodes.push(accessCode.code);
+          });
+          user.permissions = accessCodes;
+        };
+
+        res.ok({
+          totalCount,
+          records:result
+        });
+      })
+      .catch((e) => {
+        res.badRequest(e);
+      });
   }
 };
