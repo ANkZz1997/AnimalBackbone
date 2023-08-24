@@ -45,11 +45,13 @@ module.exports = {
       limit = 20,
       sort = "recent",
     } = req.query;
-
+    const price = {};
     const {
       search = '',
       category = '',
-      user
+      user,
+      minPrice = 0,
+      maxPrice = 0
     } = req.body;
 
     let criteria = {
@@ -57,7 +59,7 @@ module.exports = {
       "isDeleted":{$ne:true}
     };
 
-    if(req.payload.chainId){
+    if(req. .chainId){
       criteria['chainId'] =  Number(req.payload.chainId);
     }
     if(search){
@@ -67,6 +69,21 @@ module.exports = {
     if(user && objectid.isValid(user)){
       criteria['user._id'] = objectid(user);
     }
+
+    if(minPrice){
+      price['$gte'] = minPrice;
+    }
+
+    if(maxPrice && maxPrice  ){
+      price['$lte'] = maxPrice;
+    }
+
+    const isObjectEmtpy = await sails.helpers.isEmptyObject(price);
+
+    if(!isObjectEmtpy){
+      criteria['price'] = price;
+    }
+
 
     let filter = sails.config.custom['recent'];
 

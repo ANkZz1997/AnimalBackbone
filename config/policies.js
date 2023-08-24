@@ -49,7 +49,7 @@ module.exports.policies = {
   },
   MarketplaceController: {
     'index': ['injectChainId'],
-    'popularNft':true
+    'popularNft':['injectChainId']
   },
   AuctionController: {
     'index': ['injectChainId']
