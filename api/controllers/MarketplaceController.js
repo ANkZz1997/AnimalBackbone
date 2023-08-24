@@ -59,7 +59,7 @@ module.exports = {
       "isDeleted":{$ne:true}
     };
 
-    if(req. .chainId){
+    if(req.payload.chainId){
       criteria['chainId'] =  Number(req.payload.chainId);
     }
     if(search){
