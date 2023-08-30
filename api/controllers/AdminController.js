@@ -1167,7 +1167,7 @@ module.exports = {
 
   updateAdminUserPassword : async (req, res) => {
     const {password, userid} = req.body;
-    Admin.findOne({id:userid})
+    Admin.find({id:userid})
       .then(async (result) => {
         if(!result.length) res.badRequest('User not exists');
           Admin.update({ id:userid })
