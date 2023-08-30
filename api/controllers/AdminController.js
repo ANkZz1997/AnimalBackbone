@@ -1146,5 +1146,39 @@ module.exports = {
       .catch((e) => {
         res.badRequest(e);
       });
+  },
+
+  updateAdminUserRole : async (req, res) => {
+    const {userid, role} = req.body;
+    Admin.find({id:userid})
+      .then(async (result) => {
+        if(!result.length) res.badRequest('User not exists');
+          Admin.update({ id:userid })
+          .set({ role })
+          .fetch()
+          .then(async (result) => {
+            res.ok(result);
+          });
+      })
+      .catch((e) => {
+        res.badRequest(e);
+      });
+  },
+
+  updateAdminUserPassword : async (req, res) => {
+    const {password, userid} = req.body;
+    Admin.findOne({id:userid})
+      .then(async (result) => {
+        if(!result.length) res.badRequest('User not exists');
+          Admin.update({ id:userid })
+          .set({ password })
+          .fetch()
+          .then(async (result) => {
+            res.ok(result);
+          });
+      })
+      .catch((e) => {
+        res.badRequest(e);
+      });
   }
 };
