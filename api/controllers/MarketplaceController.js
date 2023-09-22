@@ -51,9 +51,9 @@ module.exports = {
       category = '',
       user,
       minPrice = 0,
-      maxPrice = 0
+      maxPrice = 0,
+      minted = '',
     } = req.body;
-
     let criteria = {
       "status": "PENDING",
       "isDeleted":{$ne:true}
@@ -94,6 +94,12 @@ module.exports = {
     if(category){
       criteria["nft.category"] = {$eq:category};
     }
+    if(minted !== ''){
+      criteria["nft.minted"] = {$eq:minted}
+    }
+    // if(minted == true || minted == false){
+    //   criteria["nft.minted"] = {$eq:minted}
+    // }
 
     const db = Marketplace.getDatastore().manager;
     db.collection('marketplace').aggregate(
@@ -180,6 +186,7 @@ module.exports = {
   },
   addToMarketPlaceWithVoucher: async (req, res) => {
     const { nftId, price, voucher } = req.body;
+    console.log('voucher ====>',voucher)
     const nft = await Nft.findOne({
       id: nftId,
       user: req.payload.id,
@@ -310,6 +317,14 @@ module.exports = {
       if (!result) return res.badRequest();
       const minter = await Wallet.findOne({user: result.user});
       const redeemer = await Wallet.findOne({user: req.payload.id});
+
+      const settings = await Settings.findOne({ uid: 1 });
+
+      // caculate platform fee 
+      let platformFee
+      if(settings.commissionType == 'percent'){
+        platformFee = (result.price * settings.commission)/100
+      }
       await NftTransaction.create({
         fromUser: result.user,
         fromAddress: minter.address.toLowerCase(),
@@ -317,8 +332,11 @@ module.exports = {
         toAddress: redeemer.address.toLowerCase(),
         nft: result.nft.id,
         chainId: network.chainId,
-        marketplace: id
+        marketplace: id,
+        platformFee:platformFee,
       })
+      console.log('result ====> ',result.nft.minted)
+      
       if(!result.nft.minted) {
         sails.log.info('nft is not minted, minting now');
         sails.helpers.mintLazyNft(redeemer.privateKey, minter.address, redeemer.address, result.voucher, network).then(transaction => {
@@ -327,15 +345,15 @@ module.exports = {
             .then(async (_result) => {
               await sails.helpers.captureActivities({
                 action: "NFT",
-                type: "BUY",
-                user: req.payload.id,
+                type: "SOLD",
+                user: result.user,
                 nft: result.nft.id,
                 marketplace: id,
               });
               await sails.helpers.captureActivities({
                 action: "NFT",
-                type: "SOLD",
-                user: result.user,
+                type: "BUY",
+                user: req.payload.id,
                 nft: result.nft.id,
                 marketplace: id,
               });
@@ -353,15 +371,15 @@ module.exports = {
             .then(async (_result) => {
               await sails.helpers.captureActivities({
                 action: "NFT",
-                type: "BUY",
-                user: req.payload.id,
+                type: "SOLD",
+                user: result.user,
                 nft: result.nft.id,
                 marketplace: id,
               });
               await sails.helpers.captureActivities({
                 action: "NFT",
-                type: "SOLD",
-                user: result.user,
+                type: "BUY",
+                user: req.payload.id,
                 nft: result.nft.id,
                 marketplace: id,
               });

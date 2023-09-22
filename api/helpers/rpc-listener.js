@@ -4,10 +4,12 @@ const web3Obj = {};
 const {abi} = require("../constants/networks");
 
 const handleTransfer = (from, to, tokenId) => {
+  
   NftTransaction.findOne({fromAddress: from.toLowerCase(), toAddress: to.toLowerCase(), status: 'PENDING'})
     .populateAll()
     .then(async result => {
       if(result) {
+        console.log('result ====>',result)
         if(result.nft.minted && !result.nft.tokenId) {
           await Nft.update({id: result.nft.id}).set({tokenId: parseInt(tokenId)});
         }
@@ -54,6 +56,8 @@ module.exports = {
     web3Obj[network.chainId].contract = new ethers.Contract(network.address, abi, web3Obj[network.chainId].signer);
     sails.log.info('Subscribing for : ' + network.host)
     web3Obj[network.chainId].contract.on("Transfer", (from, to, tokenId) => {
+      console.log('=====> ----rpc listener working   ---')
+      console.log({from, to, tokenId})
       setTimeout(() => {
         handleTransfer(from, to, tokenId)
       }, 10000)

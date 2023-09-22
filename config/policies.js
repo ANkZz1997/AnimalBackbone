@@ -55,6 +55,7 @@ module.exports.policies = {
     'index': ['injectChainId']
   },
   SettingsController:{
-    'getNetworks':true
+    'getNetworks':true,
+    'getPlatformSettings':true
   }
 };

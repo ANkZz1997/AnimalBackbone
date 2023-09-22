@@ -26,7 +26,7 @@ module.exports = {
     },
     status: {
       type: 'string',
-      isIn: ['ACTIVE', 'ENDED', 'REMOVED', 'FAILED'],
+      isIn: ['ACTIVE', 'ENDED', 'REMOVED', 'FAILED' , 'SETTLEMENT'],
       defaultsTo: 'ACTIVE'
     },
     bid: {

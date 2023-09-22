@@ -77,6 +77,21 @@ const transferAuctionedNft = async (auction) => {
 
   }
 }
+
+// new transfer auction setelment function 
+const transferNftSettlement = async(auction)=>{
+  console.log(' ============= transferNftSettlement working ==============')
+  if(!auction.bid.length) {
+    sails.log.info(`No Bid found for auction id: ${auction.id}`)
+    revertFailedAuction(auction)
+  }else{
+    // add 12 hr more for settlement Time 
+    const currentDateTime = moment();
+    const futureDateTime = currentDateTime.add(12, 'hours').unix()
+    await Auction.update({id: auction.id}).set({status: 'SETTLEMENT',endTime: futureDateTime});
+  }
+}
+
 // Schedule task to run at the end of the day
 const task = cron.schedule('59 * * * * *', async () => {
   // Perform your task here
@@ -90,7 +105,8 @@ const task = cron.schedule('59 * * * * *', async () => {
       sails.log.info('Found Expired Auctions');
       auctions.forEach(e => {
         sails.log.info(`Transferring NFT: ${e.nft.id} to User: ${e.user.id}`)
-        transferAuctionedNft(e)
+        // transferAuctionedNft(e)
+        transferNftSettlement(e)
       })
     }
   })

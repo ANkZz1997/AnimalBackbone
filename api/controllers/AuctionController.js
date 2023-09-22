@@ -66,9 +66,10 @@ module.exports = {
     const {
       search = '',
       user,
-      status
+      status,
+      minted =''
     } = req.body;
-
+    console.log('minted =====> ',minted)
     let criteria = {
       "isDeleted":{$ne:true}
     };
@@ -83,7 +84,9 @@ module.exports = {
     if(user && objectid.isValid(user)){
       criteria['user._id'] = objectid(user);
     }
-
+    if(minted !== ''){
+      criteria["nft.minted"] = {$eq:minted}
+    }
     if(status){
       criteria['status'] = status;
     }
@@ -93,6 +96,7 @@ module.exports = {
     if(sails.config.custom.auctionFilters[sort]){
       filter = sails.config.custom.auctionFilters[sort];
     }
+    
 
     const db = Auction.getDatastore().manager;
     db.collection('auction').aggregate(
