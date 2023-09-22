@@ -21,6 +21,10 @@ module.exports = {
       required: true,
       encrypt: true
     },
+    role:{
+      required: true,
+      model: 'Role'
+    },
     avatar:{
       type: 'string'
     },

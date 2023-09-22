@@ -789,6 +789,10 @@ module.exports.custom = {
     },
     'oldest':{
       "createdAt":1
+    },
+    'mostviewed':{
+      "nft.views":-1,
+      "createdAt":-1
     }
   },
   auctionFilters:{

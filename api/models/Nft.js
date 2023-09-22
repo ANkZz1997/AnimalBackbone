@@ -51,6 +51,7 @@ module.exports = {
     },
     minter: {
       model: 'User',
+      
       // required: true
     },
     marketPlaceId: {

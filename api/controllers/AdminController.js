@@ -47,7 +47,7 @@ module.exports = {
       order = "DESC",
     } = req.query;
     
-    const {chainId, search, minter} = req.body;
+    const {chainId, search, minter, minted=''} = req.body;
     const criteria = {};
     const filter = {};
     filter[sort] = (order === 'DESC')?-1:1;
@@ -61,6 +61,10 @@ module.exports = {
     if(minter){
       criteria['minter'] = objectid(minter);
     }
+    if(minted !== '') {
+      criteria['minted'] = minted;
+    }
+
   
     db.collection('nft').aggregate(
       [
@@ -122,7 +126,7 @@ module.exports = {
       order = "DESC",
     } = req.query;
 
-    const {chainId, search, category, status} = req.body;
+    const {chainId, search, category, status, minted=''} = req.body;
     const criteria = { };
     const filter = {};
     filter[sort] = (order === 'DESC')?-1:1;
@@ -134,6 +138,10 @@ module.exports = {
     }
     if(category){
       criteria['nft.category'] = category;
+    }
+
+    if(minted !== '') {
+      criteria['nft.minted'] = minted;
     }
 
     if(status){
@@ -209,7 +217,7 @@ module.exports = {
       order = "DESC",
     } = req.query;
     
-    const {chainId, search, category} = req.body;
+    const {chainId, search, category, minted=''} = req.body;
     const criteria = { };
     const filter = {};
     filter[sort] = (order === 'DESC')?-1:1;
@@ -222,6 +230,10 @@ module.exports = {
     if(category){
       criteria['nft.category'] = category;
     }
+    if(minted !== '') {
+      criteria['nft.minted'] = minted;
+    }
+
     const db = Marketplace.getDatastore().manager;
     db.collection('marketplace').aggregate(
       [
@@ -431,9 +443,9 @@ module.exports = {
         };
       }
       result.networks = networks;
-      const createdCount = await Nft.count({user:id, minter: id, minted: false});
-      const purchasedCount = await Nft.count({user: id, minted: true});
-      const soldCount = await Nft.count({ minted: true, minter: id});
+      const createdCount = await Nft.count({minter: id});
+      const purchasedCount = await Activity.count({user:id, type:'BUY'});
+      const soldCount = await Activity.count({user:id, type:'SOLD'});
       const wishlistCount = result.wishlist && result.wishlist.length > 0 ? result.wishlist.length : 0;   
       result.createdCount = createdCount;
       result.purchasedCount = purchasedCount;
@@ -1068,5 +1080,105 @@ module.exports = {
     } catch (err) {
       return res.badRequest("Something went wrong");
     }
+  },
+  createAdminUser: async (req, res) => {
+    try {
+      const { name, username, password, role } = req.body;
+      const user = await Admin.find({username});
+      if(user.length > 0) return res.badRequest('This user is already exists.');
+      const userRole = await Role.find({id:role});
+      if(!userRole.length) res.badRequest('Role not exists');
+      Admin.create({
+          username,
+          name,
+          role,
+          password
+        })
+        .fetch()
+        .then(async (result) => {
+          res.ok(result);
+        })
+    } catch (e) {
+      return res.badRequest('Something went wrong');
+    }
+  },
+
+  fetchAdminUsers: async (req, res) => {
+    const {
+      page = 1,
+      limit = 20,
+      sort = 'createdAt',
+      order = 'DESC',
+    } = req.query;
+    const criteria = {};
+    const {search = ''} = req.body || {};
+    if(search) {
+      criteria["$or"] = [{ "name" : {"$regex":search, '$options' : 'i'}},{ "username" : {"$regex":search, '$options' : 'i'}}];
+    }
+
+    const totalCount = await Admin.count().meta({
+      makeLikeModifierCaseInsensitive: true,
+    });
+
+    Admin.find()
+      .populate('role')
+      .limit(limit)
+      .skip((page - 1) * limit)
+      .sort(`${sort} ${order}`)
+      .then(async (result) => {
+        if (!result) return res.badRequest('No Result found');
+        for (let user of result){
+          const permissions = await Role.findOne({ id: user.role.id }).populate(
+            'accessCodes'
+          );
+          const accessCodes = [];
+          permissions.accessCodes.forEach((accessCode) => {
+            accessCodes.push(accessCode.code);
+          });
+          user.permissions = accessCodes;
+        };
+
+        res.ok({
+          totalCount,
+          records:result
+        });
+      })
+      .catch((e) => {
+        res.badRequest(e);
+      });
+  },
+
+  updateAdminUserRole : async (req, res) => {
+    const {userid, role} = req.body;
+    Admin.find({id:userid})
+      .then(async (result) => {
+        if(!result.length) res.badRequest('User not exists');
+          Admin.update({ id:userid })
+          .set({ role })
+          .fetch()
+          .then(async (result) => {
+            res.ok(result);
+          });
+      })
+      .catch((e) => {
+        res.badRequest(e);
+      });
+  },
+
+  updateAdminUserPassword : async (req, res) => {
+    const {password, userid} = req.body;
+    Admin.find({id:userid})
+      .then(async (result) => {
+        if(!result.length) res.badRequest('User not exists');
+          Admin.update({ id:userid })
+          .set({ password })
+          .fetch()
+          .then(async (result) => {
+            res.ok(result);
+          });
+      })
+      .catch((e) => {
+        res.badRequest(e);
+      });
   }
 };

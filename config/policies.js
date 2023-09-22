@@ -48,12 +48,14 @@ module.exports.policies = {
     'joinUserRoom': ['isAuthenticated', 'isAdmin'],
   },
   MarketplaceController: {
-    'index': ['injectChainId']
+    'index': ['injectChainId'],
+    'popularNft':['injectChainId']
   },
   AuctionController: {
     'index': ['injectChainId']
   },
   SettingsController:{
-    'getNetworks':true
+    'getNetworks':true,
+    'getPlatformSettings':true
   }
 };

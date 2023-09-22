@@ -16,7 +16,8 @@ module.exports = {
       model: 'Nft'
     },
     price: {
-      type: 'string',
+      type: 'float',
+      columnType: 'double',
       required: true
     },
     status: {

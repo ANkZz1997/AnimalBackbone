@@ -127,7 +127,7 @@ module.exports = {
     }
   },
   verifySignature: async (req, res) => {
-    let { address, signature, email, firstName, lastName } = req.body;
+    let { address, signature, email, firstName, lastName, socialAccountType } = req.body;
     const wallet = await Wallet.findOne({ address: address.toLowerCase() });
     const msg = `
 Welcome to SDNA Crypt
@@ -193,7 +193,7 @@ ${wallet.nonce}`;
         if(user.length > 0) return res.badRequest('This Email is already registered.');
         User.create({
           type: "DECENTRALISED",
-          socialAccountType:"METAMASK",
+          socialAccountType,
           wallet: wallet.id,
           username: address.toLowerCase(),
           email: email,
@@ -255,11 +255,18 @@ ${wallet.nonce}`;
   adminLogin: (req, res) => {
     const { username, password } = req.body;
     Admin.findOne({ username })
+      .populate('role')
       .decrypt()
       .then(async (result) => {
         if (!result) return res.badRequest("User not exist");
         if (result.password !== password)
           return res.badRequest("Invalid Password");
+          const permissions = await Role.findOne({id:result.role.id}).populate('accessCodes');
+          const accessCodes = [];
+          permissions.accessCodes.forEach((accessCode)=>{
+            accessCodes.push(accessCode.code);
+          });
+          result.permissions = accessCodes;
         result.token = await sails.helpers.signToken({
           id: result.id,
           isAdmin: true,
