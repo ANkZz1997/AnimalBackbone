@@ -1289,99 +1289,176 @@ module.exports = {
       });
   },
 
+  // topBuyerReplacedNow: async (req, res) => {
+  //   try {
+  //     const dataArray = await NftTransaction.find({
+  //       where: { status: "SUCCESS", marketplace: { "!=": null } },
+  //     })
+  //       .populate("toUser")
+  //       .populate("marketplace")
+  //       .then((transactions) =>
+  //         transactions.filter((transaction) => transaction.marketplace !== null)
+  //       );
+
+  //     const resultArray = Object.values(
+  //       dataArray.reduce((acc, obj) => {
+  //         const username = obj.toUser.username;
+  //         const price = parseFloat(obj.marketplace.price); // Convert price to a number
+
+  //         // Check if price is a valid number
+  //         if (!isNaN(price)) {
+  //           if (!acc[username]) {
+  //             acc[username] = {
+  //               buyerId: obj.toUser.id,
+  //               firstName: obj.toUser.firstName,
+  //               lastName: obj.toUser.lastName,
+  //               avatar: obj.toUser.avatar,
+  //               username: obj.toUser.username,
+  //               totalPrice: 0,
+  //             };
+  //           }
+
+  //           // Add the price to the total price for this user
+  //           acc[username].totalPrice += price;
+  //           acc[username].totalPrice = parseFloat(
+  //             acc[username].totalPrice.toFixed(6)
+  //           );
+  //         }
+  //         return acc;
+  //       }, {})
+  //     );
+
+  //     const topBuyers = resultArray
+  //       .sort((a, b) => b.totalPrice - a.totalPrice)
+  //       .slice(0, 20);
+  //     const transactionCount = topBuyers.length;
+
+  //     return res.ok({ records: topBuyers, totalCount: transactionCount });
+  //   } catch (err) {
+  //     return res.badRequest(err);
+  //   }
+  // },
+
   topBuyer: async (req, res) => {
     try {
-      const dataArray = await NftTransaction.find({
-        where: { status: "SUCCESS", marketplace: { "!=": null } },
-      })
-        .populate("toUser")
-        .populate("marketplace")
-        .then((transactions) =>
-          transactions.filter((transaction) => transaction.marketplace !== null)
-        );
+      const db = await NftTransaction.getDatastore().manager;
+      const topBuyers = await db
+        .collection("nfttransaction")
+        .aggregate([
+          {
+            $match: {
+              status: "SUCCESS",
+              marketplace: { $ne: null },
+            },
+          },
+          {
+            $lookup: {
+              from: "user",
+              localField: "toUser",
+              foreignField: "_id",
+              as: "users",
+            },
+          },
+          {
+            $unwind: "$users",
+          },
+          {
+            $lookup: {
+              from: "marketplace", // Adjust this to the actual name of the "marketplace" collection
+              localField: "marketplace", // Assuming "marketplace" is a field in "nfttransaction"
+              foreignField: "_id", // Assuming "_id" is the identifier in the "marketplace" collection
+              as: "marketplaceData",
+            },
+          },
+          {
+            $unwind: "$marketplaceData",
+          },
+          {
+            $group: {
+              _id: "$users._id",
+              firstName: { $first: "$users.firstName" },
+              lastName: { $first: "$users.lastName" },
+              avatar: { $first: "$users.avatar" },
+              username: { $first: "$users.username" },
+              totalPrice: {
+                $sum: "$marketplaceData.price", // Sum the prices as a double
+              },
+            },
+          },
+          {
+            $sort: { totalPrice: -1 },
+          },
+          {
+            $limit: 20,
+          },
+        ])
+        .toArray();
 
-      const resultArray = Object.values(
-        dataArray.reduce((acc, obj) => {
-          const username = obj.toUser.username;
-          const price = parseFloat(obj.marketplace.price); // Convert price to a number
-
-          // Check if price is a valid number
-          if (!isNaN(price)) {
-            if (!acc[username]) {
-              acc[username] = {
-                buyerId: obj.toUser.id,
-                firstName: obj.toUser.firstName,
-                lastName: obj.toUser.lastName,
-                avatar: obj.toUser.avatar,
-                username: obj.toUser.username,
-                totalPrice: 0,
-              };
-            }
-
-            // Add the price to the total price for this user
-            acc[username].totalPrice += price;
-            acc[username].totalPrice = parseFloat(
-              acc[username].totalPrice.toFixed(6)
-            );
-          }
-          return acc;
-        }, {})
-      );
-
-      const topBuyers = resultArray
-        .sort((a, b) => b.totalPrice - a.totalPrice)
-        .slice(0, 20);
       const transactionCount = topBuyers.length;
 
       return res.ok({ records: topBuyers, totalCount: transactionCount });
-    } catch (err) {
-      return res.badRequest(err);
+    } catch (e) {
+      return res.badRequest(e);
     }
   },
 
   topSeller: async (req, res) => {
     try {
-      const dataArray = await NftTransaction.find({
-        where: { status: "SUCCESS", marketplace: { "!=": null } },
-      })
-        .populate("fromUser")
-        .populate("marketplace")
-        .then((transactions) =>
-          transactions.filter((transaction) => transaction.marketplace !== null)
-        );
+      const db = await NftTransaction.getDatastore().manager;
+      const topSeller = await db
+        .collection("nfttransaction")
+        .aggregate([
+          {
+            $match: {
+              status: "SUCCESS",
+              marketplace: { $ne: null },
+            },
+          },
+          {
+            $lookup: {
+              from: "user",
+              localField: "fromUser",
+              foreignField: "_id",
+              as: "users",
+            },
+          },
+          {
+            $unwind: "$users",
+          },
+          {
+            $lookup: {
+              from: "marketplace", // Adjust this to the actual name of the "marketplace" collection
+              localField: "marketplace", // Assuming "marketplace" is a field in "nfttransaction"
+              foreignField: "_id", // Assuming "_id" is the identifier in the "marketplace" collection
+              as: "marketplaceData",
+            },
+          },
+          {
+            $unwind: "$marketplaceData",
+          },
+          {
+            $group: {
+              _id: "$users._id",
+              firstName: { $first: "$users.firstName" },
+              lastName: { $first: "$users.lastName" },
+              avatar: { $first: "$users.avatar" },
+              username: { $first: "$users.username" },
+              totalPrice: {
+                $sum: "$marketplaceData.price", // Sum the prices as a double
+              },
+            },
+          },
+          {
+            $sort: { totalPrice: -1 },
+          },
+          {
+            $limit: 20,
+          },
+        ])
+        .toArray();
 
-      const resultArray = Object.values(
-        dataArray.reduce((acc, obj) => {
-          const username = obj.fromUser.username;
-          const price = parseFloat(obj.marketplace.price); // Convert price to a number
-
-          // Check if price is a valid number
-          if (!isNaN(price)) {
-            if (!acc[username]) {
-              acc[username] = {
-                sellerId: obj.fromUser.id,
-                firstName: obj.fromUser.firstName,
-                lastName: obj.fromUser.lastName,
-                avatar: obj.fromUser.avatar,
-                username: obj.fromUser.username,
-                totalPrice: 0,
-              };
-            }
-
-            // Add the price to the total price for this user
-            acc[username].totalPrice += price;
-            acc[username].totalPrice = parseFloat(
-              acc[username].totalPrice.toFixed(6)
-            );
-          }
-          return acc;
-        }, {})
-      );
-
-      const topSeller = resultArray
-        .sort((a, b) => b.totalPrice - a.totalPrice)
-        .slice(0, 20);
       const transactionCount = topSeller.length;
+ 
 
       return res.ok({ records: topSeller, totalCount: transactionCount });
     } catch (err) {
@@ -1606,22 +1683,102 @@ module.exports = {
       return res.badRequest(e);
     }
   },
-  auctionStatusData: async (req,res)=>{
-    try{
-      console.log("i got hit")
-    }catch(e){
-      return res.badRequest(e)
+  auctionStatusData: async (req, res) => {
+    try {
+      console.log("i got hit");
+    } catch (e) {
+      return res.badRequest(e);
     }
   },
 
-  platformFeeData: async (req, res)=>{
-    try{
+  platformFeeData: async (req, res) => {
+    try {
+      const db = NftTransaction.getDatastore().manager;
+      const totalRevenue = await db
+        .collection("nfttransaction")
+        .aggregate([
+          {
+            $match: {
+              status: "SUCCESS",
+            },
+          },
+          {
+            $group: {
+              _id: null,
+              totalPlatformFee: {
+                $sum: "$platformFee",
+              },
+            },
+          },
+        ])
+        .toArray();
 
-      const totalRevenue = await NftTransaction.find()
-      return res.ok(totalRevenue)
-
-    }catch(e){
+      if (totalRevenue.length > 0) {
+        const totalPlatformFee = totalRevenue[0].totalPlatformFee;
+        return res.ok({ totalRevenue: totalPlatformFee });
+      } else {
+        return res.ok({ totalRevenue: 0 }); // No documents matched the query
+      }
+    } catch (e) {
       return res.badRequest(e);
     }
-  }
+  },
+  nftAnalysis: async (req, res) => {
+    try {
+      const nfts = await Nft.find();
+      const nftObj = nfts.reduce((acc, curr) => {
+        const { createdAt } = curr;
+        const month = moment(createdAt).format("MM");
+        if (!acc[month]) {
+          acc[month] = 0;
+        }
+        acc[month] += 1;
+        return acc;
+      }, {});
+
+      const trans = await NftTransaction.find({ status: "SUCCESS" });
+
+      const transObj = trans.reduce((acc, curr) => {
+        const { createdAt, platformFee } = curr;
+        const month = moment(createdAt).format("MM");
+        if (!acc[month]) {
+          acc[month] = { count: 0, platformFee: 0 };
+        }
+        acc[month].count += 1;
+        acc[month].platformFee += platformFee;
+        return acc;
+      }, {});
+
+      const monthlyCounts = [
+        "01",
+        "02",
+        "03",
+        "04",
+        "05",
+        "06",
+        "07",
+        "08",
+        "09",
+        "10",
+        "11",
+        "12",
+      ];
+
+      const finalData = monthlyCounts.map((i) => {
+        return {
+          [i]: {
+            created: nftObj[i] ? nftObj[i] : 0,
+            sold: transObj[i]?.count ? transObj[i]?.count : 0,
+            platformFee: transObj[i]?.platformFee
+              ? transObj[i]?.platformFee.toFixed(6)
+              : 0,
+          },
+        };
+      });
+
+      return res.ok(finalData);
+    } catch (e) {
+      return res.badRequest(e);
+    }
+  },
 };
