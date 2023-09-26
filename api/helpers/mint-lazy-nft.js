@@ -44,7 +44,8 @@ module.exports = {
     contract.redeem(minter, redeemer, _voucher, {
       value: voucher.minPrice
     }).then(async (transaction) => {
-      sails.log.info("transaction successful");hich
+      console.log('contract redeem    transaction ==== >',transaction)
+      sails.log.info("transaction successful");
       return exits.success(transaction);
       // contract.off("Transfer");
     }).catch((error) => {
