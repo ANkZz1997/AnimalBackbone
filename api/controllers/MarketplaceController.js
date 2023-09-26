@@ -317,14 +317,16 @@ module.exports = {
       if (!result) return res.badRequest();
       const minter = await Wallet.findOne({user: result.user});
       const redeemer = await Wallet.findOne({user: req.payload.id});
-
       const settings = await Settings.findOne({ uid: 1 });
-
+      let royaltyResp = {}
       // caculate platform fee 
       let platformFee
       if(settings.commissionType == 'percent'){
         platformFee = (result.price * settings.commission)/100
       }
+
+      
+
       await NftTransaction.create({
         fromUser: result.user,
         fromAddress: minter.address.toLowerCase(),
@@ -334,12 +336,29 @@ module.exports = {
         chainId: network.chainId,
         marketplace: id,
         platformFee:platformFee,
-      })
-      console.log('result ====> ',result.nft.minted)
+      });
+
+      if(result.nft.minted){
+        await Royalty.create({
+          minter:result.nft.minter,
+          fromAddress: minter.address.toLowerCase(),
+          toUser: req.payload.id,
+          toAddress: redeemer.address.toLowerCase(),
+          fromUser: result.user,
+          nft: result.nft.id,
+          royalty : ((result.price * result.nft.royalty) /100).toFixed(6),
+          marketplace: result.id,
+          chainId:settings.chainId,
+          status:'PENDING',
+          hash:''
+        });
+      };
+
       
       if(!result.nft.minted) {
         sails.log.info('nft is not minted, minting now');
         sails.helpers.mintLazyNft(redeemer.privateKey, minter.address, redeemer.address, result.voucher, network).then(transaction => {
+          console.log('nft is not minted transaction ====> ',transaction)
           Nft.update({id: result.nft.id})
             .set({user: req.payload.id, status: "PORTFOLIO", marketplaceId: "", minted: true})
             .then(async (_result) => {
@@ -366,9 +385,16 @@ module.exports = {
       } else {
         sails.log.info(`nft is minted, transferring now from ${minter.address} to ${redeemer.address}`);
         sails.helpers.transferLazyNft(redeemer.privateKey, minter.address, redeemer.address, result.voucher, network).then(transaction => {
+
           Nft.update({id: result.nft.id})
             .set({user: req.payload.id, status: "PORTFOLIO", marketplaceId: ""})
             .then(async (_result) => {
+
+              // update transtion hash 
+              // await Royalty.update({id:royaltyResp.id}).set({
+              //   hash:transaction.hash
+              // })
+
               await sails.helpers.captureActivities({
                 action: "NFT",
                 type: "SOLD",

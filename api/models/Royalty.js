@@ -1,13 +1,45 @@
-/**
- * Royalty.js
- *
- * @description :: A model definition represents a database table/collection.
- * @docs        :: https://sailsjs.com/docs/concepts/models-and-orm/models
- */
-
 module.exports = {
 
   attributes: {
+    minter:{
+      model: 'User',
+    },
+    toUser:{
+      model: 'User',
+    },
+    fromUser:{
+      model: 'User',
+    },
+    fromAddress: {
+      type: 'string',
+    },
+    toAddress: {
+      type: 'string',
+    },
+    nft:{
+      model: 'Nft',
+    },
+    royalty:{
+      type : 'string',
+    },
+    marketplace:{
+      model: 'Marketplace'
+    },
+    status:{
+      type: 'string',
+      isIn: ['PENDING', 'FAIL', 'SUCCESS'],
+      defaultsTo: 'PENDING'
+    },
+    chainId:{
+      type: 'number'
+    },
+    auction:{
+      type:'string',
+    },
+    hash:{
+      type:'string'
+    }
+
 
     //  ╔═╗╦═╗╦╔╦╗╦╔╦╗╦╦  ╦╔═╗╔═╗
     //  ╠═╝╠╦╝║║║║║ ║ ║╚╗╔╝║╣ ╚═╗
@@ -26,4 +58,3 @@ module.exports = {
   },
 
 };
-

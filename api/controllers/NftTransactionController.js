@@ -10,16 +10,33 @@ module.exports = {
     const {fromId, toId, nftId, marketplaceId, auctionId} = req.body;
     const from = await User.findOne({id: fromId}).populate('wallet');
     const to = await User.findOne({id: toId}).populate('wallet');
+    const marketplace = await Marketplace.findOne({id:marketplaceId}).populate('nft')
+    const settings = await Settings.findOne({ uid: 1 });
+
     console.log('from ====> ',from) 
     console.log('to ====> ',to) 
 
-    const marketplace = await Marketplace.findOne({id:marketplaceId})
-    const settings = await Settings.findOne({ uid: 1 });
     let platformFee
-      if(settings.commissionType == 'percent'){
-        platformFee = (marketplace.price * settings.commission)/100
-      }
-    NftTransaction.create({
+    if(settings.commissionType == 'percent'){
+      platformFee = (marketplace.price * settings.commission)/100
+    }
+    
+    if(marketplace.nft.minted){
+      await Royalty.create({
+        minter:marketplace.nft.minter,
+        toUser: to.id,
+        fromAddress: from.wallet.address.toLowerCase(),
+        toAddress: to.wallet.address.toLowerCase(),
+        fromUser: from.id,
+        nft: marketplace.nft.id,
+        royalty : ((marketplace.price * marketplace.nft.royalty) /100).toFixed(6),
+        marketplace: marketplace.id,
+        chainId:marketplace.chainId,
+        hash:''
+      })
+    }
+
+    await NftTransaction.create({
       fromUser: from.id,
       fromAddress: from.wallet.address.toLowerCase(),
       toUser: to.id,

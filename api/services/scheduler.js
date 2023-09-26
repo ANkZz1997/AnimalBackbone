@@ -116,6 +116,13 @@ const task = cron.schedule('59 * * * * *', async () => {
     if(r.length)
       sails.log.info(r.length + ' pending transaction deleted');
   })
+
+  // Delete pending Royalty record
+  Royalty.destroy({createdAt: {'<': deadlineForPendingTransaction}, status: 'PENDING'}).fetch().then((r) => {
+    if(r.length)
+      sails.log.info(r.length + ' pending Royalty transaction deleted');
+  })
+
 }, {
   scheduled: false
 });

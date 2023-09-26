@@ -3,13 +3,21 @@ const privateKey = sails.config.custom.privateKey;
 const web3Obj = {};
 const {abi} = require("../constants/networks");
 
-const handleTransfer = (from, to, tokenId) => {
-  
+const handleTransfer = async (from, to, tokenId) => {
+  // Royalty Status update 
+
+  Royalty.findOne({fromAddress: from.toLowerCase(), toAddress: to.toLowerCase(), status: 'PENDING'}).then(async (res) =>{
+    if(res){
+      await Royalty.update({id:res.id}).set({status:'SUCCESS'});
+    }
+  }) 
+
+  console.log('from, to, tokenId  ====>',from, to, tokenId)
   NftTransaction.findOne({fromAddress: from.toLowerCase(), toAddress: to.toLowerCase(), status: 'PENDING'})
     .populateAll()
     .then(async result => {
       if(result) {
-        console.log('result ====>',result)
+        console.log('NftTransaction RPC Listner result ====>',result)
         if(result.nft.minted && !result.nft.tokenId) {
           await Nft.update({id: result.nft.id}).set({tokenId: parseInt(tokenId)});
         }
