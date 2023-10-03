@@ -412,23 +412,24 @@ module.exports = {
       }
     );
   },
-  dashboard: async (req, res) => {
-    const startOfDay = moment().startOf("day").valueOf();
-    const totalUsers = await User.count();
-    const activeUserCount = await User.count({ status: "ACTIVE" });
-    const blockedUserCount = await User.count({ status: "BLOCKED" });
-    const newUserCount = await User.count({ status: "NEW" });
-    const todayUser = await User.count({ createdAt: { ">=": startOfDay } });
-    const inactiveUser = await User.count({ status: "INACTIVE" });
-    res.ok({
-      totalUsers,
-      activeUserCount,
-      newUserCount,
-      todayUser,
-      inactiveUser,
-      blockedUserCount,
-    });
-  },
+  // dashboard: async (req, res) => {
+  //   const startOfDay = moment().startOf("day").valueOf();
+  //   const totalUsers = await User.count();
+  //   const activeUserCount = await User.count({ status: "ACTIVE" });
+  //   const blockedUserCount = await User.count({ status: "BLOCKED" });
+  //   const newUserCount = await User.count({ status: "NEW" });
+  //   const todayUser = await User.count({ createdAt: { ">=": startOfDay } });
+  //   const inactiveUser = await User.count({ status: "INACTIVE" });
+  //   res.ok({
+  //     totalUsers,
+  //     activeUserCount,
+  //     newUserCount,
+  //     todayUser,
+  //     inactiveUser,
+  //     blockedUserCount,
+  //   });
+  // },
+
   updateUserStatus: async (req, res) => {
     const { id, status } = req.body;
     User.update({ id })
@@ -1289,55 +1290,70 @@ module.exports = {
       });
   },
 
-  // topBuyerReplacedNow: async (req, res) => {
-  //   try {
-  //     const dataArray = await NftTransaction.find({
-  //       where: { status: "SUCCESS", marketplace: { "!=": null } },
-  //     })
-  //       .populate("toUser")
-  //       .populate("marketplace")
-  //       .then((transactions) =>
-  //         transactions.filter((transaction) => transaction.marketplace !== null)
-  //       );
+  //Dashboard Graph APIs
 
-  //     const resultArray = Object.values(
-  //       dataArray.reduce((acc, obj) => {
-  //         const username = obj.toUser.username;
-  //         const price = parseFloat(obj.marketplace.price); // Convert price to a number
+  dashboard: async (req, res) => {
+    try {
+      const db = await User.getDatastore().manager;
+      const results = await db
+        .collection("user")
+        .aggregate([
+          {
+            $facet: {
+              totalUsers: [{ $count: "count" }],
+              activeUserCount: [
+                { $match: { status: "ACTIVE" } },
+                { $count: "count" },
+              ],
+              blockedUserCount: [
+                { $match: { status: "BLOCKED" } },
+                { $count: "count" },
+              ],
+              newUserCount: [
+                { $match: { status: "NEW" } },
+                { $count: "count" },
+              ],
+              todayUser: [
+                {
+                  $match: {
+                    createdAt: { $gte: moment().startOf("day").toDate() },
+                  },
+                },
+                { $count: "count" },
+              ],
+              inactiveUser: [
+                { $match: { status: "INACTIVE" } },
+                { $count: "count" },
+              ],
+            },
+          },
+        ])
+        .toArray();
 
-  //         // Check if price is a valid number
-  //         if (!isNaN(price)) {
-  //           if (!acc[username]) {
-  //             acc[username] = {
-  //               buyerId: obj.toUser.id,
-  //               firstName: obj.toUser.firstName,
-  //               lastName: obj.toUser.lastName,
-  //               avatar: obj.toUser.avatar,
-  //               username: obj.toUser.username,
-  //               totalPrice: 0,
-  //             };
-  //           }
+      const response = {
+        totalUsers: results[0].totalUsers[0]
+          ? results[0].totalUsers[0].count
+          : 0,
+        activeUserCount: results[0].activeUserCount[0]
+          ? results[0].activeUserCount[0].count
+          : 0,
+        blockedUserCount: results[0].blockedUserCount[0]
+          ? results[0].blockedUserCount[0].count
+          : 0,
+        newUserCount: results[0].newUserCount[0]
+          ? results[0].newUserCount[0].count
+          : 0,
+        todayUser: results[0].todayUser[0] ? results[0].todayUser[0].count : 0,
+        inactiveUser: results[0].inactiveUser[0]
+          ? results[0].inactiveUser[0].count
+          : 0,
+      };
 
-  //           // Add the price to the total price for this user
-  //           acc[username].totalPrice += price;
-  //           acc[username].totalPrice = parseFloat(
-  //             acc[username].totalPrice.toFixed(6)
-  //           );
-  //         }
-  //         return acc;
-  //       }, {})
-  //     );
-
-  //     const topBuyers = resultArray
-  //       .sort((a, b) => b.totalPrice - a.totalPrice)
-  //       .slice(0, 20);
-  //     const transactionCount = topBuyers.length;
-
-  //     return res.ok({ records: topBuyers, totalCount: transactionCount });
-  //   } catch (err) {
-  //     return res.badRequest(err);
-  //   }
-  // },
+      res.ok(response);
+    } catch (e) {
+      return res.badRequest(e);
+    }
+  },
 
   topBuyer: async (req, res) => {
     try {
@@ -1364,9 +1380,9 @@ module.exports = {
           },
           {
             $lookup: {
-              from: "marketplace", // Adjust this to the actual name of the "marketplace" collection
-              localField: "marketplace", // Assuming "marketplace" is a field in "nfttransaction"
-              foreignField: "_id", // Assuming "_id" is the identifier in the "marketplace" collection
+              from: "marketplace",
+              localField: "marketplace",
+              foreignField: "_id",
               as: "marketplaceData",
             },
           },
@@ -1381,7 +1397,7 @@ module.exports = {
               avatar: { $first: "$users.avatar" },
               username: { $first: "$users.username" },
               totalPrice: {
-                $sum: "$marketplaceData.price", // Sum the prices as a double
+                $sum: "$marketplaceData.price",
               },
             },
           },
@@ -1404,6 +1420,11 @@ module.exports = {
 
   topSeller: async (req, res) => {
     try {
+      const currentYear = new Date().getFullYear();
+      const initialDate = new Date(`${currentYear}-01-01`);
+      const finalDate = new Date(`${currentYear}-12-31`);
+      const initialEpo = initialDate.getTime();
+      const finalEpo = finalDate.getTime();
       const db = await NftTransaction.getDatastore().manager;
       const topSeller = await db
         .collection("nfttransaction")
@@ -1411,6 +1432,10 @@ module.exports = {
           {
             $match: {
               status: "SUCCESS",
+              updatedAt: {
+                $gte: initialEpo,
+                $lte: finalEpo,
+              },
               marketplace: { $ne: null },
             },
           },
@@ -1427,9 +1452,9 @@ module.exports = {
           },
           {
             $lookup: {
-              from: "marketplace", // Adjust this to the actual name of the "marketplace" collection
-              localField: "marketplace", // Assuming "marketplace" is a field in "nfttransaction"
-              foreignField: "_id", // Assuming "_id" is the identifier in the "marketplace" collection
+              from: "marketplace",
+              localField: "marketplace",
+              foreignField: "_id",
               as: "marketplaceData",
             },
           },
@@ -1444,7 +1469,7 @@ module.exports = {
               avatar: { $first: "$users.avatar" },
               username: { $first: "$users.username" },
               totalPrice: {
-                $sum: "$marketplaceData.price", // Sum the prices as a double
+                $sum: "$marketplaceData.price",
               },
             },
           },
@@ -1458,11 +1483,62 @@ module.exports = {
         .toArray();
 
       const transactionCount = topSeller.length;
- 
 
       return res.ok({ records: topSeller, totalCount: transactionCount });
     } catch (err) {
       return res.badRequest(err);
+    }
+  },
+
+  topRoyalty: async (req, res) => {
+    try {
+      const currentYear = new Date().getFullYear();
+      const initialDate = new Date(`${currentYear}-01-01`);
+      const finalDate = new Date(`${currentYear}-12-31`);
+      const initialEpo = initialDate.getTime();
+      const finalEpo = finalDate.getTime();
+      const db = await Royalty.getDatastore().manager;
+      const topUser = await db
+        .collection("royalty")
+        .aggregate([
+          {
+            $match: {
+              status: "SUCCESS",
+              updatedAt: {
+                $gte: initialEpo,
+                $lte: finalEpo,
+              },
+            },
+          },
+          {
+            $lookup: {
+              from: "user",
+              localField: "minter",
+              foreignField: "_id",
+              as: "userData",
+            },
+          },
+          {
+            $unwind: "$userData",
+          },
+          {
+            $group: {
+              _id: "$userData._id",
+              firstName: { $first: "$userData.firstName" },
+              lastName: { $first: "$userData.lastName" },
+              avatar: { $first: "$userData.avatar" },
+              username: { $first: "$userData.username" },
+              totalPrice: {
+                $sum: "$royalty", // Sum the prices as a double
+              },
+            },
+          },
+        ])
+        .toArray();
+
+      return res.ok(topUser);
+    } catch (e) {
+      return res.badRequest(e);
     }
   },
 
@@ -1478,6 +1554,7 @@ module.exports = {
       return res.badRequest(e);
     }
   },
+
   usersWalletBalance: async (req, res) => {
     try {
       const amountPaise = await Wallet.sum("amount");
@@ -1490,24 +1567,42 @@ module.exports = {
 
   userSocialType: async (req, res) => {
     try {
-      const arr = ["FACEBOOK", "GMAIL", "METAMASK", "COINBASE", ""];
-      let object = {
-        FACEBOOK: 0,
-        GMAIL: 0,
-        METAMASK: 0,
-        COINBASE: 0,
-        PLATFORM: 0,
-      };
+      const currentYear = new Date().getFullYear();
+      const initialDate = new Date(`${currentYear}-01-01`);
+      const finalDate = new Date(`${currentYear}-12-31`);
+      const initialEpo = initialDate.getTime();
+      const finalEpo = finalDate.getTime();
+      const db = await User.getDatastore().manager;
+      const socialType = await db
+        .collection("user")
+        .aggregate([
+          {
+            $match: {
+              updatedAt: {
+                $gte: initialEpo,
+                $lte: finalEpo,
+              },
+            },
+          },
+          {
+            $group: {
+              _id: "$socialAccountType",
+              count: { $sum: 1 },
+            },
+          },
+          {
+            $replaceRoot: {
+              newRoot: { $arrayToObject: [[{ k: "$_id", v: "$count" }]] },
+            },
+          },
+        ])
+        .toArray();
 
-      for (let i = 0; i <= arr.length - 1; i++) {
-        object[arr[i] ? arr[i] : "PLATFORM"] = await User.count({
-          socialAccountType: arr[i],
-        });
-      }
+      const socialData = socialType.map((i) => {
+        return { platform: Object.keys(i), count: Object.values(i) };
+      });
 
-      const totalCount = Object.values(object).reduce((a, b) => a + b);
-
-      return res.ok({ object, totalCount });
+      return res.ok(socialData);
     } catch (e) {
       return res.badRequest(e);
     }
@@ -1515,18 +1610,47 @@ module.exports = {
 
   usersKycStatus: async (req, res) => {
     try {
-      const arr = ["APPROVED", "REJECTED", "PENDING"];
-      let object = {
-        APPROVED: 0,
-        REJECTED: 0,
-        PENDING: 0,
-      };
+      const currentYear = new Date().getFullYear();
+      const initialDate = new Date(`${currentYear}-01-01`);
+      const finalDate = new Date(`${currentYear}-12-31`);
+      const initialEpo = initialDate.getTime();
+      const finalEpo = finalDate.getTime();
+      const db = await Kyc.getDatastore().manager;
+      const kycData = await db
+        .collection("kyc")
+        .aggregate([
+          {
+            $match: {
+              status: { $ne: "NEW" }, // Exclude candidates with status "NEW"
+              updatedAt: {
+                $gte: initialEpo,
+                $lte: finalEpo,
+              },
+            },
+          },
+          {
+            $group: {
+              _id: "$status",
+              count: { $sum: 1 },
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              status: "$_id",
+              count: 1,
+            },
+          },
+        ])
+        .toArray();
 
-      for (let i = 0; i <= arr.length - 1; i++) {
-        object[arr[i]] = await Kyc.count({ status: arr[i] });
-      }
+      const totalCount = kycData.reduce((acc, item) => acc + item.count, 0);
 
-      const totalCount = Object.values(object).reduce((a, b) => a + b);
+      const object = {};
+      kycData.forEach((item) => {
+        object[item.status] = item.count;
+      });
+
       return res.ok({ object, totalCount });
     } catch (e) {
       return res.badRequest(e);
@@ -1545,92 +1669,86 @@ module.exports = {
   userCountPerMonth: async (req, res) => {
     try {
       const currentYear = new Date().getFullYear();
-      const startDate = moment(`01-01-${currentYear}`, "DD-MM-YYYY").valueOf();
-      const endDate = moment(`31-12-${currentYear}`, "DD-MM-YYYY").valueOf();
+      const initialDate = new Date(`${currentYear}-01-01`);
+      const finalDate = new Date(`${currentYear}-12-31`);
+      const initialEpo = initialDate.getTime();
+      const finalEpo = finalDate.getTime();
+      const db = await User.getDatastore().manager;
+      const userData = await db
+        .collection("user")
+        .aggregate([
+          {
+            $match: {
+              updatedAt: {
+                $gte: initialEpo,
+                $lte: finalEpo,
+              },
+            },
+          },
+          {
+            $project: {
+              month: {
+                $dateToString: {
+                  format: "%m",
+                  date: { $toDate: "$createdAt" },
+                },
+              },
+            },
+          },
+          {
+            $group: {
+              _id: "$month",
+              count: { $sum: 1 },
+            },
+          },
+          {
+            $sort: { _id: 1 }, // Sort by month in ascending order
+          },
+          {
+            $replaceRoot: {
+              newRoot: {
+                $arrayToObject: [[{ k: "$_id", v: { count: "$count" } }]],
+              },
+            },
+          },
+        ])
+        .toArray();
 
-      console.log(moment(1695195587).format("MM"));
+      const dataFormat = [
+        "01",
+        "02",
+        "03",
+        "04",
+        "05",
+        "06",
+        "07",
+        "08",
+        "09",
+        "10",
+        "11",
+        "12",
+      ];
 
-      const users = await User.find({
-        createdAt: { ">=": startDate, "<=": endDate },
-      });
-
-      const monthlyCounts = {
-        Jan: 0,
-        Feb: 0,
-        Mar: 0,
-        Apr: 0,
-        May: 0,
-        Jun: 0,
-        Jul: 0,
-        Aug: 0,
-        Sep: 0,
-        Oct: 0,
-        Nov: 0,
-        Dec: 0,
-      };
-
-      users.forEach((user) => {
-        const createdAt = user.createdAt;
-        const month = moment(createdAt).format("MM");
-
-        switch (month) {
-          case "01":
-            monthlyCounts.Jan += 1;
-            break;
-          case "02":
-            monthlyCounts.Feb += 1;
-            break;
-          case "03":
-            monthlyCounts.Mar += 1;
-            break;
-          case "04":
-            monthlyCounts.Apr += 1;
-            break;
-          case "05":
-            monthlyCounts.May += 1;
-            break;
-          case "06":
-            monthlyCounts.Jun += 1;
-            break;
-          case "07":
-            monthlyCounts.Jul += 1;
-            break;
-          case "08":
-            monthlyCounts.Aug += 1;
-            break;
-          case "09":
-            monthlyCounts.Sep += 1;
-            break;
-          case "10":
-            monthlyCounts.Oct += 1;
-            break;
-          case "11":
-            monthlyCounts.Nov += 1;
-            break;
-          case "12":
-            monthlyCounts.Dec += 1;
-            break;
-          default:
-            break;
-        }
-      });
-
-      const data = Object.values(monthlyCounts);
-
-      const result = data.reduce((accumulator, currentValue) => {
-        if (accumulator.length === 0) {
-          // The initial value, just push the first element as is.
-          accumulator.push(currentValue);
+      const newData = dataFormat.map((month) => {
+        const matchingEntry = userData?.find(
+          (entry) => Object.keys(entry)[0] === month
+        );
+        if (matchingEntry) {
+          return {
+            [month]: {
+              count: matchingEntry[month].count,
+            },
+          };
         } else {
-          // Add the previous value to the current value and push it to the accumulator.
-          const previousValue = accumulator[accumulator.length - 1];
-          accumulator.push(previousValue + currentValue);
+          return {
+            [month]: {
+              count: 0,
+            },
+          };
         }
-        return accumulator;
-      }, []);
+      });
 
-      // const totalCount = Object.values(monthlyCounts).reduce((a,b)=>a+b)
-      return res.ok({ records: monthlyCounts, totalCount: result });
+      return res.ok(newData);
     } catch (e) {
       return res.badRequest(e);
     }
@@ -1638,51 +1756,96 @@ module.exports = {
 
   marketplaceStatusData: async (req, res) => {
     try {
-      const data = await Marketplace.find();
-      const newAry = data.reduce((total, item) => {
-        const monthName = moment(item.createdAt).format("M");
-        if (!total[monthName]) {
-          total[monthName] = {
-            count: 0,
-            completed: 0,
-          };
-        }
+      const currentYear = new Date().getFullYear();
+      const initialDate = new Date(`${currentYear}-01-01`);
+      const finalDate = new Date(`${currentYear}-12-31`);
+      const initialEpo = initialDate.getTime();
+      const finalEpo = finalDate.getTime();
+      const db = await Marketplace.getDatastore().manager;
+      const marketData = await db
+        .collection("marketplace")
+        .aggregate([
+          {
+            $match: {
+              updatedAt: {
+                $gte: initialEpo,
+                $lte: finalEpo,
+              },
+            },
+          },
+          {
+            $project: {
+              month: {
+                $dateToString: {
+                  format: "%m",
+                  date: { $toDate: "$createdAt" }, // Convert epoch to date
+                },
+              },
+              status: 1,
+            },
+          },
+          {
+            $group: {
+              _id: "$month",
+              count: { $sum: 1 },
+              completedCount: {
+                $sum: { $cond: [{ $eq: ["$status", "COMPLETED"] }, 1, 0] },
+              },
+            },
+          },
+          {
+            $sort: { _id: 1 }, // Sort by month in ascending order
+          },
+          {
+            $replaceRoot: {
+              newRoot: {
+                $arrayToObject: [
+                  [
+                    {
+                      k: "$_id",
+                      v: { count: "$count", complete: "$completedCount" },
+                    },
+                  ],
+                ],
+              },
+            },
+          },
+        ])
+        .toArray();
 
-        total[monthName] = {
-          count: total[monthName].count + 1,
-          completed:
-            item.status === "COMPLETED"
-              ? total[monthName].completed + 1
-              : total[monthName].completed,
+      const actualFormat = [
+        "01",
+        "02",
+        "03",
+        "04",
+        "05",
+        "06",
+        "07",
+        "08",
+        "09",
+        "10",
+        "11",
+        "12",
+      ];
+      const finalResult = actualFormat?.map((month) => {
+        const marketAddSold = marketData?.find((data) => data[month]) || {
+          [month]: { count: 0, complete: 0 },
         };
-        return total;
-      }, {});
 
-      const total = {
-        1: { count: 0, completed: 0 },
-        2: { count: 0, completed: 0 },
-        3: { count: 0, completed: 0 },
-        4: { count: 0, completed: 0 },
-        5: { count: 0, completed: 0 },
-        6: { count: 0, completed: 0 },
-        7: { count: 0, completed: 0 },
-        8: { count: 0, completed: 0 },
-        9: { count: 0, completed: 0 },
-        10: { count: 0, completed: 0 },
-        11: { count: 0, completed: 0 },
-        12: { count: 0, completed: 0 },
-      };
-      for (const i in newAry) {
-        if (newAry.hasOwnProperty(i) && total.hasOwnProperty(i)) {
-          total[i] = newAry[i];
-        }
-      }
+        return {
+          [month]: {
+            count: marketAddSold[month]?.count || 0,
+            complete: marketAddSold[month]?.complete || 0,
+          },
+        };
+      });
 
-      return res.ok(total);
+      return res.ok(finalResult);
     } catch (e) {
       return res.badRequest(e);
     }
   },
+
   auctionStatusData: async (req, res) => {
     try {
       console.log("i got hit");
@@ -1693,6 +1856,11 @@ module.exports = {
 
   platformFeeData: async (req, res) => {
     try {
+      const currentYear = new Date().getFullYear();
+      const initialDate = new Date(`${currentYear}-01-01`);
+      const finalDate = new Date(`${currentYear}-12-31`);
+      const initialEpo = initialDate.getTime();
+      const finalEpo = finalDate.getTime();
       const db = NftTransaction.getDatastore().manager;
       const totalRevenue = await db
         .collection("nfttransaction")
@@ -1700,6 +1868,10 @@ module.exports = {
           {
             $match: {
               status: "SUCCESS",
+              updatedAt: {
+                $gte: initialEpo,
+                $lte: finalEpo,
+              },
             },
           },
           {
@@ -1723,33 +1895,104 @@ module.exports = {
       return res.badRequest(e);
     }
   },
+
   nftAnalysis: async (req, res) => {
     try {
-      const nfts = await Nft.find();
-      const nftObj = nfts.reduce((acc, curr) => {
-        const { createdAt } = curr;
-        const month = moment(createdAt).format("MM");
-        if (!acc[month]) {
-          acc[month] = 0;
-        }
-        acc[month] += 1;
-        return acc;
-      }, {});
+      const currentYear = new Date().getFullYear();
+      const initialDate = new Date(`${currentYear}-01-01`);
+      const finalDate = new Date(`${currentYear}-12-31`);
+      const initialEpo = initialDate.getTime();
+      const finalEpo = finalDate.getTime();
 
-      const trans = await NftTransaction.find({ status: "SUCCESS" });
+      const db = await NftTransaction.getDatastore().manager;
+      const transData = await db
+        .collection("nfttransaction")
+        .aggregate([
+          {
+            $match: {
+              updatedAt: {
+                $gte: initialEpo,
+                $lte: finalEpo,
+              },
+            },
+          },
+          {
+            $project: {
+              month: {
+                $dateToString: {
+                  format: "%m",
+                  date: { $toDate: "$updatedAt" }, // Convert epoch to date
+                },
+              },
+              platformFee: "$platformFee",
+            },
+          },
+          {
+            $group: {
+              _id: "$month",
+              sold: { $sum: 1 },
+              revenue: { $sum: "$platformFee" },
+            },
+          },
+          {
+            $replaceRoot: {
+              newRoot: {
+                $arrayToObject: [
+                  [
+                    {
+                      k: "$_id",
+                      v: { sold: "$sold", platformFee: "$revenue" },
+                    },
+                  ],
+                ],
+              },
+            },
+          },
+        ])
+        .toArray();
 
-      const transObj = trans.reduce((acc, curr) => {
-        const { createdAt, platformFee } = curr;
-        const month = moment(createdAt).format("MM");
-        if (!acc[month]) {
-          acc[month] = { count: 0, platformFee: 0 };
-        }
-        acc[month].count += 1;
-        acc[month].platformFee += platformFee;
-        return acc;
-      }, {});
+      const dbb = await Nft.getDatastore().manager;
+      const nftData = await dbb
+        .collection("nft")
+        .aggregate([
+          {
+            $match: {
+              updatedAt: {
+                $gte: initialEpo,
+                $lte: finalEpo,
+              },
+            },
+          },
+          {
+            $project: {
+              month: {
+                $dateToString: {
+                  format: "%m",
+                  date: { $toDate: "$createdAt" }, // Convert epoch to date
+                },
+              },
+            },
+          },
+          {
+            $group: {
+              _id: "$month",
+              count: { $sum: 1 },
+            },
+          },
+          {
+            $sort: { _id: 1 }, // Sort by month in ascending order
+          },
+          {
+            $replaceRoot: {
+              newRoot: {
+                $arrayToObject: [[{ k: "$_id", v: { created: "$count" } }]],
+              },
+            },
+          },
+        ])
+        .toArray();
 
-      const monthlyCounts = [
+      const actualFormat = [
         "01",
         "02",
         "03",
@@ -1764,19 +2007,24 @@ module.exports = {
         "12",
       ];
 
-      const finalData = monthlyCounts.map((i) => {
+      const finalResult = actualFormat?.map((month) => {
+        const createdValue = nftData?.find((data) => data[month]?.created) || {
+          [month]: { created: 0 },
+        };
+        const soldAndRevenueValue = transData?.find((data) => data[month]) || {
+          [month]: { sold: 0, platformFee: 0 },
+        };
+
         return {
-          [i]: {
-            created: nftObj[i] ? nftObj[i] : 0,
-            sold: transObj[i]?.count ? transObj[i]?.count : 0,
-            platformFee: transObj[i]?.platformFee
-              ? transObj[i]?.platformFee.toFixed(6)
-              : 0,
+          [month]: {
+            created: createdValue[month]?.created || 0,
+            sold: soldAndRevenueValue[month]?.sold || 0,
+            platformFee: soldAndRevenueValue[month]?.platformFee || 0,
           },
         };
       });
 
-      return res.ok(finalData);
+      return res.ok(finalResult);
     } catch (e) {
       return res.badRequest(e);
     }
