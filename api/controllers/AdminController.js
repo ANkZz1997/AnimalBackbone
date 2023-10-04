@@ -1357,6 +1357,11 @@ module.exports = {
 
   topBuyer: async (req, res) => {
     try {
+      const currentYear = new Date().getFullYear();
+      const initialDate = new Date(`${currentYear}-01-01`);
+      const finalDate = new Date(`${currentYear}-12-31`);
+      const initialEpo = initialDate.getTime();
+      const finalEpo = finalDate.getTime();
       const db = await NftTransaction.getDatastore().manager;
       const topBuyers = await db
         .collection("nfttransaction")
@@ -1364,7 +1369,10 @@ module.exports = {
           {
             $match: {
               status: "SUCCESS",
-              marketplace: { $ne: null },
+              updatedAt: {
+                $gte: initialEpo,
+                $lte: finalEpo,
+              },
             },
           },
           {
@@ -1387,18 +1395,38 @@ module.exports = {
             },
           },
           {
-            $unwind: "$marketplaceData",
+            $lookup: {
+              from: "auction",
+              localField: "auction",
+              foreignField: "_id",
+              as: "auctionData",
+            },
+          },
+          {
+            $unwind: { path: "$marketplaceData", preserveNullAndEmptyArrays: true },
+          },
+          {
+            $unwind: { path: "$auctionData", preserveNullAndEmptyArrays: true },
+          },
+          {
+            $project: {
+              _id: "$users._id",
+              firstName: "$users.firstName",
+              lastName: "$users.lastName",
+              avatar: "$users.avatar",
+              username: "$users.username",
+              marketplacePrice: { $ifNull: ["$marketplaceData.price", 0] },
+              auctionPrice: { $ifNull: ["$auctionData.price", 0] },
+            },
           },
           {
             $group: {
-              _id: "$users._id",
-              firstName: { $first: "$users.firstName" },
-              lastName: { $first: "$users.lastName" },
-              avatar: { $first: "$users.avatar" },
-              username: { $first: "$users.username" },
-              totalPrice: {
-                $sum: "$marketplaceData.price",
-              },
+              _id: "$_id",
+              firstName: { $first: "$firstName" },
+              lastName: { $first: "$lastName" },
+              avatar: { $first: "$avatar" },
+              username: { $first: "$username" },
+              totalPrice: { $sum: { $add: ["$marketplacePrice", "$auctionPrice"] } },
             },
           },
           {
@@ -1419,7 +1447,7 @@ module.exports = {
   },
 
   topSeller: async (req, res) => {
-    try {
+    try{
       const currentYear = new Date().getFullYear();
       const initialDate = new Date(`${currentYear}-01-01`);
       const finalDate = new Date(`${currentYear}-12-31`);
@@ -1436,7 +1464,6 @@ module.exports = {
                 $gte: initialEpo,
                 $lte: finalEpo,
               },
-              marketplace: { $ne: null },
             },
           },
           {
@@ -1459,18 +1486,38 @@ module.exports = {
             },
           },
           {
-            $unwind: "$marketplaceData",
+            $lookup: {
+              from: "auction",
+              localField: "auction",
+              foreignField: "_id",
+              as: "auctionData",
+            },
+          },
+          {
+            $unwind: { path: "$marketplaceData", preserveNullAndEmptyArrays: true },
+          },
+          {
+            $unwind: { path: "$auctionData", preserveNullAndEmptyArrays: true },
+          },
+          {
+            $project: {
+              _id: "$users._id",
+              firstName: "$users.firstName",
+              lastName: "$users.lastName",
+              avatar: "$users.avatar",
+              username: "$users.username",
+              marketplacePrice: { $ifNull: ["$marketplaceData.price", 0] },
+              auctionPrice: { $ifNull: ["$auctionData.price", 0] },
+            },
           },
           {
             $group: {
-              _id: "$users._id",
-              firstName: { $first: "$users.firstName" },
-              lastName: { $first: "$users.lastName" },
-              avatar: { $first: "$users.avatar" },
-              username: { $first: "$users.username" },
-              totalPrice: {
-                $sum: "$marketplaceData.price",
-              },
+              _id: "$_id",
+              firstName: { $first: "$firstName" },
+              lastName: { $first: "$lastName" },
+              avatar: { $first: "$avatar" },
+              username: { $first: "$username" },
+              totalPrice: { $sum: { $add: ["$marketplacePrice", "$auctionPrice"] } },
             },
           },
           {
@@ -1481,10 +1528,12 @@ module.exports = {
           },
         ])
         .toArray();
+      
+        const transactionCount = topSeller.length;
 
-      const transactionCount = topSeller.length;
+        return res.ok({ records: topSeller, totalCount: transactionCount });
+      
 
-      return res.ok({ records: topSeller, totalCount: transactionCount });
     } catch (err) {
       return res.badRequest(err);
     }
@@ -1595,6 +1644,7 @@ module.exports = {
               newRoot: { $arrayToObject: [[{ k: "$_id", v: "$count" }]] },
             },
           },
+          
         ])
         .toArray();
 
@@ -1848,7 +1898,91 @@ module.exports = {
 
   auctionStatusData: async (req, res) => {
     try {
-      console.log("i got hit");
+      const currentYear = new Date().getFullYear();
+      const initialDate = new Date(`${currentYear}-01-01`);
+      const finalDate = new Date(`${currentYear}-12-31`);
+      const initialEpo = initialDate.getTime();
+      const finalEpo = finalDate.getTime();
+      const db = await Auction.getDatastore().manager;
+      const auctionData = await db
+        .collection("auction")
+        .aggregate([
+          {
+            $match: {
+              updatedAt: {
+                $gte: initialEpo,
+                $lte: finalEpo,
+              },
+            },
+          },
+          {
+            $project: {
+              month: {
+                $dateToString: {
+                  format: "%m",
+                  date: { $toDate: "$createdAt" }, // Convert epoch to date
+                },
+              },
+              status: 1,
+            },
+          },
+          {
+            $group: {
+              _id: "$month",
+              count: { $sum: 1 },
+              completedCount: {
+                $sum: { $cond: [{ $eq: ["$status", "COMPLETED"] }, 1, 0] },
+              },
+            },
+          },
+          {
+            $sort: { _id: 1 }, // Sort by month in ascending order
+          },
+          {
+            $replaceRoot: {
+              newRoot: {
+                $arrayToObject: [
+                  [
+                    {
+                      k: "$_id",
+                      v: { count: "$count", complete: "$completedCount" },
+                    },
+                  ],
+                ],
+              },
+            },
+          },
+        ])
+        .toArray();
+
+      const actualFormat = [
+        "01",
+        "02",
+        "03",
+        "04",
+        "05",
+        "06",
+        "07",
+        "08",
+        "09",
+        "10",
+        "11",
+        "12",
+      ];
+      const finalResult = actualFormat?.map((month) => {
+        const marketAddSold = auctionData?.find((data) => data[month]) || {
+          [month]: { count: 0, complete: 0 },
+        };
+
+        return {
+          [month]: {
+            count: marketAddSold[month]?.count || 0,
+            complete: marketAddSold[month]?.complete || 0,
+          },
+        };
+      });
+
+      return res.ok(finalResult);
     } catch (e) {
       return res.badRequest(e);
     }
